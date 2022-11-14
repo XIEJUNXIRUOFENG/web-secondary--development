@@ -1,0 +1,22 @@
+{
+  "id": "ae4d3fce-d8ab-49e3-8853-d47a81a2524d",
+  "type": "bigscreen",
+  "main": "app.ea95d1fb.js",
+  "version": "2",
+  "requirement-number": "SR-W45-f1nC6L",
+  "requirement-name": "站点缺陷统计表",
+  "props": {
+    "img": "APP_0001.png",
+    "disableimg": "disabled_custom_table.png",
+    "name": "Vue版本的演示Demo",
+    "className": "className-demo",
+    "configuration": [
+      "style",
+      "data",
+      "other"
+    ],
+    "vars": [
+      "id"
+    ]
+  }
+}

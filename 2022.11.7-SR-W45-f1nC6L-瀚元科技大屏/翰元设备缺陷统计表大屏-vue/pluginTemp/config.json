@@ -1,0 +1,22 @@
+{
+  "id": "3a74a8c9-c0c2-4665-a3ac-07c42161fdeb",
+  "type": "bigscreen",
+  "main": "app.49095fdc.js",
+  "version": "2",
+  "requirement-number": "SR-W45-f1nC6L",
+  "requirement-name": "设备缺陷统计表",
+  "props": {
+    "img": "APP_0001.png",
+    "disableimg": "disabled_custom_table.png",
+    "name": "Vue版本的演示Demo",
+    "className": "className-demo",
+    "configuration": [
+      "style",
+      "data",
+      "other"
+    ],
+    "vars": [
+      "id"
+    ]
+  }
+}
