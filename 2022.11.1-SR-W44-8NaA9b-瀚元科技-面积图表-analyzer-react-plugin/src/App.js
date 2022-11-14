@@ -195,7 +195,7 @@ export default class App extends Component {
       xAxis: [
         {
           type: "category",
-          boundaryGap: false,
+          // boundaryGap: false,
           axisLabel: {
             color: this.xAxisLabelColor,
             fontSize: this.xAxisLabelFontSize,
