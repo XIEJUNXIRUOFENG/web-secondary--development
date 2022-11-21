@@ -1,0 +1,97 @@
+iframe {
+   display: none;
+}
+
+// 配置页样式
+.app_setting {
+   // 多选框
+   .ant-checkbox-wrapper {
+      color: #111 !important;
+   }
+}
+
+// 应用页样式
+.outermost {
+   width: 100%;
+   box-sizing: border-box;
+   overflow-y: auto;
+   overflow-x: hidden;
+   background-color: #faf7f8 !important;
+   // 右侧区域
+   .ant-layout-sider {
+      flex: 0 0 272px !important;
+      max-width: none !important;
+      min-width: 272px !important;
+      min-height: 100%;
+      width: 272px !important;
+      padding: 0 16px;
+      background: #fff !important;
+      overflow-y: auto;
+      overflow-x: hidden;
+      box-shadow: 0 0 16px rgb(6 35 90 / 5%);
+   }
+   // 事件流平台标题
+   .evevtflow_title {
+      height: 80px;
+      line-height: 80px;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      // 标题文本
+      .title_text {
+         color: #213764;
+         font-family: PingFang SC;
+         font-size: 24px;
+         font-style: normal;
+         font-weight: 500;
+         margin-left: 16px;
+      }
+   }
+   // 事件流平台菜单
+   .ant-menu {
+      margin-top: 16px;
+      border: none;
+      // 基础样式
+      .ant-menu-item {
+         height: 48px;
+         line-height: 48px;
+         display: flex;
+         align-items: center;
+         margin: 10px 0;
+         border-radius: 4px;
+         // 选项图标
+         img {
+            width: 16px;
+            height: 16px;
+            margin-right: 20px;
+         }
+      }
+      // 选项hover样式
+      .ant-menu-item:hover {
+         background: #5182e4;
+         color: #fff;
+      }
+      // 选项文本样式
+      .ant-menu-title-content {
+         font-family: PingFang SC;
+         margin: 0;
+         font-size: 16px;
+         font-style: normal;
+         font-weight: 400;
+         height: 48px;
+         overflow: hidden;
+         text-overflow: ellipsis;
+         white-space: nowrap;
+      }
+      // 选项选中样式
+      .ant-menu-item-selected {
+         color: #fff;
+         background: #0454f2 !important;
+      }
+      // 选项选中右侧竖线
+      ::after {
+         display: none;
+      }
+   }
+}

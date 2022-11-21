@@ -1,0 +1,20 @@
+{
+  "id": "402fb5e6-1ce6-47dc-8084-7c1146253442",
+  "type": "bigscreen",
+  "main": "app.4ef6823a.js",
+  "version": "2",
+  "requirement-number": "SR-W46-HTPgqq",
+  "requirement-name": "大屏-容器定制组件",
+  "props": {
+    "img": "APP_0001.png",
+    "disableimg": "disabled_custom_table.png",
+    "name": "Vue版本的演示Demo",
+    "className": "className-demo",
+    "configuration": [
+      "style",
+      "data",
+      "other"
+    ],
+    "vars": []
+  }
+}

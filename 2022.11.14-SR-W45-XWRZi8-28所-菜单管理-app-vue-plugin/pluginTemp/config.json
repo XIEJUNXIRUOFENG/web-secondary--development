@@ -1,0 +1,18 @@
+{
+  "id": "a5f06eec-eed9-4b15-9645-08060ecb4e6a",
+  "type": "app",
+  "main": "app.20baf7b8.js",
+  "version": "2",
+  "props": {
+    "type": "customize",
+    "img": "APP_0001.png",
+    "name": "应用二开_vue",
+    "loadStyle": 0,
+    "lib": [],
+    "css_script": [],
+    "customconf": [
+      "组件高度",
+      "资产ID"
+    ]
+  }
+}

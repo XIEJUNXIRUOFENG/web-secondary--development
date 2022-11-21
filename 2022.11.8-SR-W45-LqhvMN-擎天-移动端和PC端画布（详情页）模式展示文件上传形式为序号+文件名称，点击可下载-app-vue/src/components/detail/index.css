@@ -1,0 +1,25 @@
+.articleTitleInfo{
+    font-size: 30px;
+    display: flex;
+    justify-content: center;
+}
+.articleInfo{
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+.articleInfo span {
+    margin-right: 20px;
+}
+.articleContent{
+    padding:50px 200px 0 200px;
+}
+.fujianText{
+    font-weight: 700;
+}
+.downloadItem{
+    color: dodgerblue;
+    cursor: pointer;
+    font-size: 18px;
+}
