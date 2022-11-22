@@ -1,0 +1,57 @@
+
+.zhezhao {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(204, 204, 204, 0.3);
+    z-index: 99;
+    .dialogBox {
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80%;
+      border-radius: 15px;
+      background: #ffffff;
+      z-index: 99;
+      .dialogBody {
+        padding-top: 44px;
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .nfcTip {
+          font-size: 14px;
+          color: #ff8d8d;
+          text-align: center;
+          margin: 0 15px;
+        }
+      }
+      .lineHr {
+        width: 100%;
+        border-bottom: 2px solid #f8f8f8;
+      }
+      .dialogFoot {
+        display: flex;
+        justify-content: space-around;
+        height: 45px;
+        width: 100%;
+
+        .footBtn {
+          cursor: pointer;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex: 1;
+          font-size: 14px;
+          color: #398cff;
+          font-weight: 700;
+        }
+      }
+    }
+}

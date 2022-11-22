@@ -1,0 +1,20 @@
+{
+  "id": "76769a5d-b993-4533-bb22-83fbad1a4477",
+  "type": "app",
+  "main": "app.f603d70a.js",
+  "version": "2",
+  "props": {
+    "type": "customize",
+    "img": "APP_0001.png",
+    "name": "应用二开_vue",
+    "loadStyle": 0,
+    "lib": [],
+    "css_script": [],
+    "customconf": [
+      "taskId",
+      "routeId",
+      "dataIdKey",
+      "routerUrl"
+    ]
+  }
+}

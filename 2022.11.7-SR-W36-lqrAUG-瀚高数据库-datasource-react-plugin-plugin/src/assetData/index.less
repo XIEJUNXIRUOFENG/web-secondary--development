@@ -1,0 +1,104 @@
+.jdbc-asset-data {
+	width: 100%;
+	height: 100%;
+	padding: 0 32px;
+	overflow: auto;
+
+	.data-filter {
+		padding: 24px;
+		background-color: #fff;
+		margin-bottom: 20px;
+
+		.filter-col {
+			display: flex;
+			align-items: center;
+			height: 33px;
+
+			.filter-label {
+				width: 70px;
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				text-align: justify;
+				text-align-last: justify;
+			}
+		}
+
+		.filter-btn {
+			text-align: right;
+
+			.ant-btn {
+				margin-right: 12px;
+			}
+
+			.more {
+				color: #5481e4;
+				cursor: pointer;
+
+				.anticon {
+					margin-left: 5px;
+				}
+			}
+		}
+	}
+
+	.data-view {
+		width: 100%;
+		padding: 24px;
+		background-color: #fff;
+
+		.data-labels {
+			background: rgba(237, 248, 254, 1);
+			border: 1px solid rgba(81, 130, 228, 1);
+			border-radius: 4px;
+			padding: 10px 30px;
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 10px;
+
+			.label {
+				font-size: 14px;
+				font-family: Microsoft YaHei, sans-serif;
+				font-weight: bold;
+				color: rgba(51, 51, 51, 1);
+				line-height: 32px;
+
+				img {
+					margin-right: 30px;
+				}
+			}
+
+			.ant-btn {
+				background-color: #fff;
+				font-size: 14px;
+				font-family: Microsoft YaHei, sans-serif;
+				font-weight: bold;
+				color: rgba(51, 51, 51, 1);
+			}
+		}
+		.lookImg {
+			cursor: pointer;
+		}
+		.ant-table-pagination.ant-pagination {
+			float: none;
+			text-align: center;
+		}
+		.datatypeIcon {
+			font-size: 18px;
+			margin-right: 10px;
+			position: relative;
+			top: 2px;
+		}
+		// 问题修复-垂直居中和省略显示的样式冲突导致文字显示不全，问题单号： BUG-20210415-520
+		.d-table .maxWidthClass {
+			line-height: normal;
+		}
+	}
+
+	.d-table .ant-pagination-item-active {
+		background-color: transparent;
+		a {
+			color: #5481e4;
+		}
+	}
+}

@@ -1,0 +1,12 @@
+{
+  "id": "dbf46b7f-edfa-447a-895b-048d1f3313f7",
+  "type": "app",
+  "main": "app.5c464760.js",
+  "baseVersion": "V8R4C60SPC140",
+  "requirement-number": "SR-W47-ksAIZH",
+  "requirement-name": "根据姓名，身份证号进行注册，注册账号默认在“人民群众”组织下“市民”角色",
+  "version": "2",
+  "props": {
+    "type": "login"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "64051247-8e6b-48e1-bb39-ef54fd8f4b6c",
+  "type": "app",
+  "main": "app.98952dff.js",
+  "version": "2",
+  "props": {
+    "type": "customize",
+    "img": "APP_0001.png",
+    "name": "应用二开_vue",
+    "loadStyle": 0,
+    "lib": [],
+    "css_script": [],
+    "customconf": [
+      "列表资产ID",
+      "列表显示字段",
+      "时间显示格式",
+      "系统变量名称"
+    ]
+  },
+  "requirement-number": "SR-W46-80EbBC",
+  "requirement-name": "应用页面批量选择数据插入"
+}

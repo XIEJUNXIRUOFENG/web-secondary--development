@@ -1,0 +1,55 @@
+._add_dataSource_form {
+
+  ._add_dataSource_title {
+    color: #898f96;
+    height: 40px;
+    line-height: 40px;
+  }
+  ._add_dataSource_item {
+    margin-bottom: 0;
+    padding: 14px 22px;
+    border-bottom: 1px solid #f5f6f7;
+    background: #fff;
+    .ant-form-item-label > label {
+      color: #898f96;
+    }
+    .ant-input:focus {
+      outline: none;
+      border-bottom: 1px solid #7da7f0;
+    }
+    .ant-input[disabled] {
+      border-bottom: 1px solid #f5f5f5;
+      background-color: transparent;
+    }
+    .ant-input {
+      box-shadow: none !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      border-bottom: 1px solid #dedfe0 !important;
+    }
+
+    .ant-input-affix-wrapper {
+      border: 0 !important;
+      border-radius: 0 !important;
+      border-bottom: 1px solid #dedfe0 !important;
+      box-shadow: none !important;
+      .ant-input {
+        border: 0 !important; 
+      }
+    }
+    .ant-input-affix-wrapper {
+      &:hover {
+        border-bottom: 1px solid #7da7f0 !important;
+      }
+      &:focus {
+        border-bottom: 1px solid #7da7f0 !important;
+      }
+    }
+    .ant-input-status-error {
+      border-bottom: 1px solid #ff4d4f !important;
+    }
+    .ant-form-item-explain-error {
+      text-align: right;
+    }
+  }
+}

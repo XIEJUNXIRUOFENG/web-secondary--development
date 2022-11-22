@@ -513,7 +513,11 @@ export default {
     exportExcel(type) {
       let url = "";
       if (type == "D") {
-        url = `?${this.queryAllData.dian_fei_mo_ban.current_value}`;
+        if (this.excelAllData.settlement_type == "分时电价") {
+          url = `?${this.queryAllData.dian_fei_fenshi_mo_ban.current_value}`;
+        } else {
+          url = `?${this.queryAllData.dian_fei_mo_ban.current_value}`;
+        }
       } else {
         url = `?${this.queryAllData.biao_ma_mo_ban.current_value}`;
       }
@@ -652,13 +656,17 @@ export default {
           return this.myFixed(row.data_value_j, 5);
           break;
         case "市电电费（元）":
-          let messagesddf = 0;
+          let messagesddfj1 = 0;
+          let messagesddfj2 = 0;
           this.tableData.t_monthly_bill_list.forEach((item, index) => {
-            if (item.data_type == "自发自用电量（kWh）" || item.data_type == "市电单价（元/kWh）") {
-              messagesddf += Number(item.data_value_j);
+            if (item.data_type == "自发自用电量（kWh）") {
+              messagesddfj1 = Number(item.data_value_j);
+            }
+            if (item.data_type == "市电单价（元/kWh）") {
+              messagesddfj2 = Number(item.data_value_j);
             }
           });
-          return (row.data_value_j = this.myFixed(messagesddf, 2));
+          return (row.data_value_j = this.myFixed(messagesddfj1 * messagesddfj2, 2));
           break;
         case "协议单价（元/kWh）":
           // let messagexydj = 0;
@@ -712,13 +720,17 @@ export default {
           return this.myFixed(row.data_value_f, 5);
           break;
         case "市电电费（元）":
-          let messagesddf = 0;
+          let messagesddff1 = 0;
+          let messagesddff2 = 0;
           this.tableData.t_monthly_bill_list.forEach((item, index) => {
-            if (item.data_type == "自发自用电量（kWh）" || item.data_type == "市电单价（元/kWh）") {
-              messagesddf += Number(item.data_value_f);
+            if (item.data_type == "自发自用电量（kWh）") {
+              messagesddff1 = Number(item.data_value_f);
+            }
+            if (item.data_type == "市电单价（元/kWh）") {
+              messagesddff2 = Number(item.data_value_f);
             }
           });
-          return (row.data_value_f = this.myFixed(messagesddf, 2));
+          return (row.data_value_f = this.myFixed(messagesddff1 * messagesddff2, 2));
           break;
         case "协议单价（元/kWh）":
           // let messagexydf = 0;
@@ -772,13 +784,17 @@ export default {
           return this.myFixed(row.data_value_p, 5);
           break;
         case "市电电费（元）":
-          let messagesddf = 0;
+          let messagesddfp1 = 0;
+          let messagesddfp2 = 0;
           this.tableData.t_monthly_bill_list.forEach((item, index) => {
-            if (item.data_type == "自发自用电量（kWh）" || item.data_type == "市电单价（元/kWh）") {
-              messagesddf += Number(item.data_value_p);
+            if (item.data_type == "自发自用电量（kWh）") {
+              messagesddfp1 = Number(item.data_value_p);
+            }
+            if (item.data_type == "市电单价（元/kWh）") {
+              messagesddfp2 = Number(item.data_value_p);
             }
           });
-          return (row.data_value_p = this.myFixed(messagesddf, 2));
+          return (row.data_value_p = this.myFixed(messagesddfp1 * messagesddfp2, 2));
           break;
         case "协议单价（元/kWh）":
           // let messagexydf = 0;
@@ -832,13 +848,17 @@ export default {
           return this.myFixed(row.data_value_g, 5);
           break;
         case "市电电费（元）":
-          let messagesddf = 0;
+          let messagesddfg1 = 0;
+          let messagesddfg2 = 0;
           this.tableData.t_monthly_bill_list.forEach((item, index) => {
-            if (item.data_type == "自发自用电量（kWh）" || item.data_type == "市电单价（元/kWh）") {
-              messagesddf += Number(item.data_value_g);
+            if (item.data_type == "自发自用电量（kWh）") {
+              messagesddfg1 = Number(item.data_value_g);
+            }
+            if (item.data_type == "市电单价（元/kWh）") {
+              messagesddfg2 = Number(item.data_value_g);
             }
           });
-          return (row.data_value_g = this.myFixed(messagesddf, 2));
+          return (row.data_value_g = this.myFixed(messagesddfg1 * messagesddfg2, 2));
           break;
         case "协议单价（元/kWh）":
           // let messagexydf = 0;
@@ -900,6 +920,7 @@ export default {
               messagesddj2 = Number(item.data_value_all);
             }
           });
+          console.log(messagesddj1, messagesddj2);
           messagesddj3 = messagesddj2 / messagesddj1 == "Infinity" || isNaN(messagesddj2 / messagesddj1) ? 0 : messagesddj2 / messagesddj1;
 
           return (row.data_value_all = this.myFixed(messagesddj3, 5));

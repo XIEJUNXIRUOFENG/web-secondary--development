@@ -1,0 +1,28 @@
+{
+  "id": "f74e153f-145b-43bd-b750-98e1c685fa44",
+  "type": "bigscreen",
+  "main": "app.76647d09.js",
+  "version": "2",
+  "requirement-number": "需求编号",
+  "requirement-name": "需求名称",
+  "props": {
+    "img": "APP_0001.png",
+    "disableimg": "disabled_custom_table.png",
+    "name": "Vue版本的演示Demo",
+    "className": "className-demo",
+    "configuration": [
+      "style",
+      "data",
+      "other"
+    ],
+    "vars": [
+      "assetId",
+      "urlSelectKey",
+      "officeIdKey",
+      "assetFliterKey",
+      "deveiceIdKey",
+      "intervalTime",
+      "dataLength"
+    ]
+  }
+}

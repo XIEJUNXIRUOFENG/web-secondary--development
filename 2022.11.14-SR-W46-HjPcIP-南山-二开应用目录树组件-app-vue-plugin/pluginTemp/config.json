@@ -1,0 +1,20 @@
+{
+  "id": "0a9c2324-6168-4d25-90b7-7f2eafa18207",
+  "type": "app",
+  "main": "app.0f9158ed.js",
+  "version": "2",
+  "props": {
+    "type": "customize",
+    "img": "APP_0001.png",
+    "name": "应用二开_vue",
+    "loadStyle": 0,
+    "lib": [],
+    "css_script": [],
+    "customconf": [
+      "modelId",
+      "appVariablesName"
+    ]
+  },
+  "requirement-number": "SR-W46-HjPcIP",
+  "requirement-name": "二开应用目录树组件"
+}

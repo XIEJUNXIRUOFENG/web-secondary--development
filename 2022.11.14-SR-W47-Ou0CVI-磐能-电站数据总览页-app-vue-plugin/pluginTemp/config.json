@@ -1,0 +1,22 @@
+{
+  "id": "35963f17-b16c-4779-9c74-650f8001176a",
+  "type": "app",
+  "main": "app.c9920b0c.js",
+  "version": "2",
+  "props": {
+    "type": "customize",
+    "img": "APP_0001.png",
+    "name": "应用二开_vue",
+    "loadStyle": 0,
+    "lib": [],
+    "css_script": [],
+    "customconf": [
+      "一次接线图跳转",
+      "通讯拓补图跳转",
+      "图例跳转",
+      "view_id"
+    ]
+  },
+  "requirement-number": "SR-W47-Ou0CVI",
+  "requirement-name": " 定制电站数据页面 （磐能的总览页）"
+}

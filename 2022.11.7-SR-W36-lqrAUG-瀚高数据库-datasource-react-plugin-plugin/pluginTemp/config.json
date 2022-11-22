@@ -1,0 +1,53 @@
+{
+  "id": "8a2e0114-e65e-4d22-b0f2-r0746caf7559",
+  "type": "datasource",
+  "main": "main.b3d42942.js",
+  "version": "2",
+  "props": {
+    "logo": "starrocks.svg",
+    "logoBg": "#ffffff",
+    "sourceType": 2058,
+    "tabs": [
+      {
+        "scene": "assetData",
+        "key": "1",
+        "isCustom": true
+      },
+      {
+        "scene": "assetConfigEdit",
+        "key": "2",
+        "isCustom": true
+      },
+      {
+        "scene": "dataStructure",
+        "key": "3",
+        "isCustom": true
+      },
+      {
+        "scene": "associationDiagram",
+        "key": "4",
+        "isCustom": false
+      },
+      {
+        "scene": "blood",
+        "key": "5",
+        "isCustom": false
+      },
+      {
+        "scene": "relatedAnalyzer",
+        "key": "6",
+        "isCustom": false
+      },
+      {
+        "scene": "qualityInspection",
+        "key": "qualityInspection",
+        "isCustom": false
+      },
+      {
+        "scene": "authoritySetting",
+        "key": "7",
+        "isCustom": false
+      }
+    ]
+  }
+}
