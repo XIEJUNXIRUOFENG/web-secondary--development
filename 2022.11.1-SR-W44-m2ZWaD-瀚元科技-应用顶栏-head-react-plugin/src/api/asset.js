@@ -4,8 +4,8 @@ import request from "./request";
  * 查询资产
  * @param id 资产ID
  */
-export const queryAssetById = (id) =>
-  request.post(`/asset/getAssetData?asset_id=${id}`, []);
+export const queryAssetById = (id, timeData = '') =>
+  request.post(`/asset/getAssetData?asset_id=${id}`, {});
 export const logout = (id) => request.get(`/system/authority/logout`);
 export const getMenuData = (appId, menuId) =>
   request.get(
@@ -16,3 +16,5 @@ export const queryApplyInfoList = (id, params) =>
 export const externalConfirm = (id, agree) =>
   request.get(`external/confirm?id=${id}&agree=${agree}`);
 export const setRead = (id) => request.get(`sysInfo/read?id=${id}`);
+
+export const userQuery = () => request.get(`system/authority/user`);

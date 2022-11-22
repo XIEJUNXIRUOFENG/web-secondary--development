@@ -19,6 +19,7 @@ const utils = {
       });
       tableData.push(temp);
     });
+
     return tableData;
   },
   /**
@@ -73,7 +74,7 @@ const utils = {
       let display = getStyles(node).getPropertyValue('display'),
         tagName = node.nodeName.toLowerCase();
       if (display != 'none'
-          && tagName != 'body') {
+        && tagName != 'body') {
         getNoneNode(node.parentNode);
       } else {
         noneNodes.push(node);
@@ -134,7 +135,7 @@ const utils = {
     if (
       element.style &&
       ((element.style.display && element.style.display == "none") ||
-       (element.style.visibility && element.style.visibility == "hidden"))
+        (element.style.visibility && element.style.visibility == "hidden"))
     ) {
       return false;
     }
@@ -145,7 +146,7 @@ const utils = {
       if (
         parent.style &&
         ((parent.style.display && parent.style.display == "none") ||
-         (parent.style.visibility && parent.style.visibility == "hidden"))
+          (parent.style.visibility && parent.style.visibility == "hidden"))
       ) {
         return false;
       } else {

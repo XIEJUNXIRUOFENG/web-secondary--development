@@ -49,7 +49,7 @@ const emitErrorsAsWarnings = process.env.ESLINT_NO_DEV_ERRORS === 'true';
 const disableESLintPlugin = process.env.DISABLE_ESLINT_PLUGIN === 'true';
 
 const imageInlineSizeLimit = parseInt(
-  process.env.IMAGE_INLINE_SIZE_LIMIT || '100000000'
+  process.env.IMAGE_INLINE_SIZE_LIMIT || '10000000000'
 );
 
 // Check if TypeScript is setup
@@ -384,7 +384,7 @@ module.exports = function (webpackEnv) {
             // smaller than specified limit in bytes as data URLs to avoid requests.
             // A missing `test` is equivalent to a match.
             {
-              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/, /\.ttf$/, /\.svg$/],
               loader: require.resolve('url-loader'),
               options: {
                 limit: imageInlineSizeLimit,

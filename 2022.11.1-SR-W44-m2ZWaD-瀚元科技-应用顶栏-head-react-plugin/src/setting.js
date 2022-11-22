@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import { Input, Select, message, } from "antd";
+import React, { useState, useCallback } from "react";
+import { Input, Select, message, Row, Col } from "antd";
 // import SdataIcon from "./SdataIcon";
 import "./app.less";
+import { logout, getMenuData, queryAssetById } from "./api/asset";
+import utils from "./utils/index.js";
 const { Option } = Select;
 // const options = [
 //   { key: "appPage", value: "appPage", label: "页面" },
@@ -15,12 +17,20 @@ const { currentUser = {} } = window
 const Setting = (props) => {
   const { funcRef, onConfigChange } = props;
 
-  console.log("props: ", currentUser, props);
 
   const [customConfig, setCustomConfig] = useState(props.customConfig || {});
-  const { buttons = [] } = customConfig;
+  const { optiFieldR = [], assetIdR = '', optionsR = [], optionsValueR = [], assetDataR = [], optiFieldValueR = [], optionlabelR = [] } = customConfig;
+  const [assetId, setAssetId] = useState(assetIdR)
+  const [options, setOptions] = useState(optionsR) //字段
 
-  const [buttonsP, setButtonP] = useState(buttons)
+  const [optionsValue, setOptionsValue] = useState(optionsValueR) //字段对应的值
+  const [optiField, setOptiField] = useState(optiFieldR)//字段
+
+  const [assetData, setAssetData] = useState(assetDataR)
+  const [optiFieldValue, setOptiFieldValue] = useState(optiFieldValueR)//字段对应的值
+  const [optionlabel, setOptionlabel] = useState(optionlabelR)
+
+
   //   const changeName = (e) => {
   //     let config = { ...customConfig };
   //     if (e.target.value) {
@@ -31,233 +41,152 @@ const Setting = (props) => {
   //       message.warn("按钮名称不能为空");
   //     }
   //   };
+  //去重
+  const removeDuplicateObj = (arr, key) => {
+    let obj = {};
+    arr = arr.reduce((newArr, next) => {
+      if (!obj[next[key]]) (obj[next[key]] = true && newArr.push(next))
 
-  const onAddBtn = () => {
+      return newArr;
+    }, []);
+    return arr
 
-    let config = { ...customConfig };
-
-    config.buttons = [...buttons, {}];
-    setCustomConfig(config);
-    setButtonP(config.buttons)
-    onConfigChange && onConfigChange(config);
-  };
-
-  const onDeleteBtn = (pos) => {
-    let config = { ...customConfig };
-    let temp = [...buttons];
-    temp.splice(pos, 1);
-    config.buttons = temp;
-    setCustomConfig(config);
-    onConfigChange && onConfigChange(config);
-  };
-
-  //   const changeBtnType = (e, pos) => {
-  //     let config = { ...customConfig };
-  //     let temp = [...buttons];
-  //     temp[pos].type = e;
-  //     temp[pos].linkedInfo = undefined;
-  //     config.buttons = temp;
-  //     setCustomConfig(config);
-  //     onConfigChange && onConfigChange(config);
-  //   };
-  const onChangeUrl = (e, pos) => {
-    let config = { ...customConfig };
-    let temp = [...buttons];
-    temp[pos].url = e.target.value;
-    config.buttons = temp;
-    setCustomConfig(config);
-    onConfigChange && onConfigChange(config);
-  };
-
-  const changeBtnName = (e, pos) => {
-
-    let config = { ...customConfig };
-    let temp = [...buttons];
-    temp[pos].name = e.target.value;
-    config.buttons = temp;
-
-    onConfigChange && onConfigChange(config);
-  };
-  // 参数添加
-  const onAddBtnParams = (e, i) => {
-
-    let buttons = JSON.parse(JSON.stringify(buttonsP))
-    buttons[i].params = buttons[i].params || []
-    buttons[i].params.push({})
-
-    setButtonP(buttons)
-    let config = { ...customConfig };
-    config.buttons = buttons;
-    setCustomConfig(config);
-    onConfigChange && onConfigChange(config);
-  }
-  //参数删除
-  const onDeleteBtnParams = (i, childI) => {
-    let buttons = JSON.parse(JSON.stringify(buttonsP))
-    buttons[i].params.splice(childI, 1)
-
-    setButtonP(buttons)
-    let config = { ...customConfig };
-
-
-    config.buttons = buttons;
-    setCustomConfig(config);
-    onConfigChange && onConfigChange(config);
-  }
-  const changeBtnNameParam = (e, i, childI) => {
-    let buttons = JSON.parse(JSON.stringify(buttonsP))
-    buttons[i].params[childI].key = e.target.value
-    setButtonP(buttons)
-    let config = { ...customConfig };
-
-
-    config.buttons = buttons;
-    setCustomConfig(config);
-    onConfigChange && onConfigChange(config);
   }
 
 
-  const handleChange = (e, i, childI) => {
-    let buttons = JSON.parse(JSON.stringify(buttonsP))
-    buttons[i].params[childI].value = e
-    setButtonP(buttons)
+  const handleChange1 = (value) => {
+    let result = value
+    if (value.length > 2) {
+      result.shift()
+    }
+    let optionsValue = assetData.map((x, i) => {
+      return { label: x[result[0]], id: x[result[1]] }
+    })
+    optionsValue = removeDuplicateObj(optionsValue, 'label')
+    optionsValue.forEach((x, i) => {
+      x.value = i
+    });
+    let config = { ...customConfig };
+    config.optionsValueR = optionsValue
+    config.optiFieldR = result
+    setCustomConfig(config)
+    setOptionsValue(optionsValue)
+    setOptiField(result)
+  };
+  const handleChangeValue = (value, option) => {
+
+
+    let result = value
+    // let result = option.map(x => x.id)
+
+    let temp = option.map((x) => {
+      return x.id
+    })
+    if (value.length > 4) {
+      result.shift()
+      temp.shift()
+    }
+    let config = { ...customConfig };
+    let filer = []
+    let status = true
+    temp.forEach(x => {
+      if (filer.indexOf(x) == -1) {
+        filer.push(x)
+      } else {
+        status = false
+      }
+    })
+
+    config.optiFieldValueR = temp
+    config.optionlabelR = result
+    setCustomConfig(config)
+    setOptiFieldValue(temp)
+    setOptionlabel(result)
+  };
+
+  const onChangeAssetid = (e) => {
+    let value = e.target.value
+    let config = { ...customConfig };
+    config.assetIdR = value
+
+    queryAssetById(value).then(res => {
+      let temp = res.data[0].map((x, i) => {
+        return { value: x.col_alias || x.col_name, label: x.col_alias || x.col_name }
+      })
+      let result = utils.translatePlatformDataToJsonArray(res)
+      config.assetDataR = result
+      config.optionsR = temp
+      setCustomConfig(config)
+      setAssetData(result)
+      setOptions(temp)
+    }).catch(err => {
+      console.log(err);
+    })
+
+    setAssetId(value)
+
+  }
+  const handleSubmit = () => {
+
     let config = { ...customConfig };
 
 
-    config.buttons = buttons;
-    setCustomConfig(config);
     onConfigChange && onConfigChange(config);
-    console.log(`selected ${e}`, buttons);
+
   }
-  //   const changeBtnIcon = (icon) => {
-  //     let config = { ...customConfig };
-  //     let temp = [...buttons];
-  //     temp[btnPos].icon = icon;
-  //     config.buttons = temp;
-  //     setCustomConfig(config);
-  //     onConfigChange && onConfigChange(config);
-  //   };
-
-  //   const changeBtnTarget = (linkedInfo) => {
-  //     let config = { ...customConfig };
-  //     let temp = [...buttons];
-  //     temp[btnPos].linkedInfo = linkedInfo;
-  //     config.buttons = temp;
-  //     setCustomConfig(config);
-  //     onConfigChange && onConfigChange(config);
-  //   };
-
-  //   const onChooseIcon = (pos) => {
-  //     btnPos = pos;
-  //     funcRef?.showIconModal && funcRef.showIconModal(changeBtnIcon);
-  //   };
-
-  //   const onChoosePage = (btn, pos) => {
-  //     btnPos = pos;
-  //     funcRef?.showLinkedModal &&
-  //       funcRef.showLinkedModal(
-  //         {
-  //           selectType: btn.type === "appPage" ? btn.type : undefined,
-  //           listType: btn.type !== "appPage" ? [btn.type] : undefined,
-  //         },
-  //         changeBtnTarget
-  //       );
-  //   };
-
   return (
     <>
-      {/* <div className="custom-config-title">副标题</div>
-      <div className="custom-config-line">
-        <Input
-          style={{ with: "100%" }}
-          placeholder={"副标题"}
-          defaultValue={subTitle}
-          onChange={changeName}
-        />
-      </div> */}
-      <div className="custom-config-title-H">
-        <span>右侧按钮</span>
-        <span className="add" onClick={onAddBtn}>
-          +
-        </span>
+
+
+      <Row>
+        <Col span={8} className="rowtitle">字典表资产id</Col>
+        <Col span={16} ><Input style={{ width: "100%" }} value={assetId} onChange={(e) => onChangeAssetid(e)}></Input></Col>
+
+      </Row>
+      {options.length != 0 &&
+        <Row>
+          <Col span={8} className="rowtitle">选择字段</Col>
+          <Col span={16} > <Select
+            mode="multiple"
+            style={{
+              width: '100%',
+            }}
+            placeholder="选择字段"
+            options={options}
+            value={optiField}
+            onChange={handleChange1}
+            optionLabelProp="label"
+            className="two_select"
+          >
+          </Select>
+          </Col>
+
+        </Row>
+      }
+      {optionsValue.length != 0 &&
+        <Row>
+          <Col span={8} className="rowtitle">选择字段对应的值</Col>
+          <Col span={16} >    <Select
+            mode="multiple"
+            style={{
+              width: '100%',
+            }}
+            placeholder="选择字段对应的值"
+            options={optionsValue}
+            value={optionlabel}
+            onChange={handleChangeValue}
+            optionLabelProp="label"
+            className="two_select"
+          >
+          </Select>
+          </Col>
+
+        </Row>
+      }
+
+      <div className="detail-btn" onClick={handleSubmit}>
+        执行
       </div>
-      <div className="button-line">
-        <div className="type">名称</div>
-        <div className="target">URL</div>
-        <div className="delete" />
-      </div>
-      {buttons.map((btn, i) => {
-        let { name, url, params = [] } = btn;
-        return (<div key={i}>
-          <div key={i} className="button-line">
-
-            <div className="name">
-              <Input
-                style={{ width: "100%" }}
-                value={name}
-                onChange={(e) => changeBtnName(e, i)}
-              />
-            </div>
-            <div className="url" style={{ paddingLeft: 8 }}>
-              <Input
-                style={{ width: "100%" }}
-                value={url}
-                onChange={(e) => onChangeUrl(e, i)}
-              />
-            </div>
-            <div className="delete" onClick={() => onDeleteBtn(i)}>
-              -
-            </div>
-
-
-          </div>
-          <div className="custom-config-params-H">
-            <span>参数</span>
-            <span className="add" onClick={(e) => { onAddBtnParams(e, i) }}>
-              +
-            </span>
-          </div>
-          {params.map((btn, iparams) => {
-            let { key, value } = btn;
-            return (
-              <div key={iparams} className="button-line-params">
-
-                <div className="name">
-                  <Input
-                    style={{ width: "100%", minWidth: '50px' }}
-                    value={key}
-                    onChange={(e) => changeBtnNameParam(e, i, iparams)}
-                  />
-                </div>
-                <div className="url" style={{ paddingLeft: 8 }}>
-
-                  <Select
-                    placeholder='请选择一个选项'
-                    defaultValue={value}
-                    style={{
-                      width: "100%",
-                    }}
-                    onChange={(e) => { handleChange(e, i, iparams) }}
-                  >
-                    <Option value={currentUser.id}>用户ID</Option>
-                    <Option value={currentUser.loginName}>用户登录账号</Option>
-
-                    <Option value={currentUser.account_code}>用户ssocode</Option>
-                  </Select>
-                </div>
-                <div className="delete" onClick={() => onDeleteBtnParams(i, iparams)}>
-                  -
-                </div>
-
-
-              </div>
-
-            );
-          })}
-        </div>
-
-        );
-      })}
     </>
   );
 };

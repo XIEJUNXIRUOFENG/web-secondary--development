@@ -15,10 +15,14 @@ if (process.env.NODE_ENV !== "production") {
     account_code: '1234567890', id: '1234567890id', loginName: "admin"
   }
   const a = [
-    { label: '首页', pid: '61bb5d5b-7f41-a0e5-3f14-4152bb7c9f5f', },
-    { label: '第二页面', pid: 'dsada2', children: [{ label: '子级2', pid: '1ddd' }] },
-    { label: '第三页面', pid: 'dsada3', children: [{ label: '子级3', pid: '3ddd' }] },
-    { label: '第四页面', pid: 'dsada4', children: [{ label: '子级4', url: '4ddd' }] },
+    { label: '首页', pid: '13fa289a-d46c-31e4-6da2-af2410e68c6f', },
+    { label: '空中管理', pid: 'dsada2', children: [{ label: '子级2', pid: 'f685d8eb-e780-6674-55cc-2c97b56ce548', key: 'id1' }] },
+    { label: '无人机巡检', pid: 'dsada3', children: [{ label: '子级3', pid: '7c9e0b84-acfa-ddc3-58fd-30e7be986893' }] },
+    { label: '低空防御监视', pid: 'dsada4', children: [{ label: '子级4', url: '6c1b89ee-07f1-d73e-acc4-7267cab4a01b' }] },
+    { label: '态势感知', pid: 'dsada4', children: [{ label: '子级4', url: 'a0fb1ff5-cfa5-7b8e-d22d-086f4803abee' }] },
+    { label: '统计分析', pid: 'dsada4', children: [{ label: '子级4', url: 'af4b6b03-4086-3c80-2483-e6cf0aa022be' }] },
+    { label: '基础数据', pid: 'dsada4', children: [{ label: '子级4', url: 'b68bf656-307b-119c-1549-4eeeb0a7b160' }] },
+    { label: '第四页面', pid: 'dsada4', children: [{ label: '子级4', url: '8d0a05ef-294e-7124-0585-95b3263653da' }] },
   ]
   let props = {
     title: "变电站(换流站)无人机运防一体系统",
@@ -26,17 +30,25 @@ if (process.env.NODE_ENV !== "production") {
     mainHeight: null,
     menuData: JSON.stringify(a),
     appId: '',
-    regionAsset: '33b93646-868b-4ffc-a249-e766b5af9be8',
-    alarmAsset: '0cda0b85-ddf3-42eb-9180-3d08d947b628',
+    regionAsset: '9c54500a-b7f4-0f80-c01b-ca1c4af8b660',
+    alarmAsset: '334b2d43-7a37-c173-fc8a-962d64ffafe2',
+    substationAsset: 'ea7c9900-0652-a5a0-2f11-194074ec2957',
     alarmUrl: '',
-    alarmUrl: '', time: '1'
+    alarmField: 'alarm_level', time: '60'
   };
   let isConfig = '';
-  ReactDOM.render(<App {...props} />, document.getElementById("root"));
+  ReactDOM.render(<App {...props} isConfig={isConfig} />, document.getElementById("root"));
 } else {
   if (!window.CUSTOM_PLUGIN) {
     window.CUSTOM_PLUGIN = new Map();
   }
+
+
+
+
+
+
+
 
   window.CUSTOM_PLUGIN.set(process.env.CUSTOM_PLUGIN_ID, (dom, props) => {
     console.log(props, '====8080');

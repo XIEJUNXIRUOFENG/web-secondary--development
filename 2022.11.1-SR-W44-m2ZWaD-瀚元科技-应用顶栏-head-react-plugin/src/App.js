@@ -14,7 +14,7 @@ import {
   // LaptopOutlined,
   DownOutlined, MailOutlined, AppstoreOutlined
 } from "@ant-design/icons";
-import { logout, getMenuData, queryAssetById } from "./api/asset";
+import { logout, getMenuData, queryAssetById, userQuery } from "./api/asset";
 // import appService from "@njsdata/app-sdk";
 import head from "./assets/headbg.png";
 import user from "./assets/user.png";
@@ -24,11 +24,11 @@ const { Search } = Input;
 // const { Link } = Anchor;
 const appid = qs.parse(window.location.search).appid;
 const regionalAssets = []
-
+// const office_name = window.currentUser?.office_name || '全国'
 const logoutSystem = () => {
   logout()
     .then((res) => {
-      console.log("res", res);
+
       if (res.status === 200) {
         if (res.data) {
           console.log("res.data", res.data);
@@ -48,27 +48,7 @@ const logoutSystem = () => {
 const menu2 = (
   <Menu
     items={[
-      // {
-      //   key: "1",
-      //   label: (
-      //     <span
-      //       onClick={() => {
-      //         window.history.push(
-      //           `/applicationview/personalcenter?appid=${
-      //             qs.parse(window.location.search).appid
-      //           }&type=view&menuId=${qs.parse(window.location.search).menuId}${
-      //             qs.parse(window.location.search).pId
-      //               ? "&pId=" + qs.parse(window.location.search).pId
-      //               : ""
-      //           }`
-      //         );
-      //         window.location.reload();
-      //       }}
-      //     >
-      //       个人中心
-      //     </span>
-      //   ),
-      // },
+
       {
         key: "2",
         label: <span onClick={logoutSystem}>退出登录</span>,
@@ -80,10 +60,11 @@ const menu2 = (
 // const menu3 = <ApplicationNotice styleStore={{}} />;
 /*!TODO:1.菜单接口；2.站内信接口；3.主题改变方法 ；4.用户信息；*/
 export default class App extends Component {
-  async componentDidMount() {
-    let { menuData = '[]', alarmAsset = '0cda0b85-ddf3-42eb-9180-3d08d947b628', regionAsset = '33b93646-868b-4ffc-a249-e766b5af9be8', time = 3 } = this.props;
 
-    console.log(menuData, '====');
+  async componentDidMount() {
+    let { menuData = '[]', alarmAsset = '0cda0b85-ddf3-42eb-9180-3d08d947b628', substationAsset = 'f54a257e-cb84-40d1-8d35-683e73284532', regionAsset = '33b93646-868b-4ffc-a249-e766b5af9be8', time = 60 } = this.props;
+
+
     // const { data } = await getMenuData(appId, menuId);
     // let buttons = data?.menuAndButton?.datappMenus;
     // let menuid = qs.parse(window.location.search)?.menuId;
@@ -134,111 +115,107 @@ export default class App extends Component {
           actions,
         }
       );
+    let { data } = await this.userHanfler()
+    let office_name = data.office_name
+    this.setState({ office_name })
+
     menuData = JSON.parse(menuData)
     menuData.forEach((x, i) => {
-      x.className = 'handerMenu2'
+      x.className = 'handerMenu2  handMenu' + i
+      x.popupClassName = 'handerMenuChirend' + i
       x.key = 'menu' + i
+      x.children && x.children.forEach((item, inx) => {
+        item.key = x.key + 'item' + inx
+      })
       x.onTitleClick = this.onClick
+      x.popupOffset = [-22, 5]
     })
+    let parName = office_name == '全国' ? '中国' : office_name
     this.setState({
-      menuData
+      menuData, regionValue: office_name
+    })
+    this.metaButton.current?.addEventListener("wheel", this.wrapperWheel.bind(this));
+
+    let res = await queryAssetById(regionAsset) //区域
+
+    let datar = utils.translatePlatformDataToJsonArray(res)
+    let tempQy = datar.find((x, i) => {
+      return x.province_name == parName || x.city_name == parName || x.nation == parName
+    })
+    let tempZd
+
+    let res1 = await queryAssetById(substationAsset) //站点
+    let datas = utils.translatePlatformDataToJsonArray(res1)
+    tempZd = datas.find((x, i) => {
+      return x.substation_name == parName
     })
 
 
-    queryAssetById(regionAsset).then(res => {
+    this.flatHandler(datar, office_name).then(res => {
 
-      let data = utils.translatePlatformDataToJsonArray(res)
-      let tree = this.GetTreeData(data)
-      this.setState({
-        treeData: tree
-      })
+      let tree = this.translateDataToTree(res)
 
-    }).catch(err => {
 
-    })
 
-    queryAssetById(alarmAsset).then(res => {
 
-      let data = utils.translatePlatformDataToJsonArray(res)
 
-      let a = {}
-      let b = []
-      data.forEach(x => {
-        let key = x.type
-        if (a[key]) {
-          a[key]++
-        } else {
-          a[key] = 1
-        }
-      })
-      let temp = { 紧急: 0, 高: 0, 中: 0, 低: 0 }
-      for (const key in temp) {
-        for (const keya in a) {
-          if (keya == key) {
-            temp[key] = a[keya]
-
-          }
-        }
-
-      }
-      let i = 0
-      for (let key in temp) {
-        // b[i] = [Number(a[key].toFixed(2)), key]
-        b[i] = { type: key, num: temp[key] }
-
-        i++
+      let statusList
+      if (tempZd) {
+        statusList = tempZd.substation_no
+      } else {
+        statusList = this.childHanfler(tree)
+        statusList.forEach((x, i) => {
+          x = x.substr(0, x.length - 1)
+          statusList[i] = x
+        })
       }
 
-      this.setState({
-        warningAlter: b
-      })
 
-    }).catch(err => {
+      this.setState({
+        treeData: tree, statusList, regionFiled: parName
+      }, () => {
+        this.queryAlterFn()
+        let time1 = setInterval(() => {
+          this.queryAlterFn()
+        }, time * 1000)
+        this.setState({ tiemObj: time1 })
+      })
 
     })
 
-    let time1 = setInterval(() => {
-      queryAssetById(alarmAsset).then(res => {
+    if (parName != '中国') {
 
-        let data = utils.translatePlatformDataToJsonArray(res)
+      let syid = tempQy?.province_id
+      let city = tempQy?.city_name == parName && tempQy?.city_name != tempQy?.province_name ? tempQy?.city_id : ''
+      let substation = tempZd?.substation_name == parName ? tempZd?.substation_no : ''
 
-        let a = {}
-        let b = []
-        data.forEach(x => {
-          let key = x.type
-          if (a[key]) {
-            a[key]++
-          } else {
-            a[key] = 1
-          }
-        })
-        let temp = { 紧急: 0, 高: 0, 中: 0, 低: 0 }
-        for (const key in temp) {
-          for (const keya in a) {
-            if (keya == key) {
-              temp[key] = a[keya]
 
-            }
-          }
+      this.setState({ officeno: syid, city, substation },)
+      const { changeAppVariables = '', appVarKey = 'province_id|city_id|substation_no|test' } = this.props
+      let AppVariables = {}
+      let appArr = appVarKey.split('|')
+      AppVariables[appArr[0]] = syid || tempZd?.province
+      AppVariables[appArr[1]] = city || tempZd?.city
+      AppVariables[appArr[2]] = substation
+      let temp = {}
+      temp[appArr[0]] = syid || tempZd?.province
+      temp[appArr[1]] = city || tempZd?.city
+      temp[appArr[2]] = substation
+      if (appArr[3]) {
+        AppVariables[appArr[3]] = JSON.stringify(temp)
 
-        }
-        let i = 0
-        for (let key in temp) {
-          // b[i] = [Number(a[key].toFixed(2)), key]
-          b[i] = { type: key, num: temp[key] }
+      }
 
-          i++
-        }
 
-        this.setState({
-          warningAlter: b
-        })
+      changeAppVariables && changeAppVariables(AppVariables)
+    }
 
-      }).catch(err => {
 
-      })
-    }, time * 1000)
-    this.setState({ tiemObj: time1 })
+
+
+
+    // this.queryAlterFn()
+
     // let ulitem = document.querySelectorAll('ul.ant-menu-vertical')
 
     // ulitem.forEach(x => {
@@ -260,27 +237,208 @@ export default class App extends Component {
   do_EventCenter_setValue = ({ value }) => {
     console.log(value, '====设值');
   }
+  //获取最后一级的id
+  childHanfler(tree, arr = []) {
+
+    tree.map((x, i) => {
+
+      if (x.children) {
+
+        this.childHanfler(x.children, arr)
+      } else {
+        if (!x.statu) {
+          arr.push(x.id)
+        }
+      }
+    })
+    return arr
+
+  }
+  wrapperWheel(e) {
+    e.preventDefault();
+
+    // if (e.target.className == 'timeline-item-info' || e.target.className == 'timeline-item-scroll') {
+
+    //   e.target.addEventListener("wheel", this.contentWheel);
+    // }
+    // if (e.target.className == 'analyzer-timeline') {
+    this.metaButton.current.scrollLeft += e.deltaY * 3 + e.deltaX * 3;
+
+    // }
+  };
+
+
+  queryAlterFn() {
+
+
+    let { alarmAsset = '0cda0b85-ddf3-42eb-9180-3d08d947b628', alarmField = 'type3', areaFiled = 'substation_no' } = this.props;
+    let { regionFiled, statusList } = this.state
+    let dateT = new Date().getTime()
+
+    queryAssetById(alarmAsset, dateT).then(res => {
+      // let parName = regionFiled == '全国' ? '中国' : regionFiled
+      let data = utils.translatePlatformDataToJsonArray(res)
+
+      if (regionFiled != '全国') {
+        let temp = []
+        statusList.forEach(item => {
+          data.forEach(x => {
+
+            if (x[areaFiled] == item && x.clear_time == null) temp.push(x)
+          })
+
+        })
+
+        data = temp
+
+      }
+
+
+      const arrOptions = this.props.optiFieldValueR || ['1', '2', '3', '4']
+      let a = {}
+      let b = []
+
+      data.forEach(x => {
+        let key = x[alarmField]
+
+        if (a[key]) {
+          a[key]++
+        } else {
+          a[key] = 1
+        }
+      })
+
+
+      let temp = [{ 紧急: 0, }, { 高: 0, }, { 中: 0, }, { 低: 0 }]
+      temp.forEach((x, i) => {
+        x.type = arrOptions[i]
+        x.value = 0
+      })
+
+      // console.log(a, '===s');
+      temp.forEach((x, i) => {
+        for (const keya in a) {
+
+          if (keya == x.type) {
+            x.value = a[keya] > 99 ? '99+' : a[keya]
+
+          }
+        }
+      })
+
+
+
+      // let i = 0
+      // for (let key in temp) {
+      //   // b[i] = [Number(a[key].toFixed(2)), key]
+      //   b[i] = { type: arrOptions[i], num: temp[key] }
+
+      //   i++
+      // }
+
+      this.setState({
+        warningAlter: temp
+      })
+
+    }).catch(err => {
+
+    })
+  }
 
   componentWillUnmount() {
     clearInterval(this.state.tiemObj)
+    this.metaButton.current?.removeEventListener("wheel", this.wrapperWheel.bind(this));
     this.setState({
       tiemObj: null
     })
   }
+  metaButton = React.createRef();
   state = {
     selectButton: "",
     buttons: [],
     counting: 0,
-    current: 'SubMenu', menuData: [], treeData: [], warningAlter: [], regionValue: '全国', tiemObj: null
+    current: 'SubMenu', clickStatus: false, officeno: null, statusList: [], office_name: '全国', ctiy: '', substation: '',
+    menuData: [], treeData: [], warningAlter: [], regionValue: '全国', tiemObj: null, regionFiled: '全国'
   };
+  //将城市结构的数据转成扁平数据
+  flatHandler = async (data, office_name) => {
+    const { substationAsset } = this.props
+    let parName = office_name == '全国' ? '中国' : office_name
+
+    let provinceArr = []
+    let cityArr = []
+    let countryArr = []
+    data.forEach((x, i) => {
+
+      if (x.nation == parName || x.province_name == parName || x.city_name == parName || x.country_name == parName || x.nation == '全国') {
+        let strL = String(x.city_id).length
+        let strl = String(x.country_id).length
+        let proBoolean = true
+        let cityBoolean = true
+        provinceArr.forEach((pr,) => {
+
+          proBoolean = !(pr.id == x.province_id)
+        })
+
+
+        if (proBoolean && (x.province_name == parName || office_name == '全国')) provinceArr.push({ id: String(x.province_id), name: x.province_name, parentid: null, statu: true })
+        cityArr.forEach((cit, i) => {
+          cityBoolean = !(cit.id == x.city_id)
+        })
+        let nameId = x.province_name == parName || office_name == '全国' ? String(x.city_id).substr(0, strL - 2) : null
+        if (cityBoolean && x.city_name && x.city_name != x.province_name) cityArr.push({ id: String(x.city_id), name: x.city_name, parentid: nameId, statu: true })
+        if (x.country_name) countryArr.push({ id: String(x.country_id), name: x.country_name, parentid: String(x.country_id).substr(0, strl - 2) })
+      }
+
+
+    })
+
+    let res = await queryAssetById(substationAsset);
+
+    let zhandian = utils.translatePlatformDataToJsonArray(res)
+
+    let zuidiji = []
+    zhandian.forEach((x, i) => {
+      zuidiji.push({ id: x.substation_no + 'x', name: x.substation_name, parentid: String(x.city) })
+    })
+
+    return [...cityArr, ...zuidiji, ...provinceArr]
+  }
+
+
+  translateDataToTree(data) {
+    let parents = data.filter(value => value.parentid == 'undefined' || value.parentid == null)
+    let children = data.filter(value => value.parentid !== 'undefined' && value.parentid != null)
+
+    let translator = (parents, children) => {
+
+      parents.forEach((parent) => {
+        children.forEach((current, index) => {
+          if (current.parentid === parent.id) {
+            let temp = JSON.parse(JSON.stringify(children))
+            temp.splice(index, 1)
+            translator([current], temp)
+            typeof parent.children !== 'undefined' ? parent.children.push(current) : parent.children = [current]
+          }
+        }
+        )
+      }
+      )
+    }
+
+    translator(parents, children)
+
+    return parents
+  }
   GetTreeData = (data) => {
     let TreeData = [];
     let map = new Map(); //存在id,对应所在的内存地址
     let outputObj, parentid;
     for (let i = 0; i < data.length; i++) {
       parentid = data[i].parentid;
-
+      // console.log(map, '======1');
       if (map.has(parentid)) {
+
         //存在，将些信息，加入到对应id=pid的对象上的children
         if (!map.get(parentid).childrens)
           map.get(parentid).childrens = [];
@@ -289,13 +447,15 @@ export default class App extends Component {
         //通过pid在Map中查找，并将当前对象，加入到对应的childres属性
         map.set(data[i].id, obj);
         //重点(必须也加入Map)：将当前id及对应的对象，存入Map对象中
-      } else if (!map.has(parentid) && (parentid == 0 || parentid == null)) {
+      } else if (!map.has(parentid) && (parentid == 0 || parentid == null || parentid == undefined)) {
         //这里处理pid不存在，且pid 为0的处理，pid不存在，且不为0的，程序不考虑这种情况
         outputObj = new Object(data[i]);
+
         //加入到要返回的数组中
         TreeData.push(outputObj);
         //将id添加到Map中
         map.set(data[i].id, outputObj);
+
 
       }
     }
@@ -316,6 +476,10 @@ export default class App extends Component {
 
     window.open(workbenchUrl);
   };
+  userHanfler = async () => {
+    let res = await userQuery()
+    return res
+  }
   /*
    * url 目标url
    * arg 需要替换的参数名称
@@ -366,16 +530,64 @@ export default class App extends Component {
       }, 3000);
     }
   }
+  //区域选择
   onChangeC = (_, arrsel) => {
-    // console.log(_, arrsel);
-    const { changeAppVariables } = this.props
+
+    const { changeAppVariables, appVarKey = 'province_id|city_id|substation_no|test', } = this.props
+    const { officeno, city } = this.state
     let leng = arrsel.length
+    let regionFiled = _.length == 3 ? _[leng - 1].replace('x', '') : _[leng - 1]
     let regionValue = arrsel[leng - 1].name
-    this.setState({ regionValue })
-    changeAppVariables && changeAppVariables({
-      name: _,
-      index: arrsel
+    let arrList = leng == 3 ? _[leng - 1].replace('x', '') : arrsel[leng - 1]
+    let statusList = []
+    if (arrList.children && arrList.statu) {
+      statusList = this.childHanfler(arrList.children)
+      statusList.forEach((x, i) => {
+        x = x.substr(0, x.length - 1)
+        statusList[i] = x
+      })
+    } else {
+      statusList = arrList.statu ? [] : [arrList]
+    }
+
+
+
+
+    this.setState({ regionValue, regionFiled: regionFiled, statusList, clickStatus: true }, () => {
+
+      this.queryAlterFn()
     })
+    let AppVariables = {}
+    let appArr = appVarKey.split('|')
+    let temp = {}
+    if (_[0].length > 2) {
+
+      AppVariables[appArr[0]] = officeno
+      temp[appArr[0]] = officeno
+      for (let i = 1; i < 3; i++) {
+        let x = appArr[i]
+        AppVariables[x] = i == 2 && _.length == 2 ? _[i - 1].substr(0, _[leng - 1].length - 1) : _[i - 1]
+        temp[x] = AppVariables[x]
+      }
+
+    } else if (appArr.length == 1) {
+
+      AppVariables[appVarKey] = _[leng - 1].substr(0, _[leng - 1].length - 1)
+      temp = JSON.stringify(AppVariables[appVarKey])
+    } else {
+
+      for (let i = 0; i < 3; i++) {
+        let x = appArr[i]
+        AppVariables[x] = i == 2 && _.length == 3 ? _[i].substr(0, _[leng - 1].length - 1) : _[i]
+        temp[x] = AppVariables[x]
+      }
+
+    }
+    if (appArr[3]) AppVariables[appArr[3]] = JSON.stringify(temp)
+    // let appOBj = leng == 3 ? [_[0], _[1], _[2].replace('x', '')] : _
+
+
+    changeAppVariables && changeAppVariables(AppVariables)
     window.eventCenter?.triggerEvent(this.props?.componentId, "valueChange", {
       value: this.props?.componentId
     })
@@ -404,20 +616,13 @@ export default class App extends Component {
       this.setState({ selectButton: item.name }, window.location.reload());
     }
   };
-  onClick = (e) => {
-    let { history } = this.props;
-    // let url = ""
-    // history.push(url) 
-    // console.log(e, '=====');
-    this.setState({
-      current: e.key
-    })
-  }
+
   itmeOnClick = ({ item, key, keyPath, domEven }) => {
-    // console.log(item, key, keyPath, 'item=====');
+
     let pid = item.props.pid
     let address = item.props.url
     let { appId, history } = this.props;
+
     if (pid) {
       let url = `applicationview/content/view?appid=${appId}&pId=${pid}`
       history.push(url)
@@ -428,22 +633,37 @@ export default class App extends Component {
 
 
 
-    if (keyPath.length == 1) {
-      this.setState({
-        current: key
-      })
-    }
+
+    this.setState({
+      current: key
+    })
+
+
 
   }
   querySel = (e) => {
+    const { menuData } = this.state
+
+    let value = e[0]
+    let index = menuData.findIndex((x, i) => {
+      return x.key == value
+    })
+    if (value) {
+      let item = document.querySelector('.handMenu' + index)
+      let obpq = document.querySelector(`.handerMenuChirend${index} .ant-menu-sub`)
+      obpq.style.minWidth = item.clientWidth + 4 + 'px'
+
+    }
 
     if (this.state.counting) return
     let ulitem = document.querySelectorAll('ul.ant-menu-vertical')
+
     ulitem.forEach(x => {
 
       x.className += ' tow_mentParent'
       x.style.border = '1px solid rgba(89, 175, 249, 0.7)'
     })
+
     this.setState({ counting: 1 })
   }
   warningClick = (type) => {
@@ -456,12 +676,41 @@ export default class App extends Component {
       window.open(`${alarmUrl}${alarmField}=${type}`)
     }
   }
+  onDropdownChange = (value) => {
+    setTimeout(() => {
+      let statusList
+      const { treeData, officeno, office_name, city, substation } = this.state
+
+
+      if (!value) {
+
+        if (!this.state.clickStatus) {
+          statusList = this.childHanfler(treeData)
+          statusList.forEach((x, i) => {
+            x = x.substr(0, x.length - 1)
+            statusList[i] = x
+          })
+
+          window.location.reload()
+
+
+          this.setState({ statusList, regionValue: office_name }, () => {
+            this.queryAlterFn()
+          })
+        }
+
+
+        this.setState({ clickStatus: false, })
+      }
+    })
+
+
+  }
   Event_Center_getName = () => {
     return "应用头部二开测试";
   }
 
   render() {
-
 
 
     // const warningAlter = [1, 2, 3, 4]
@@ -481,9 +730,9 @@ export default class App extends Component {
     } = this.props || {};
 
     const { selectButton, current, menuData, treeData, warningAlter, regionValue } = this.state;
-    // if (this.props.isConfig) {
-    //   return <Setting {...this.props} />;
-    // }
+    if (this.props.isConfig) {
+      return <Setting {...this.props} />;
+    }
     return (
       <div
         className="herder"
@@ -500,14 +749,14 @@ export default class App extends Component {
 
             <img
               alt="logo2"
-              src={require("./assets/logo2.png").default}
+              src={require("./assets/log.svg").default}
               style={{ display: "block" }}
               className="logo"
             />
             <div className="title">{title ? title : "变电站(换流站)无人机运防一体系统"}</div>
           </div>
 
-          <div className='metaButton' >
+          <div className='metaButton' ref={this.metaButton} >
 
             <div
               className="secondLine"
@@ -522,11 +771,10 @@ export default class App extends Component {
                   items={
                     menuData
                   }
-                  mode='horizontal' forceSubMenuRender={true} selectedKeys={[current]} triggerSubMenuAction='hover' onClick={(e) => { this.itmeOnClick(e) }} onOpenChange={(e) => { this.querySel(e) }}
+                  mode='horizontal' forceSubMenuRender={true} selectedKeys={[current]}
+                  triggerSubMenuAction='click' onClick={(e) => { this.itmeOnClick(e) }} onOpenChange={(e) => { this.querySel(e) }}
                 >
-                  <Menu.Item key="mail" icon={<MailOutlined />}>
-                    Navigation One
-                  </Menu.Item>
+
 
                 </Menu>
 
@@ -539,14 +787,17 @@ export default class App extends Component {
           </div>
 
           <div className="lineRight">
-            <Cascader options={treeData} popupClassName='tow_Cascader' fieldNames={{ children: 'childrens', value: 'id', label: 'name' }} className='dddd' onChange={this.onChangeC}>
-              <a href="#">{regionValue}   <DownOutlined /></a>
+            <Cascader options={treeData} popupClassName='tow_Cascader' fieldNames={{ children: 'children', value: 'id', label: 'name' }}
+              onDropdownVisibleChange={this.onDropdownChange}
+              changeOnSelect={true}
+              className='dddd' onChange={this.onChangeC}>
+              <div className='aTag'><a href="#">{regionValue}   </a><DownOutlined /></div>
             </Cascader>
 
 
             <div className='warningAlter' >
               {warningAlter.map((x, i) => {
-                return (<div className={`warningItem Item${i}`} onClick={() => { this.warningClick(x.type) }}>{x.num}</div>)
+                return (<div className={`warningItem Item${i}`} onClick={() => { this.warningClick(x.type) }}>{x.value}</div>)
               })
 
               }
@@ -576,7 +827,7 @@ export default class App extends Component {
                     color: '#fff'
                   }}
                 >
-                  {window?.currentUser?.office_name || "默认"}
+                  {window?.currentUser?.loginName || "默认"}
                   <DownOutlined />
                 </span>
               </Dropdown>
