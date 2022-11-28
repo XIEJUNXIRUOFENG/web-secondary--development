@@ -7,6 +7,10 @@ import {
   themeInfo
 }
   from "@/components/mockData.js";
+// import Antd from 'ant-design-vue'
+// import 'ant-design-vue/dist/antd.css'
+// Vue.use(Antd);
+
 import './index.css'
 if (process.env.NODE_ENV !== "production") {
   window.eventCenter = {

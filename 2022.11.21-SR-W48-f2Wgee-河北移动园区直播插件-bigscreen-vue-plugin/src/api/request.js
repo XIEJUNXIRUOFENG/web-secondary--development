@@ -4,19 +4,16 @@ import qs from "querystringify";
 let apiContextPath = "";
 if (process.env.NODE_ENV === "development") {
   document.cookie =
-    "token=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY2OTI5NzkzNDEwMSwidXNlcklkIjoiMTIzNDU2Nzg5MCJ9.k6-y5RzeB14WDPYhXy4ERZwYZH-pvp1AYRR4iHiPbXk";
-  // "token=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY2OTAxNzk4ODE2NywidXNlcklkIjoiMTIzNDU2Nzg5MCJ9.JQ9RzoTE5AIyeG4voNbUBTQRsEuaxp8ybVPhBhr7fvE";
+    "token=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY2OTI3MzkyMTI2OSwidXNlcklkIjoiMTIzNDU2Nzg5MCJ9.Q8f9G-cm9Kgl-R0CN1Gx7QPvGR-wq6zI98T3bFLd0Ew";
   document.cookie =
-    "refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY2OTI5NzkzNDEwM30.D5vszpoZh5yv7mWSXelr8IhP93jPZpIBqDvM5NxRvag";
-  // "refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY2OTAxNzk4ODE3MX0.akPb_rfnaLBeFaJCxyk4AXcXdzkR1xXgpISmkm9KJbE";
+    "eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY2OTIwMDIxNjYyMn0.jVLoi8WFb3-UHAi86VHlUUAAmJ8btS0emFxp7x8lMSU";
   document.cookie = "username=admin";
   document.cookie = "windowOnline=true";
   apiContextPath = "/api";
 }
-let a = '/dtyq/pngf/'
-const prefix = window.apiContextPathPrefix ? (window.apiContextPathPrefix + "/") : ""
+
 const instance = axios.create({
-  baseURL: `${apiContextPath}/dtyq/pngf/sdata/rest`,
+  baseURL: `${apiContextPath}/sdata/rest`,
   timeout: 60000,
   validateStatus: function (status) {
     return status >= 200 && status < 300; // default

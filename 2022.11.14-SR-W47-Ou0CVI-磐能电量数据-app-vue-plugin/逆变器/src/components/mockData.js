@@ -210,7 +210,8 @@ export const customConfig = {
         value: "基层六队"
       }
     ]
-  })
+  }),
+
 };
-export const appVariables=[];
+export const appVariables = [];
 

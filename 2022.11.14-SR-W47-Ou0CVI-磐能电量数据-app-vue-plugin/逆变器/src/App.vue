@@ -3,22 +3,22 @@
   <div :id="id" style="width: 100%;height: 100%" :ref="id">
     <div class="inverter">
       <div class="inverter_information">
-        <el-descriptions :column="4" labelClassName="information_title" contentClassName="information_content">
+        <el-descriptions :column="3" labelClassName="information_title" contentClassName="information_content">
           <el-descriptions-item label="逆变器名称">{{ equipmentInfo.name }}</el-descriptions-item>
           <el-descriptions-item label="设备厂家">{{ equipmentInfo.equipment_name }}</el-descriptions-item>
           <el-descriptions-item label="设备型号">{{ equipmentInfo.equipment_model }}</el-descriptions-item>
           <el-descriptions-item label="SN号">{{ equipmentInfo.equipment_pid }} </el-descriptions-item>
-          <el-descriptions-item label="通讯地址码">{{ equipmentInfo.communication_address_code }}</el-descriptions-item>
-          <el-descriptions-item label="逆变器类型">{{ equipmentInfo.nbqll }}</el-descriptions-item>
+
           <el-descriptions-item label="PV接入数量">{{ equipmentInfo.pvjrsl }}</el-descriptions-item>
-          <el-descriptions-item label="接入容量（kWp）">{{ equipmentInfo.machine_volume }}</el-descriptions-item>
+          <el-descriptions-item label="接入容量">{{ Number(equipmentInfo.machine_volume).toFixed(2) }}kWp
+          </el-descriptions-item>
 
         </el-descriptions>
 
       </div>
       <div class="inverter_card">
 
-        <el-card class="box-card" v-for="(x, i) in detailInfoAll" :key="i">
+        <el-card class="box-card" v-for="(x, i) in detailInfoAll" :key="i" :lazy="true">
           <div class="box_item">
             <div class="clire_pin"><img :src="require(`./img/形状${i + 1}.png`)" alt="" srcset="" width="19" height="22">
             </div>
@@ -34,16 +34,16 @@
               </div>
               <div class="descri_btm">
                 <div class="descri_top_item">
-                  <span class="descri_btm1">{{ x.tt ? Number((detail_info[x.filed] / 10000)).toFixed(2) :
-                      detail_info[x.filed]
-                  }}</span><span class="descri_btm3">{{ x.unit
-}}</span>
+                  <span class="descri_btm1">{{ x.tt ? Number((detail_info[x.filed] / 10000) || 0).toFixed(x.fixed || 2)
+                      :
+                      Number(detail_info[x.filed] || 0).toFixed(x.fixed || 2)
+                  }}</span> <span class="descri_btm3">{{ x.unit }}</span>
                 </div>
                 <div class="descri_top_item">
 
                   <span class="descri_btm2" v-show="i != 0">{{ detail_info[x.field2] ?
-                      Number(detail_info[x.field2]).toFixed(2) : 0
-                  }}</span><span class="descri_btm3">{{ x.unit2 }}</span>
+                      Number(detail_info[x.field2] || 0).toFixed(2) : 0
+                  }}</span> <span class="descri_btm3">{{ x.unit2 }}</span>
                 </div>
 
               </div>
@@ -54,6 +54,7 @@
           </div>
         </el-card>
       </div>
+
       <div class="inverter_tab">
 
 
@@ -62,8 +63,10 @@
             <span slot="label"> <button :class="`tabsButon`">运行曲线</button></span>
             <div class="inverter_echat_search">
               <div class="inverter_date">
-                <el-date-picker prefix-icon="1" v-model="timeStart" @change="timeStartFn" type="date" placeholder="选择日期"
-                  :clearable="false"> </el-date-picker>
+                <!-- <el-date-picker prefix-icon="1" v-model="timeStart" @change="timeStartFn" type="date" placeholder="选择日期"
+                  :clearable="false"> </el-date-picker> -->
+                <DatePicker type="date" placeholder="选择日期" style="width: 100px" :value="timeStart"
+                  @on-change="timeStartFn" :clearable='false' class='two_ivew_date' />
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
                   <path d="M0 0H30C31.1046 0 32 0.895431 32 2V30C32 31.1046 31.1046 32 30 32H0V0Z" fill="#0084FF" />
                   <path
@@ -79,6 +82,7 @@
                 <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
                 </el-option>
               </el-select>
+
             </div>
             <div class="inverter_echart" ref="echart_curve"></div>
 
@@ -89,68 +93,95 @@
             <span slot="label"> <button :class="`tabsButon`">实时数据</button></span>
             <div class="table_top">
               <div class="table_top_left">
-                <el-table :data="realDataT.left" border style=" margin-top: 20px" stripe :row-style="{ height: '32px' }"
+                <el-table :data="realDataT.left" border style=" margin-top: 20px" stripe :row-style="{ height: '35px' }"
                   :header-cell-style="{ padding: 0 + 'px' }"
                   :cell-style="{ padding: 0 + 'px', color: '#000000', height: '32px' }"
-                  :header-row-style="{ height: '31.5px' }">
-                  <el-table-column label="单向交流输出" align="center" width="134">
-                    <el-table-column prop="phase" label="相位" align="center" width="134"> </el-table-column>
-                    <el-table-column prop="AC_voltage" label="电压(V)" align="center" width="134"> </el-table-column>
-                    <el-table-column prop="current" label="电流(A)" align="center" width="134"> </el-table-column>
-                    <el-table-column prop="AC_power_zb" label="单项有功率(kW)" align="center" width="134"> </el-table-column>
+                  :header-row-style="{ height: '35px' }">
+                  <el-table-column label="单向交流输出" align="center">
+                    <el-table-column prop="phase" label="相位" align="center" min-width="134" max-width="196">
+                    </el-table-column>
+                    <el-table-column prop="AC_voltage" label="电压(V)" :formatter="oneFixed" align="center"
+                      max-width="185" min-width="130">
+                    </el-table-column>
+                    <el-table-column prop="current" label="电流(A)" :formatter="oneFixed" align="center" min-width="134"
+                      max-width="185">
+                    </el-table-column>
+                    <el-table-column prop="AC_power_zb" label="单项有功率(kW)" :formatter="oneFixed" align="center"
+                      max-width="191" min-width="130">
+                    </el-table-column>
                   </el-table-column>
                 </el-table>
               </div>
               <div class="table_top_right">
                 <el-table :data="realDataT.right" border style=" margin-top: 20px" stripe
                   :row-style="{ height: '96px' }" :header-cell-style="{ padding: 0 + 'px' }" cell-class-name="bigWidth"
-                  :cell-style="{ padding: 0 + 'px', color: '#000000', height: '96px' }"
+                  :cell-style="{ padding: 0 + 'px', color: '#000000', height: '105px' }"
                   :header-row-style="{ height: '63px' }">
-                  <el-table-column prop="AcMeasuredActive" label="交流输出总有|功率(kW)" align="center" width="105"
-                    :render-header="renderheader">
+                  <el-table-column prop="AcMeasuredActive" :formatter="oneFixed" label="交流输出|总有功功率|(kW)" align="center"
+                    min-width="110" :render-header="renderheader">
                   </el-table-column>
-                  <el-table-column prop="AcMeasuringReactive" label="交流输出总无功|功率（kvar）" align="center" width="105"
-                    :render-header="renderheader">
+                  <el-table-column prop="AcMeasuringReactive" :formatter="oneFixed" label="交流输出|总无功功率|(kW)"
+                    align="center" min-width="110" :render-header="renderheader">
                   </el-table-column>
-                  <el-table-column prop="InputP" label="直流输入功率|（kW）" align="center" width="105"
-                    :render-header="renderheader">
+                  <el-table-column prop="InputP" label="直流输入功率|（kW）" :formatter="oneFixed" align="center"
+                    min-width="110" :render-header="renderheader">
                   </el-table-column>
-                  <el-table-column prop="Cos" label="功率因数" align="center" width="105"> </el-table-column>
-                  <el-table-column prop="GridFrequency" label="频率（HZ）" align="center" width="105"> </el-table-column>
-                  <el-table-column prop="AirTemperature" label="柜内空气温度（℃）" align="center" width="105">
+                  <el-table-column prop="Cos" label="功率因数" align="center" :formatter="oneFixed" min-width="105">
                   </el-table-column>
-                  <el-table-column prop="SquareArray" label="绝缘阻抗（MΩ）" align="center" width="105"> </el-table-column>
+                  <el-table-column prop="GridFrequency" label="频率（HZ）" :formatter="oneFixed" align="center"
+                    min-width="110">
+                  </el-table-column>
+                  <el-table-column prop="AirTemperature" label="柜内空气温度|(℃)" :render-header="renderheader"
+                    :formatter="oneFixed" align="center" min-width="114">
+                  </el-table-column>
+                  <el-table-column prop="SquareArray" label="绝缘阻抗|（MΩ）" :render-header="renderheader"
+                    :formatter="oneFixed" align="center" min-width="110">
+                  </el-table-column>
                 </el-table>
 
               </div>
             </div>
+            <div class="table_btn">
+              <el-table :data="realDataB" border style="width: 100%; margin-top: 20px" stripe
+                :row-style="{ height: '32px' }" :header-cell-style="{ padding: 0 + 'px' }"
+                :cell-style="{ padding: 0 + 'px', color: '#000000', height: '32px' }"
+                :header-row-style="{ height: '31.5px' }">
+                <el-table-column label="MPPT" align="center" min-width="134">
+                  <el-table-column prop="MPPT" label="回路编号" align="center" min-width="134"> </el-table-column>
+                  <el-table-column prop="voltage_MPPT" label="电压(V)" :formatter="oneFixedStatus" align="center"
+                    min-width="130"> </el-table-column>
+                  <el-table-column prop="current_MPPT" label="电流(A)" :formatter="oneFixedStatus" align="center"
+                    min-width="130"> </el-table-column>
+
+                </el-table-column>
+
+                <el-table-column label="PV" align="center" stripe>
+                  <el-table-column prop="NAME" label="回路编号" align="center" min-width="134"> </el-table-column>
+                  <el-table-column prop="capacity" label="接入容量(kWp)" :formatter="oneFixedStatus" align="center"
+                    min-width="110"> </el-table-column>
+                  <el-table-column prop="voltage" label="电压（V）" :formatter="oneFixedStatus" align="center"
+                    min-width="110">
+                  </el-table-column>
+                  <el-table-column prop="current" label="电流（A）" :formatter="oneFixedStatus" align="center"
+                    min-width="110">
+                  </el-table-column>
+                  <el-table-column prop="NAME2" label="回路编号" align="center" min-width="110"> </el-table-column>
+                  <el-table-column prop="capacity2" label="接入容量(kWp)" :formatter="oneFixedStatus" align="center"
+                    min-width="110"> </el-table-column>
+                  <el-table-column prop="voltage2" label="电压（V）" :formatter="oneFixedStatus" align="center"
+                    min-width="114">
+                  </el-table-column>
+                  <el-table-column prop="current2" label="电流（A）" :formatter="oneFixedStatus" align="center"
+                    min-width="110">
+                  </el-table-column>
+                </el-table-column>
 
 
-            <el-table :data="realDataB" border style="width: 100%; margin-top: 20px" stripe
-              :row-style="{ height: '32px' }" :header-cell-style="{ padding: 0 + 'px' }"
-              :cell-style="{ padding: 0 + 'px', color: '#000000', height: '32px' }"
-              :header-row-style="{ height: '31.5px' }">
-              <el-table-column label="MPPT" align="center" width="134">
-                <el-table-column prop="MPPT" label="回路编号" align="center" width="134"> </el-table-column>
-                <el-table-column prop="voltage_MPPT" label="电压(V)" align="center" width="134"> </el-table-column>
-                <el-table-column prop="current_MPPT" label="电流(A)" align="center" width="134"> </el-table-column>
 
-              </el-table-column>
-
-              <el-table-column label="PV" align="center" stripe>
-                <el-table-column prop="NAME" label="回路编号" align="center" width="134"> </el-table-column>
-                <el-table-column prop="capacity" label="接入容量（kWp）" align="center" width="134"> </el-table-column>
-                <el-table-column prop="voltage" label="电压（V）" align="center" width="134"> </el-table-column>
-                <el-table-column prop="current" label="电流（A）" align="center" width="134"> </el-table-column>
-                <el-table-column prop="NAME2" label="回路编号" align="center" width="134"> </el-table-column>
-                <el-table-column prop="capacity2" label="接入容量（kWp）" align="center" width="134"> </el-table-column>
-                <el-table-column prop="voltage2" label="电压（V）" align="center" width="134"> </el-table-column>
-                <el-table-column prop="current2" label="电流（A）" align="center" width="134"> </el-table-column>
-              </el-table-column>
+              </el-table>
+            </div>
 
 
-
-            </el-table>
           </el-tab-pane>
           <el-tab-pane name="3">
             <span slot="label"> <button :class="`tabsButon`">发电量</button></span>
@@ -159,8 +190,11 @@
                 <button v-for="(x, i ) in typeDate" :key="i" :class="`typeButon ${activeBut == x ? 'activeBtn' : ''} `"
                   @click="buttnClick(x)">{{ x }}</button>
                 <div class="inverter_date inverter_date1" v-if="activeBut != '总'">
-                  <el-date-picker prefix-icon="1" v-model="Start" @change="outPowerStartFn" :type="pickerType"
-                    :clearable="false" placeholder="选择日期"> </el-date-picker>
+                  <!-- <el-date-picker :append-to-body='false' prefix-icon="1" v-model="Start" @change="outPowerStartFn"
+                    :type="pickerType" popper-class="fastTop" :clearable="false" placeholder="选择日期"> </el-date-picker> -->
+                  <DatePicker :type="pickerType" placeholder="选择日期" style="width: 100px" :value="Start"
+                    @on-change="outPowerStartFn" :clearable='false'
+                    :class="`${pickerType == 'date' ? 'two_ivew_date' : 'two_ivew'} `" />
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
                     <path d="M0 0H30C31.1046 0 32 0.895431 32 2V30C32 31.1046 31.1046 32 30 32H0V0Z" fill="#0084FF" />
                     <path
@@ -169,7 +203,11 @@
                     <path
                       d="M7.875 16.375H12.875V19.5H7.875V16.375ZM7.875 20.125H12.875V23.25H7.875V20.125ZM13.5 16.375H18.5V19.5H13.5V16.375ZM13.5 20.125H18.5V23.25H13.5V20.125ZM19.125 16.375H24.125V19.5H19.125V16.375ZM19.125 20.125H24.125V23.25H19.125V20.125Z"
                       fill="white" />
+
+
                   </svg>
+
+
                 </div>
               </div>
 
@@ -186,8 +224,10 @@
             <span slot="label"> <button :class="`tabsButon`">历史数据</button></span>
             <div class="inverter_echat_search inverter_echat_search_btw">
               <div class="inverter_date inverter_date4">
-                <el-date-picker prefix-icon="1" v-model="hiostyTime" @change="hisotryStartFn" type="date"
-                  :clearable="false" placeholder="选择日期"> </el-date-picker>
+                <!-- <el-date-picker prefix-icon="1" v-model="hiostyTime" @change="hisotryStartFn" type="date"
+                  :clearable="false" placeholder="选择日期"> </el-date-picker> -->
+                <DatePicker type="date" placeholder="选择日期" style="width: 118px" :value="hiostyTime"
+                  @on-change="hisotryStartFn" :clearable='false' class='two_ivew_date' />
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
                   <path d="M0 0H30C31.1046 0 32 0.895431 32 2V30C32 31.1046 31.1046 32 30 32H0V0Z" fill="#0084FF" />
                   <path
@@ -203,15 +243,16 @@
 
             </div>
 
-            <el-table :data="historyData" border style="width: 100%; margin-top: 20px" stripe
+            <el-table v-loading="loading.ls" :data="historyData" border style="width: 100%; margin-top: 20px" stripe
               :row-style="{ height: '35px' }" :header-cell-style="{ padding: 0 + 'px' }"
               :cell-style="{ padding: 0 + 'px', color: '#000000', height: '40px' }"
               :header-row-style="{ height: '35px' }">
 
-              <el-table-column v-for="(x, i) in columnRand" :key="i" :label="x.label" :prop="x.field" align="center"
-                :width="x.width || 120" :render-header="x.rander ? renderheader : ''">
+              <el-table-column v-for="(x, i) in columnRand" :key="i" :label="x.label" :formatter="lsFixed"
+                :prop="x.field" align="center" :width="x.width || 120"
+                :render-header="x.rander ? renderheader : renderFn">
                 <el-table-column v-for="(item, index) in x.children" :key='index' :label='item.label' align="center"
-                  :width="item.width || 120" :prop='item.field'>
+                  :formatter="lsFixed" :width="item.width || 120" :prop='item.field'>
                 </el-table-column>
               </el-table-column>
             </el-table>
@@ -236,13 +277,24 @@
 import eventActionDefine from "./components/msgCompConfig";
 import {
   RadioButton,
-  RadioGroup, Descriptions, DescriptionsItem, Card, Tabs, TabPane, DatePicker, Select, Option, Table, TableColumn, Radio,
+  RadioGroup, Descriptions, DescriptionsItem, Card, Tabs, TabPane, Select, Option, Table, TableColumn, Radio, Loading,
   Pagination
 } from "element-ui";
 import Vue from "vue"
 import Utils from "./utils";
+
+import { DatePicker } from 'view-design';
+// import ViewUI from 'view-design';
+import 'view-design/dist/styles/iview.css';
+Vue.component('DatePicker', DatePicker);
 import moment from "moment";
-import * as echarts from "echarts";
+// 引入echarts
+import echarts from "./utils/echarts";
+
+// 挂载到vue实例中
+
+
+
 import { queryInverterData, queryIndexCard, queryPowerOutput, queryHistoryData, realTimeData, exportFn, queryOperationCurve } from './api/asset'
 Vue.use(RadioGroup)
 Vue.use(RadioButton)
@@ -250,12 +302,15 @@ Vue.use(Descriptions)
 Vue.use(DescriptionsItem)
 Vue.use(Card)
 Vue.use(Tabs)
+
+Vue.use(Loading.directive);
 Vue.use(TabPane)
-Vue.use(DatePicker)
+// Vue.use(DatePicker)
 Vue.use(Select)
 Vue.use(Option)
 Vue.use(Table)
 Vue.use(TableColumn)
+// Vue.prototype.$loading = Loading.service;
 Vue.use(Radio)
 Vue.use(Pagination)
 const PvU = ['U₁', 'U₂', 'U₃', 'U₄', 'U₅', 'U₆', 'U₇', 'U₈', 'U₉', 'U₁₀', 'U₁₁', 'U₁₂', 'U₁₃', 'U₁₄', 'U₁₅', 'U₁₆', 'U₁₇', 'U₁₈', 'U₁₉', 'U₂₀', 'U₂₁', 'U₂₂', 'U₂₃', 'U₂₄']
@@ -268,11 +323,11 @@ const MpUfeild = []
 const MpIfeild = []
 for (let i = 1; i <= 24; i++) {
   PvUfeild.push(`PV${i}U`)
-  PvIfeild.push(`PV${i}I`)
+  PvIfeild.push(`PV${i}A`)
 }
 for (let i = 1; i <= 12; i++) {
   MpUfeild.push(`PV${i}U`)
-  MpIfeild.push(`PV${i}I`)
+  MpIfeild.push(`PV${i}A`)
 }
 
 
@@ -317,10 +372,15 @@ export default {
         themeColor,
         textColor
       }
-    },
+    }
+
+  },
+  filters: {
+
   },
   data() {
     return {
+      value1: '',
       //必需，不可删除
       id: "",
       //业务代码
@@ -328,7 +388,10 @@ export default {
       buttons: [],
       defaultValue: "",
       styleEle: null,
-      activeName: '3',
+      activeName: '1',
+      tabsStatus: { qx: true, ss: false, fdl: false, ls: false },//维护状态
+      loading: { qx: false, ss: false, fdl: false, ls: false },
+      loadingReal: false,
       //运行曲线
       value: '发电功率',
       timeStart: new Date(),
@@ -375,8 +438,8 @@ export default {
       columnRand: [
         { label: '数据时间', field: 'time', width: 180 },
         { label: '直流输入总功率|（kW）', field: 'InputP', width: 150, rander: true },
-        { label: '交流输出总有功|功率(kW)', field: 'equipment_id', width: 140, rander: true },
-        { label: '交流输出总无功|功率（kvar）', field: 'AcMeasuredActive', width: 140, rander: true },
+        { label: '交流输出总有功|功率(kW)', field: 'AcMeasuredActive', width: 140, rander: true },
+        { label: '交流输出总无功|功率（kvar）', field: 'AcMeasuringReactive', width: 140, rander: true },
         { label: '当日发电量|（kWh）', field: 'poweroutput_d', rander: true },
         { label: '累计发电量|（kWh）', field: 'poweroutput_all', rander: true },
         { label: '功率因数', field: 'Cos', width: 100 },
@@ -385,7 +448,7 @@ export default {
         { label: '绝缘阻抗|（MΩ）', field: 'SquareArray', width: 100, rander: true },
         { label: 'A相', children: [{ label: '电压（V）', field: 'AcUa' }, { label: '电流（A）', field: 'Ia' }, { label: '有功功率（kW）', field: 'AC_power_A', width: 140 },] },
         { label: 'B相', children: [{ label: '电压（V）', field: 'AcUb' }, { label: '电流（A）', field: 'Ib' }, { label: '有功功率（kW）', field: 'AC_power_B', width: 140 },] },
-        { label: 'C相', children: [{ label: '电压（V）', field: 'AcUc' }, { label: '电流（A）', field: 'Ic' }, { label: '有功功率（kW）', field: 'AC_power_C', width: 140 },] },
+        { label: 'C相', children: [{ label: '电压（V）', field: 'AcUc' }, { label: '电流（A）', field: 'Ic' }, { label: '有功功率（kW）', field: 'AC_power_c', width: 140 },] },
         { label: 'PV1', children: [{ label: '电压（V）', field: 'PV1U' }, { label: '电流（A）', field: 'PV1A' }] },
         { label: 'PV2', children: [{ label: '电压（V）', field: 'PV2U' }, { label: '电流（A）', field: 'PV2A' }] },
         { label: 'PV3', children: [{ label: '电压（V）', field: 'PV3U' }, { label: '电流（A）', field: 'PV3A' }] },
@@ -439,7 +502,7 @@ export default {
       //卡片信息存储字段
       detail_info: {},
       detailInfoAll: [
-        { key: '当前发电功率', filed: 'AcMeasuredActive', unit: 'kW' },
+        { key: '当前发电功率', filed: 'AcMeasuredActive', unit: 'kW', fixed: 3 },
         { key: '当日发电量', key2: '当日等效时数', unit: 'kWh', unit2: 'h', filed: 'poweroutput_d', field2: 'equivalent_hours_d' },
         { key: '当月发电量', key2: '当月等效时数', unit: 'kWh', unit2: 'h', filed: 'poweroutput_m', field2: 'equivalent_hours_m' },
         { key: '当年发电量', key2: '当年等效时数', tt: true, unit: '万kWh', unit2: 'h', filed: 'poweroutput_y', field2: 'equivalent_hours_y' },
@@ -450,7 +513,8 @@ export default {
       realDataT: {},
       realDataB: [],
       //逆变器id
-      equipmentId: null,
+      equipmentId: null ||
+        1999117999234,
     }
   },
   mounted() {
@@ -478,15 +542,22 @@ export default {
         }
       )
     }
-    this.handleValueChange('1')
-    this.initElectricity()
-    this.descriQuery()
-    this.historyQueryData()
-    this.operationInit()
+    this.handleValueChange() //加载完成事件
+    // this.initElectricity()  //发电量接口3
+    this.descriQuery()    // 描述数据
+    // this.historyQueryData() //历史数据4
+    this.operationInit()  // 运行曲线 1
     this.connectWS()
+
 
   },
   methods: {
+    testView(e) {
+
+      this.timeStart = e
+
+    },
+
     //合并单元格
     objectSpanMethod({ row, column, rowIndex, columnIndex }) {
 
@@ -519,9 +590,59 @@ export default {
         }
       )
     },
-    //实时表头渲染
+    //实时表头渲染2
     renderheader(h, { column, $index }) {
       return h("span", {}, [h("span", {}, column.label.split("|")[0]), h("br"), h("span", {}, column.label.split("|")[1])]);
+    },
+    //实时表头渲染3
+    renderheader(h, { column, $index }) {
+      return h("span", {}, [h("span", {}, column.label.split("|")[0]), h("br"), h("span", {}, column.label.split("|")[1]), h("br"), h("span", {}, column.label.split("|")[2])]);
+    },
+    //表格内容渲染
+    oneFixed(row, column, cellValue, index) {
+
+      let colName = column.label
+      if (colName.indexOf('功率') != -1) {
+        return cellValue || cellValue == 0 ? Number(Math.round(cellValue * 1000) / 1000).toFixed(3) : cellValue
+      } else if (colName.indexOf('电压') != -1) {
+        return cellValue || cellValue == 0 ? Number(Math.round(cellValue * 10) / 10).toFixed(1) : cellValue
+      } else {
+        return cellValue || cellValue == 0 ? Number(Math.round(cellValue * 100) / 100).toFixed(2) : cellValue
+      }
+
+
+    },
+    oneFixedStatus(row, column, cellValue, index) {
+
+      let poper = column.property
+      let status = { voltage_MPPT: 'statusM', current_MPPT: 'statusM', capacity: 'status', voltage: 'status', current: 'status', capacity2: 'status2', voltage2: 'status2', current2: 'status2' }
+      let colName = column.label
+
+      if (colName.indexOf('功率') != -1) {
+        return (row[status[poper]] == 0 || !row[status[poper]]) ? '-' : (cellValue || cellValue == 0 ? Number(Math.round(cellValue * 1000) / 1000).toFixed(3) : cellValue)
+      } else if (colName.indexOf('电压') != -1) {
+        return (row[status[poper]] == 0 || !row[status[poper]]) ? '-' : (cellValue || cellValue == 0 ? Number(Math.round(cellValue * 10) / 10).toFixed(1) : cellValue)
+      } else {
+        return (row[status[poper]] == 0 || !row[status[poper]]) ? '-' : (cellValue || cellValue == 0 ? Number(Math.round(cellValue * 100) / 100).toFixed(2) : cellValue)
+      }
+
+
+    },
+    lsFixed(row, column, cellValue, index) {
+      let colName = column.label
+
+      if (colName.indexOf('功率') != -1) {
+        return cellValue != "-" && (cellValue == 0 || cellValue) ? Number(Math.round(cellValue * 1000) / 1000).toFixed(3) : cellValue
+      } else if (colName.indexOf('电压') != -1) {
+        return cellValue != "-" && (cellValue == 0 || cellValue) ? Number(Math.round(cellValue * 10) / 10).toFixed(1) : cellValue
+      } else if (colName.indexOf('数据时间') != -1) {
+        return moment(cellValue).format('YYYY-MM-DD HH:mm:ss')
+      } else {
+        return cellValue != "-" && (cellValue == 0 || cellValue) ? Number(Math.round(cellValue * 100) / 100).toFixed(2) : cellValue
+      }
+    },
+    renderFn(h, { column, $index }) {
+      return h("span", {}, column.label);
     },
 
     //顶部表述查询
@@ -543,12 +664,42 @@ export default {
       }).catch(err => {
         console.log(err);
       })
+
+
+    },
+    //实时查询
+    shisquery() {
+      this.loading.ss = true
       realTimeData(this.equipmentId).then(res => {
 
         let { MPPT, PV, leftTop, rightTop } = res.data
         let relBtm = []
-        let temp = PV.splice(12)
+        let tempPV = []
+        PV.forEach(x => {
+          let obj = {}
+          obj.NAME = x.PV
+          obj.capacity = x.capacity
+          obj.status = x.status
+          let tempObj = {}
+          for (const key in x) {
+
+            if (key.indexOf(obj.NAME + 'A') != -1 || key.indexOf(obj.NAME + 'U') != -1) {
+              let valueK = key.indexOf('A') != -1 ? 'current' : 'voltage'
+
+              tempObj[valueK] = x[key]
+
+            }
+          }
+          obj = { ...obj, ...tempObj }
+          tempPV.push(obj)
+        })
+        let temp = tempPV.splice(12)
         let PV2 = []
+        let realLeftTop = []
+        realLeftTop[0] = { phase: 'A', AC_voltage: leftTop[0].AcUa, current: leftTop[0].Ia, AC_power_zb: leftTop[0].A }
+        realLeftTop[1] = { phase: 'B', AC_voltage: leftTop[0].AcUb, current: leftTop[0].Ib, AC_power_zb: leftTop[0].B }
+        realLeftTop[2] = { phase: 'C', AC_voltage: leftTop[0].AcUc, current: leftTop[0].Ic, AC_power_zb: leftTop[0].C }
+
         temp.forEach(x => {
           let obj = {}
           for (const key in x) {
@@ -558,19 +709,48 @@ export default {
         })
 
         MPPT.forEach((x, i) => {
-          let y = PV[i]
+          if (!x.MPPT) MPPT.splice(i, 1)
+        })
+        MPPT = this.removeDuplicateObj(MPPT, 'MPPT')
+        MPPT.sort(function (a, b) {
+          return a.MPPT.replace('MPPT', '') - b.MPPT.replace('MPPT', '')
+        })
+        MPPT.splice(12)
+
+
+        MPPT.forEach((x, i) => {
+          x.statusM = x.status
+          let y = tempPV[i]
           let z = PV2[i]
           relBtm.push({ ...x, ...y, ...z })
         })
         this.realDataB = relBtm
-        this.realDataT.left = leftTop
-        this.realDataT.right = rightTop
 
+
+
+        this.realDataT.left = realLeftTop
+        this.realDataT.right = rightTop
+        this.loading.ss = false
       }).catch(err => {
+        this.realDataB = []
+        this.realDataT.left = []
+        this.realDataT.right = []
+        this.loading.ss = false
         console.log(err);
       })
+    },
+    //去重
+    removeDuplicateObj(arr, key) {
+      let obj = {};
+      arr = arr.reduce((newArr, next) => {
+        obj[next[key]] ? "" : (obj[next[key]] = true && newArr.push(next));
+        return newArr;
+      }, []);
+      return arr
+
 
     },
+
     //发电量echarts图初始化方法
     async initElectricity() {
 
@@ -591,25 +771,56 @@ export default {
       let theory_power_output = []
       let equivalent_hours = []
       let PR = []
-      let xAxis = data.map(x => {
-        power_output.push(x[fieldP[this.pickerType][1]])
-        theory_power_output.push(x[fieldP[this.pickerType][2]])
+      let xUnit = this.pickerType == 'total' ? '单位：万kWh' : '单位：kWh'
+      let uint = this.pickerType == 'total' ? ['万kWh', '万kWh', 'h', '%'] : ['kWh', 'kWh', 'h', '%']
 
-        equivalent_hours.push(x[fieldP[this.pickerType][3]])
-        PR.push(x[fieldP[this.pickerType][4]])
+      let xAxis = data.map(x => {
+        this.pickerType == 'total' ? power_output.push((x[fieldP[this.pickerType][1]] / 10000).toFixed(2)) : power_output.push(Number(x[fieldP[this.pickerType][1]] || 0).toFixed(2))
+        this.pickerType == 'total' ? theory_power_output.push((x[fieldP[this.pickerType][2]] / 10000).toFixed(2)) : theory_power_output.push(Number(x[fieldP[this.pickerType][2]] || 0).toFixed(2))
+        equivalent_hours.push(Number(x[fieldP[this.pickerType][3]] || 0).toFixed(2))
+        PR.push(Number(x[fieldP[this.pickerType][4]] || 0).toFixed(2))
+
+
         return x[fieldP[this.pickerType][0]]
       })
+
 
       let options = {
         color: colors,
         tooltip: {
           trigger: 'axis',
+          show: true,
           axisPointer: {
-            type: 'cross'
+            lineStyle: {
+              color: 'rgba(28, 124, 196, .6)'
+            },
+          },
+
+          formatter: function (params, ticket, callback) {
+            var htmlStr = '';
+            for (var i = 0; i < params.length; i++) {
+              var param = params[i];
+              var xName = param.name;//x轴的名称
+              var seriesName = param.seriesName;//图例名称
+              var value = param.value;//y轴值
+              var color = param.color;//图例颜色
+              if (i === 0) {
+                htmlStr += xName + '<br/>';//x轴的名称
+              }
+              htmlStr += '<div style="display:flex;align-items:center">';
+              htmlStr += '<span style="margin-right:5px;display:inline-block;width:10px;height:10px;border-radius:5px;background-color:' + color + ';"></span>';//一个点
+              htmlStr += '<div style="display:flex;justify-content: space-between;flex:1" >' + '<span>' + seriesName + '：' + '</span>' + '<span>' + value + ' ' + uint[i] + '</span>' + '</div>';//圆点后面显示的文本
+              htmlStr += '</div>';
+            }
+            return htmlStr;
           }
+
         },
         grid: {
-          right: '20%'
+          left: '4%',
+          right: '6%',
+          bottom: '5%',
+          // containLabel: true
         },
 
         legend: {
@@ -647,7 +858,7 @@ export default {
           },
           {
             type: 'value',
-            name: '%',
+            name: '    %',
             position: 'right',
             alignTicks: true,
             offset: 40,
@@ -659,7 +870,7 @@ export default {
           },
           {
             type: 'value',
-            name: '单位：kWh',
+            name: xUnit,
             position: 'left',
             alignTicks: true,
             axisLine: {
@@ -694,7 +905,7 @@ export default {
           {
             name: '等效时数',
             type: 'line',
-            yAxisIndex: 1,
+
             symbol: 'circle',
             data: equivalent_hours,
             itemStyle: {
@@ -714,18 +925,20 @@ export default {
 
         ]
       };
+
       this.Gechart = echarts.init(this.$refs.echart_electricity);
       this.Gechart.setOption(options);
 
     },
     //发电量日期选择框
-    outPowerStartFn() {
+    outPowerStartFn(e) {
+      this.Start = e
       this.initElectricity()
     },
     //发电量导出
     tableToExcel() {
       let tableData = this.excelData
-      const headArr = Object.keys(tableData[0])
+      // const headArr = Object.keys(tableData[0])
       let fieldP = {
         date: { 'sub_time': '展示时间', 'power_output_h': '发电量', 'theory_power_output_h': '理论发电量', 'equivalent_hours_h': '等效时数', 'PR_h': 'PR' },
         month: { 'sub_time': '展示时间', 'poweroutput_d': '发电量', 'theory_power_output_d': '理论发电量', 'equivalent_hours_d': '等效时数', 'PR_d': 'PR' },
@@ -733,62 +946,71 @@ export default {
         total: { 'sub_time': '展示时间', 'poweroutput_y': '发电量', 'theory_power_output_y': '理论发电量', 'equivalent_hours_y': '等效时数', 'PR_y': 'PR' },
 
       }
-
+      let initialize = { date: 'YYYY-MM-DD', month: 'YYYY-MM', year: 'YYYY' }//日期格式
+      let time = initialize[this.pickerType] ? moment(this.Start).format(initialize[this.pickerType]) : ''
       // 要导出的json数据
       // 列标题
+      const headObj = {
+        date: ['sub_time', 'power_output_h', 'theory_power_output_h', 'equivalent_hours_h', 'PR_h'],
+        month: ['sub_time', 'poweroutput_d', 'theory_power_output_d', 'equivalent_hours_d', 'PR_d'],
+        year: ['sub_time', 'poweroutput_m', 'theory_power_output_m', 'equivalent_hours_m', 'PR_m'],
+        total: ['sub_time', 'poweroutput_y', 'theory_power_output_y', 'equivalent_hours_y', 'PR_y'],
+
+      }
+      const headArr = headObj[this.pickerType]
       let str = "<tr>"
+      // console.log(headArr, '====');
+      // return
       headArr.forEach((item, index) => {
-
-        str += (index == (headArr.length - 1)) ? `<td>${fieldP[this.pickerType][item]}</td></tr>` : `<td>${fieldP[this.pickerType][item]}</td>`
-
+        str += (index == (headArr.length - 1)) ? `<th>${fieldP[this.pickerType][item]}</th></tr>` : `<th>${fieldP[this.pickerType][item]}</th>`
       })
       // 循环遍历，每行加入tr标签，每个单元格加td标签
       for (let i = 0; i < tableData.length; i++) {
         str += '<tr>';
         for (const key of headArr) {
           // 增加\t为了不让表格显示科学计数法或者其他格式
-          str += `<td>${tableData[i][key] + '\t'}</td>`;
+          str += `<td>${(tableData[i][key] || 0) + '\t'}</td>`;
         }
         str += '</tr>';
       }
       // Worksheet名
-      const worksheet = 'Sheet1'
-      const uri = 'data:application/vnd.ms-excel;base64,';
+      const worksheet = `发电量-${this.activeBut}-${this.equipmentInfo.name}-${time}`
+
 
       // 下载的表格模板数据
-      const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office" 
-    xmlns:x="urn:schemas-microsoft-com:office:excel" 
-    xmlns="http://www.w3.org/TR/REC-html40">
-    <head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-    <x:Name>${worksheet}</x:Name>
-    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
-    </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-    </head><body><table>${str}</table></body></html>`;
+      const template = `<html
+             xmlns:o="urn:schemas-microsoft-com:office:office" 
+             xmlns:x="urn:schemas-microsoft-com:office:excel"
+        xmlns="http://www.w3.org/TR/REC-html40">
+      <head> <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+          <x:Name>${worksheet}</x:Name>
+          <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
+          </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--> </head>
+    <body><table>${str}</table></body>
+      </html>`;
       // 下载模板
 
-      // 输出base64编码
-      const base64 = function (s) {
-        return window.btoa(unescape(encodeURIComponent(s)));
-      };
-      const format = function (s, c) {
-        return s.replace(/{(\w+)}/g, function (m, p) {
-          return c[p];
-        });
-      };
+
+
+
+
+      let blob = new Blob([template], { type: "application/vnd.ms-excel" })
       const a = document.createElement("a");
-      a.href = uri + base64(format(template));
-      a.download = `逆变器发电量${this.activeBut}` + ".xls";
+      // a.href = uri + base64(format(template));
+      a.href = URL.createObjectURL(blob);
+      a.download = `发电量-${this.activeBut}-${this.equipmentInfo.name}-${time}` + ".xls";
       a.click();
     },
 
     //历史数据查询
     async historyQueryData() {
       let time = moment(this.hiostyTime).format('YYYY-MM-DD')
+      this.loading.ls = true
       let { data } = await queryHistoryData({
         equipment_id: this.equipmentId, date: time, "pageNum": this.pageNum,
         "pageSize": this.pageSize
       })
-
+      this.loading.ls = false
       this.historyData = [...data.results]
       this.totalD = data.totalCount
     },
@@ -805,14 +1027,16 @@ export default {
       this.pageNum = val
       this.historyQueryData()
     },
-    hisotryStartFn() {
+    hisotryStartFn(e) {
+      this.hiostyTime = e
       this.historyQueryData()
 
     },
     exportHisotryFn() {
       let time = moment(this.hiostyTime).format('YYYY-MM-DD')
+
       exportFn({
-        equipment_id: '1999123999348', date: time,
+        equipment_id: this.equipmentId, date: time,
 
       }).then(res => {
         var blob = res.data;
@@ -825,7 +1049,7 @@ export default {
           // 获取文件名fileName
           var fileName = res.headers["content-disposition"].split("=");
           fileName = fileName[fileName.length - 1];
-          fileName = decodeURI(fileName);
+          fileName = decodeURI(fileName).replace(/\%23/g, "#");
           a.download = fileName;
           a.href = e.target.result;
           document.body.appendChild(a);
@@ -841,14 +1065,16 @@ export default {
 
     //运行曲线图表渲染
     async operationInit() {
-      this.Gechart2 && this.Gechart2.clear()
+      // this.Gechart2 && this.Gechart2.clear()
       let color = ['#6dbd81', '#47a2ff', '#e4b304', '#fd6e65', '#d04be5', '#f8a11f',
         '#0454f2', '#6688cc', '#8866cc', '#66ccbb', '#cc66bb', '#7c7cd3', '#8aca9a', '#47a2ff', '#e4b304', '#fd6e65', '#d04be5', '#f8a11f', '#0454f2', '#6688cc', '#8866cc', '#66ccbb', '#cc66bb', '#6b6bce',]
-      let serName = { fdgl: ['直流输入功率', '交流总有功', '日辐射量', '光伏组件温度'], pvdy: PvU, pvdl: PvI, mpptdy: MpU, mpptdl: MpI, jltotal: ['交流测无功功率', '日辐射量', '光伏组件温度'], gnwd: ['柜内温度'], jldy: ['Ua', 'Ub', 'Uc'], jldl: ['Ia', 'Ib', 'Ic'] }
+      let serName = { fdgl: ['直流输入功率', '交流总有功率', '日辐射量', '光伏组件温度'], pvdy: PvU, pvdl: PvI, mpptdy: MpU, mpptdl: MpI, jltotal: ['交流测无功功率', '日辐射量', '光伏组件温度'], gnwd: ['柜内温度'], jldy: ['Ua', 'Ub', 'Uc'], jldl: ['Ia', 'Ib', 'Ic'] }
       let serData = { fdgl: ['InputP', 'AcMeasuredActive', 'radiation_day', 'PV_temperature'], pvdy: PvUfeild, pvdl: PvIfeild, mpptdy: MpUfeild, mpptdl: MpIfeild, jltotal: ['AcMeasuringReactive', 'radiation_day', 'PV_temperature'], gnwd: ['AirTemperature'], jldy: ['AcUa', 'AcUb', 'AcUc'], jldl: ['Ia', 'Ib', 'Ic'] }
       let symbolR = ['circle', 'diamond', 'rect', 'triangle', 'triangleRoate']
       let unit = { fdgl: '单位：kW', pvdy: '单位：V', pvdl: '单位：A', mpptdy: '单位：V', mpptdl: '单位：A', jltotal: '单位：kvar', gnwd: '单位：℃', jldy: '单位：V', jldl: '单位：A' }
       let serColor = { fdgl: ['#6dbd81', '#f50a05', '#6688cc', '#8866cc'], jltotal: ['#6dbd81', '#6688cc', '#8866cc'], jldy: ['#feff08', '#38af52', '#f50a05'], jldl: ['#feff08', '#38af52', '#f50a05'] }
+      let itemUnitArr = { fdgl: ['kW', 'kW', 'W/m²', '℃'], pvdy: ['V'], pvdl: ['A'], mpptdy: ['V'], mpptdl: ['A'], jltotal: ['kvar', 'W/m²', '℃'], gnwd: ['℃'], jldy: ['V'], jldl: ['A'] }
+      let itemUnit = itemUnitArr[this.fdField]
       let param = {}
       param.id = this.equipmentId
       param.time = moment(this.timeStart).format('YYYY-MM-DD')
@@ -861,19 +1087,52 @@ export default {
           eachartData[key] = eachartData[key] ? [...eachartData[key], x[key]] : [x[key]]
         }
       })
+      let tempLength
+      serData[this.fdField].forEach(x => {
+        if (!eachartData[x]) {
+          eachartData[x] = []
+          for (let i = 0; i < tempLength; i++) {
+            eachartData[x].push(null)
+          }
+          eachartData[x][0] = 0
+        } else {
+          tempLength = eachartData[x].length
+        }
+      })
+
+
       serData[this.fdField].forEach((x, i) => {
         let st = i % 5 == 4 ? "triangle" : symbolR[i % 5]
         let rotae = i % 5 == 4 ? 180 : 0
         let name = serName[this.fdField][i]
+        let dataA = []
         let yAxi = name == '日辐射量' ? 1 : (name == '光伏组件温度' ? 2 : 0)
         eachartData[x] = eachartData[x] ? eachartData[x] : [0]
+
+        if (name.indexOf('功率') != -1) {
+          eachartData[x].map(x => {
+            dataA.push(!x ? x : Number(x).toFixed(3))
+          })
+
+        } else if (name.indexOf('U') != -1) {
+          eachartData[x].map(x => {
+            dataA.push(!x ? x : Number(x).toFixed(1))
+          })
+        } else {
+          eachartData[x].map(x => {
+
+            dataA.push(!x ? x : Number(x).toFixed(2))
+
+          })
+        }
         seriesData.push({
           name: serName[this.fdField][i],
           type: 'line',
           symbol: st,
           yAxisIndex: yAxi,
+          id: serName[this.fdField][i],
           symbolRotate: rotae,
-          data: eachartData[x],
+          data: dataA,
           itemStyle: {
             color: serColor[this.fdField] && serColor[this.fdField][i] || color[i]
           }
@@ -883,7 +1142,52 @@ export default {
       let options = {
 
         tooltip: {
-          trigger: 'axis'
+          trigger: 'axis',
+          confine: true,
+          className: 'two_tooltips',
+
+          formatter: function (params, ticket, callback) {
+            let htmlStr = '';
+            for (let i = 0; i < params.length; i++) {
+              let param = params[i];
+              let xName = param.name;//x轴的名称
+              let seriesName = param.seriesName;//图例名称
+              let value = param.value;//y轴值
+              if (!value) {
+                if (xName.indexOf('功率') != -1) {
+
+                  value = Number(0).toFixed(3)
+
+
+                } else if (xName.indexOf('U') != -1) {
+
+                  value = Number(0).toFixed(1)
+
+
+                } else {
+
+
+                  value = Number(0).toFixed(2)
+
+
+                }
+              }
+
+              let color = param.color;//图例颜色
+              if (i === 0) {
+                htmlStr += xName + '<br/>';//x轴的名称
+              }
+              htmlStr += '<div style="display:flex;align-items:center">';
+              htmlStr += '<span style="margin-right:5px;display:inline-block;width:10px;height:10px;border-radius:5px;background-color:' + color + ';"></span>';//一个点
+              htmlStr += '<div style="display:flex;justify-content: space-between;flex:1" >' + '<span>' + seriesName + '：' + '</span>' + '<span>' + value + ' ' + (itemUnit[i] || itemUnit[0]) + '</span>' + '</div>';//圆点后面显示的文本
+              htmlStr += '</div>';
+            }
+            return htmlStr;
+          },
+          // alwaysShowContent: true,
+
+
+          enterable: true
         },
         legend: {
           data: serName[this.fdField],
@@ -895,18 +1199,23 @@ export default {
           }
         },
         grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
+          left: '4%',
+          right: '6%',
+          bottom: '5%',
+          // containLabel: true
         },
 
         xAxis: {
           type: 'category',
           boundaryGap: false,
           axisTick: {
-            show: false
+            show: false,
+
           },
+          axisLabel: {
+            interval: 11
+          },
+
 
           data: eachartData.sub_time
         },
@@ -958,10 +1267,12 @@ export default {
         ],
         series: seriesData
       };
-      console.log(eachartData, '====', options);
+
 
       this.Gechart2 = echarts.init(this.$refs.echart_curve);
-      this.Gechart2.setOption(options);
+      this.Gechart2.setOption(options, { notMerge: true });
+      // this.Gechart2.setOption(options);
+      // this.Gechart2.resize()
 
 
     },
@@ -974,7 +1285,8 @@ export default {
       this.operationInit()
     },
     //日期选择框
-    timeStartFn() {
+    timeStartFn(e) {
+      this.timeStart = e
       this.operationInit()
     },
     //------
@@ -983,20 +1295,13 @@ export default {
       try {
 
         let { 配置地址: wsConfig = '[]' } = this.customConfig;
-        wsConfig = JSON.parse(wsConfig)
-        const { hostname } = window.location;
-        const wsUrl = wsConfig.find(
-          conf => conf.env.indexOf(hostname) !== -1
-        )?.ws;
+        const wsUrl = wsConfig
+
         if (wsUrl) {
-          const userid = window?.currentUser
-            ? window?.currentUser.id
-            : "1234567890";
+
           // let url = `ws://${window.location.host}/sdata/webSocket/` + userid;
-          const url =
-            `${wsUrl}/sdata/webSocket/` +
-            userid +
-            `@${Math.floor(Math.random() * 1000000)}`;
+          const url = `${wsUrl}`
+
           console.log("-----前端开始连接websocket-----", url);
           // websocket = new WebSocket(url);
           let websocket = new WebSocket(url)
@@ -1005,33 +1310,36 @@ export default {
           };
           websocket.onopen = function () {
             console.log("连接成功");
-            timer = setInterval(() => {
-              console.log("心跳");
-              let ping = { type: "ping" };
-              websocket.send(JSON.stringify(ping));
-            }, 5000);
+            // let timer = setInterval(() => {
+
+            //   let ping = { "commandType": "ASSET_DML_SUBSCRIBE", "commandBody": "{\"assetId\":\"4b057d7f-a59d-195a-1767-aa3686d896aa\"}" };
+            //   websocket.send(JSON.stringify(ping));
+            // }, 5 * 60 * 1000);
           };
-          websocket.onmessage = function (event) {
-            console.log(event);
-            this.initElectricity()
-            this.descriQuery()
-            this.historyQueryData()
-            this.operationInit()
+          websocket.onmessage = (event) => {
+            console.log(JSON.parse(event.data).status);
+            if (JSON.parse(event.data).status == 200) {
+
+              this.handelWebSocket()
+              // this.descriQuery()
+
+            }
+
           };
           window.onbeforeunload = function () {
             closeWebSocket();
           };
           websocket.onclose = function (e) {
             console.log("连接关闭");
-            console.log(
-              "websocket 断开: " + e.code + " " + e.reason + " " + e.wasClean
-            );
-            clearInterval(timer);
-            timer = null;
-            if (e.code * 1 === 1000 || e.code * 1 === 1006) {
-              console.log("尝试重连");
-              this.connectWS();
-            }
+            // console.log(
+            //   "websocket 断开: " + e.code + " " + e.reason + " " + e.wasClean
+            // );
+            // clearInterval(timer);
+            // timer = null;
+            // if (e.code * 1 === 1000 || e.code * 1 === 1006) {
+            //   console.log("尝试重连");
+            //   this.connectWS();
+            // }
           };
           function closeWebSocket() {
             websocket.close();
@@ -1068,17 +1376,128 @@ export default {
     },
     setValue(value) {
       this.equipmentId = value
-      this.initElectricity()
+      // this.initElectricity()
       this.descriQuery()
-      this.historyQueryData()
-      this.operationInit()
+      // this.historyQueryData()
+      // this.operationInit()
+      this.handelMouned()
     },
 
 
     //tabs选项卡
     handleClick(tab, event) {
-      console.log(tab, event);
-    }
+      switch (tab.name) {
+        case '1':
+          if (!this.tabsStatus.qx) {
+            this.operationInit()
+            this.tabsStatus.qx = true
+          }
+          break;
+        case '2':
+          if (!this.tabsStatus.ss) {
+            this.shisquery()
+            this.tabsStatus.ss = true
+          }
+          break;
+        case '3':
+          if (!this.tabsStatus.fdl) {
+            this.initElectricity()
+            this.tabsStatus.fdl = true
+          }
+          break;
+        case '4':
+          if (!this.tabsStatus.ls) {
+            this.historyQueryData()
+            this.tabsStatus.ls = true
+          }
+
+          break;
+
+        default:
+          break;
+      }
+
+    },
+    //websocket更新
+    handelWebSocket() {
+      this.tabsStatus.qx = false
+      this.tabsStatus.fdl = false
+      this.tabsStatus.ss = false
+      queryIndexCard(this.equipmentId).then(res => {
+        this.detail_info = res.data
+
+
+      }).catch(err => {
+        console.log(err);
+      }).catch(err => {
+        console.log(err);
+      })
+      switch (this.activeName) {
+        case '1':
+          this.operationInit()
+          this.tabsStatus.qx = true
+          break;
+        case '2':
+          this.shisquery()
+          this.tabsStatus.ss = true
+          break;
+
+        case '3':
+
+          this.initElectricity()
+          this.tabsStatus.fdl = true
+
+          break;
+
+        default:
+          break;
+      }
+
+    },
+    //页面刷新
+    handelMouned() {
+      this.tabsStatus.qx = false
+      this.tabsStatus.fdl = false
+      this.tabsStatus.ss = false
+      this.tabsStatus.ls = false
+      // queryIndexCard(this.equipmentId).then(res => {
+      //   this.detail_info = res.data
+
+
+      // }).catch(err => {
+      //   console.log(err);
+      // }).catch(err => {
+      //   console.log(err);
+      // })
+      switch (this.activeName) {
+        case '1':
+          this.operationInit()
+          this.tabsStatus.qx = true
+          break;
+        case '2':
+          this.shisquery()
+          this.tabsStatus.ss = true
+          break;
+
+        case '3':
+
+          this.initElectricity()
+          this.tabsStatus.fdl = true
+
+          break;
+        case '4':
+
+          this.historyQueryData()
+          this.tabsStatus.ls = true
+
+          break;
+
+        default:
+          break;
+      }
+
+    },
+
   },
 
 
@@ -1098,7 +1517,7 @@ export default {
 <style lang="less" scoped>
 .inverter {
   .inverter_information {
-    padding-left: 20px;
+    padding-left: 42px;
     padding-top: 15px;
     background-color: #fff;
 
@@ -1106,6 +1525,7 @@ export default {
       color: rgb(56, 54, 54);
       font-size: 16px;
       font-weight: 400;
+      width: 110px;
     }
 
     /deep/ .information_content {
@@ -1119,7 +1539,7 @@ export default {
     display: flex;
     background-color: #fff;
     flex: 1;
-    justify-content: space-around;
+    justify-content: space-between;
     padding: 15px;
     margin: 10px 0;
 
@@ -1184,8 +1604,8 @@ export default {
     }
 
     .box-card {
-      // width: 19%;
-      width: 244.82px;
+      width: 19%;
+      // width: 244.82px;
       height: 70px;
     }
   }
@@ -1193,9 +1613,14 @@ export default {
   .inverter_tab {
     padding: 15px;
     background-color: #fff;
+    margin-bottom: 40px;
 
     /deep/.el-tabs__item {
       padding: 0px;
+    }
+
+    /deep/.el-tabs__content {
+      overflow: visible;
     }
 
     .tabsButon {
@@ -1208,7 +1633,7 @@ export default {
       border: 1px solid rgba(222, 222, 222, 1);
       cursor: pointer;
       font-size: 16px;
-      font-weight: 700;
+      // font-weight: 700;
 
       &:hover {
         color: #1B85FF;
@@ -1243,6 +1668,7 @@ export default {
       .inverter_box {
         display: flex;
         align-items: center;
+
       }
 
       .inverter_date {
@@ -1304,21 +1730,51 @@ export default {
     }
 
     .inverter_echart {
-      width: 1290px;
-      height: 594px;
+      margin-top: 15px;
+      // width: 1290px;
+      z-index: 1 !important;
+      height: 445px;
+
+      div {
+        z-index: 1 !important;
+      }
+
+      canvas {
+        z-index: 1 !important;
+      }
     }
 
     //实时数据
     .table_top {
       display: flex;
+      // min-width: 1308px;
+      overflow-x: auto;
 
       /deep/.bigWidth {
         height: 60px;
       }
 
-      .table_top_left {}
+      .table_top_left {
+        min-width: 529px;
+        flex: 1;
+      }
 
-      .table_top_right {}
+      .table_top_right {
+        min-width: 770px;
+        flex: 1.47;
+        // max-width: 1308px;
+        // overflow-x: auto;
+      }
+    }
+
+    .table_btn {
+      min-width: 1300px;
+      // overflow-x: auto;
+    }
+
+    /deep/ .table_btn .el-table::-webkit-scrollbar {
+
+      display: none;
     }
 
     //历史数据
@@ -1382,6 +1838,11 @@ export default {
 
   }
 
+  /deep/.fastTop .el-picker-panel__body-wrapper {
+    position: relative;
+    z-index: 1000000000000000 !important;
+  }
+
   /deep/.el-select .el-input .el-select__caret {
     line-height: 32px;
   }
@@ -1419,13 +1880,14 @@ export default {
     background-color: transparent;
     border-color: #d8dfe7;
     color: #000000;
+
   }
 
   /deep/.el-table th.el-table__cell>.cell {
     display: flex;
     justify-content: center;
     align-items: center;
-
+    padding: 0;
     // :nth-child(0) {
     //   padding-left: 24px;
     // }
@@ -1470,7 +1932,9 @@ export default {
     border-color: #d8dfe7;
   }
 
-
+  /deep/ .el-tabs__nav {
+    z-index: 1;
+  }
 
 }
 </style>

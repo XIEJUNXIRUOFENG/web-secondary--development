@@ -1,0 +1,22 @@
+{
+  "id": "75f679b1-85a2-4573-96e9-ca1614997dde",
+  "type": "bigscreen",
+  "main": "app.2ac25ae0.js",
+  "version": "2",
+  "requirement-number": "SR-W48-f2Wgee",
+  "requirement-name": "河北移动大屏直播插件",
+  "props": {
+    "img": "APP_0001.png",
+    "disableimg": "disabled_custom_table.png",
+    "name": "Vue版本的演示Demo",
+    "className": "className-demo",
+    "configuration": [
+      "style",
+      "data",
+      "other"
+    ],
+    "vars": [
+      "id"
+    ]
+  }
+}
