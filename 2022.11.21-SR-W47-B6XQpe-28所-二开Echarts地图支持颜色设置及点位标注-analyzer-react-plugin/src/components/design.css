@@ -1,0 +1,14 @@
+.Item {
+  display: flex;
+  justify-content: space-between;
+  width: 230px;
+}
+.ItemName {
+  line-height: 26px;
+}
+.chooseColor {
+  height: 15px;
+  width: 15px;
+  display: inline-block;
+  margin-left: 30px;
+}

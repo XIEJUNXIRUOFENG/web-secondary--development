@@ -1,0 +1,22 @@
+{
+  "id": "e18ba9ad-de78-46ad-991e-e89e1f36da4f",
+  "type": "analyzer",
+  "main": "main.bc5f2316.js",
+  "version": "2",
+  "configuration": true,
+  "props": {
+    "img": "custom_table.png",
+    "type": "qoiwud23fo3",
+    "disableimg": "disabled_custom_table.png",
+    "name": "demo",
+    "process": true,
+    "domId": "ex_46fbe360-daa5-42af-8ca0-2ec3066ef216",
+    "lib": [],
+    "cssDep": [],
+    "scriptName": "main.b42fe2f5.js",
+    "vars": [],
+    "optionModules": []
+  },
+  "requirement-number": "SR-W47-B6XQpe",
+  "requirement-name": "二开Echarts地图支持颜色设置及点位标注"
+}

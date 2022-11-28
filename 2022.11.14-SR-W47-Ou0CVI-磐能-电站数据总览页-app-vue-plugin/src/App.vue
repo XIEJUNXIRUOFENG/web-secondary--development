@@ -1,10 +1,12 @@
 <template>
   <!-- 定义外层容器标识，宽高百分百 不可删除 -->
-  <div :id="id" style="width: 100%; height: 100%" :ref="id">
+  <div :id="id" style="width: 100%; height: 100%; padding-top: 10px; padding-right: 20px" :ref="id">
     <!-- -->
     <div class="topStation">
       <div class="top_Left_Card">
-        <el-card class="top_Left_Card_Station_Name"> 电站名称:{{ this.queryLeftDataRes.name }}<span style="float: right">></span></el-card>
+        <el-card class="top_Left_Card_Station_Name" @click.native="goStation"
+          ><span @click="goStation">电站名称:{{ this.queryLeftDataRes.name }}</span> <span @click="goStation" style="float: right; margin-right: 10px">></span></el-card
+        >
         <el-card class="top_Left_Card_ButtonArray">
           <div class="blueButton" @click="goOneLine">一次接线图</div>
           <div class="blueButton" @click="goCallMore">通讯拓补图</div>
@@ -14,39 +16,44 @@
         <el-card class="top_Left_Card_Station_Info">
           <div>并网日期：{{ this.formatDate(this.queryLeftDataRes.connection_date) }}</div>
           <div>并网电压等级：{{ this.queryLeftDataRes.voltage }}</div>
-          <div>装机容量：{{ this.queryLeftDataRes.machine_volume }}kWp</div>
+          <div>装机容量：{{ this.queryLeftDataRes.machine_volume ? this.queryLeftDataRes.machine_volume.toFixed(2) : "" }}kWp</div>
           <div>地址：{{ this.queryLeftDataRes.address }}</div>
         </el-card>
         <el-card class="top_Left_Card_Weather">
-          <div>2022-03-07</div>
-          <div>多云 19°~20°</div>
-          <span>日出：06:25</span><span style="float: right">日落：18:08</span>
+          <div class="top_Left_Card_Weather_Left">
+            <div>{{ this.$moment().format("YYYY-MM-DD") }}</div>
+            <div>{{ this.weatherInfo.data?.temperature ? `${this.weatherInfo.data?.temperature}℃` : "" }}</div>
+            <span>日出：{{ this.$moment(resRichu.SunRise?.getTime())?.format("HH:mm") || "" }}</span>
+          </div>
+          <div class="top_Left_Card_Weather_Right">
+            <img :src="imgss" alt="" width="45px" height="45px" />
+            <span>日落：{{ this.$moment(resRichu.SunSet?.getTime())?.format("HH:mm") || "" }}</span>
+          </div>
         </el-card>
       </div>
       <el-card class="top_Center_Card">
         <span class="top_Center_Card_Title">┃ 功率</span>
-        <hr />
+        <el-divider style="background-color: '#F0F2F5'" />
         <div class="top_Center_Card_Date_Operation">
           <div class="top_Center_Card_Date_Box">
-            <el-date-picker
-              class="top_Center_Card_Date"
-              v-model="powerDatePick"
-              value-format="yyyy-MM-dd"
-              format="yyyy-MM-dd"
-              clear-icon="el-icon-error"
-              type="date"
-              @change="queryPowerData()"
-              placeholder="选择时间"
-            />
+            <a-locale-provider :locale="zh_CN">
+              <a-date-picker
+                :defaultValue="this.$moment(new Date(), 'YYYY-MM-DD')"
+                value-format="yyyy-MM-DD"
+                style="width: 133px"
+                @change="queryPowerData"
+                placeholder="选择时间"
+              />
+            </a-locale-provider>
             <img src="../pluginTemp/images/date.png" alt="" />
           </div>
-          <img style="cursor: pointer" @click="exportPower" src="../pluginTemp/images/export.png" alt="" />
+          <img style="cursor: pointer" width="85px" height="32px" @click="exportPower" src="../pluginTemp/images/export.png" alt="" />
         </div>
-        <div class="top_Center_Card_StationCharts" style="height: 74%; width: 98%" ref="top_Center_Card_StationCharts" id="top_Center_Card_StationCharts"></div>
+        <div class="top_Center_Card_StationCharts" style="height: calc(100% - 110px); width: 100%" ref="top_Center_Card_StationCharts" id="top_Center_Card_StationCharts"></div>
       </el-card>
       <el-card class="top_Right_Card">
         <span class="top_Right_Card_Title">┃ 发电量</span>
-        <hr />
+        <el-divider style="background-color: '#F0F2F5'"></el-divider>
         <div class="top_Right_Card_Date_Operation">
           <el-radio-group v-model="radioData" size="mini" @change="radioChange">
             <el-radio-button label="日"></el-radio-button>
@@ -55,68 +62,62 @@
             <el-radio-button label="总"></el-radio-button>
           </el-radio-group>
           <div class="top_Right_Card_Date_Box">
-            <el-date-picker
-              v-if="radioData == '日'"
-              class="top_Right_Card_Date"
-              v-model="electricDatePick"
-              clear-icon="el-icon-error"
-              value-format="yyyy-MM-dd"
-              format="yyyy-MM-dd"
-              type="date"
-              @change="queryGeneratingCapacity()"
-              placeholder="选择时间"
-            />
-            <el-date-picker
-              v-if="radioData == '月'"
-              class="top_Right_Card_Date"
-              v-model="electricDatePickMon"
-              clear-icon="el-icon-error"
-              value-format="yyyy-MM"
-              format="yyyy-MM"
+            <a-locale-provider :locale="zh_CN" v-if="radioData == '日'">
+              <a-date-picker
+                :defaultValue="this.$moment(new Date(), 'YYYY-MM-DD')"
+                value-format="yyyy-MM-DD"
+                style="width: 133px"
+                @change="queryGeneratingCapacity"
+                placeholder="选择时间"
+              />
+            </a-locale-provider>
+            <DatePicker
               type="month"
-              @change="queryGeneratingCapacityMon()"
+              @on-change="queryGeneratingCapacityMon"
+              format="yyyy-MM"
+              v-if="radioData == '月'"
+              :value="new Date()"
               placeholder="选择时间"
-            />
-            <el-date-picker
-              v-if="radioData == '年'"
-              class="top_Right_Card_Date"
-              v-model="electricDatePickYear"
-              clear-icon="el-icon-error"
-              value-format="yyyy"
-              format="yyyy"
+              style="width: 133px"
+            ></DatePicker>
+            <DatePicker
               type="year"
-              @change="queryGeneratingCapacityYear()"
+              @on-change="queryGeneratingCapacityYear"
+              format="yyyy"
+              :value="new Date()"
+              v-if="radioData == '年'"
               placeholder="选择时间"
-            />
+              style="width: 133px"
+            ></DatePicker>
             <img v-show="radioData !== '总'" src="../pluginTemp/images/date.png" alt="" />
           </div>
-          <img style="cursor: pointer" @click="exportElectric" src="../pluginTemp/images/export.png" alt="" />
+          <img style="cursor: pointer" width="85px" height="32px" @click="exportElectric" src="../pluginTemp/images/export.png" alt="" />
         </div>
         <div
           class="top_Right_Card_StationCharts"
-          v-show="radioData == '日'"
-          style="height: 74%; width: 98%"
+          v-if="radioData == '日'"
+          style="height: calc(100% - 110px); width: 100%"
           ref="top_Right_Card_StationCharts"
           id="top_Right_Card_StationCharts"
         ></div>
         <div
           class="top_Right_Card_StationChartsMon"
-          v-show="radioData == '月'"
-          style="height: 74%; width: 98%"
+          v-if="radioData == '月'"
+          style="height: calc(100% - 110px); width: 100%"
           ref="top_Right_Card_StationChartsMon"
           id="top_Right_Card_StationChartsMon"
         ></div>
         <div
           class="top_Right_Card_StationChartsYear"
-          v-show="radioData == '年'"
-          style="height: 74%; width: 98%"
+          v-if="radioData == '年'"
+          style="height: calc(100% - 110px); width: 100%"
           ref="top_Right_Card_StationChartsYear"
           id="top_Right_Card_StationChartsYear"
         ></div>
         <div
           class="top_Right_Card_StationChartsAll"
-          v-show="radioData == '总'"
-          style="height: 74%; width: 98%"
+          v-if="radioData == '总'"
+          style="height: calc(100% - 110px); width: 100%"
           ref="top_Right_Card_StationChartsAll"
           id="top_Right_Card_StationChartsAll"
         ></div>
@@ -127,7 +128,9 @@
         <el-card class="bottom_Left_Card_Station">
           <div class="bottom_Left_Card_Station1">
             <span>电站运行状态</span>
-            <img src="../pluginTemp/images/Group 633.png" width="27px" height="25px" alt="" />
+            <img v-if="this.queryLeftDataRes.run_status == '正常'" src="../pluginTemp/images/Group 633.png" width="27px" height="25px" alt="" />
+            <img v-if="this.queryLeftDataRes.run_status == '离线'" src="../pluginTemp/images/leave.png" width="27px" height="25px" alt="" />
+            <img v-if="this.queryLeftDataRes.run_status == '异常'" src="../pluginTemp/images/error.png" width="27px" height="25px" alt="" />
             <span class="span2">{{ this.queryLeftDataRes.run_status }}</span>
           </div>
           <div class="bottom_Left_Card_Station2">
@@ -141,46 +144,62 @@
         </el-card>
         <el-card class="bottom_Left_Card_Station_Use">
           <div>当日发电量：</div>
-          <div style="float: right; margin-bottom: 3px; text-align: right">
+          <div style="float: right; height: 30px; line-height: 30px; margin-bottom: 5px; text-align: right">
             {{
               this.queryLeftDataRes.power_output_d / 10000 > 1
                 ? (this.queryLeftDataRes.power_output_d / 10000).toFixed(2) + "万kWh/"
-                : this.queryLeftDataRes.power_output_d + "kWh/"
+                : this.queryLeftDataRes.power_output_d
+                ? this.queryLeftDataRes.power_output_d.toFixed(2) + "kWh/"
+                : "" + "kWh/"
             }}
-            {{ this.queryLeftDataRes.equivalent_hours_d }} h
+            <span style="display: inline-block; width: 100px">
+              {{ this.queryLeftDataRes.equivalent_hours_d ? this.queryLeftDataRes.equivalent_hours_d.toFixed(2) + "h" : "" + "h" }}
+            </span>
           </div>
           <div>当月发电量：</div>
-          <div style="float: right; margin-bottom: 3px; text-align: right">
+          <div style="float: right; height: 30px; line-height: 30px; margin-bottom: 5px; text-align: right">
             {{
               this.queryLeftDataRes.power_output_m / 10000 > 1
                 ? (this.queryLeftDataRes.power_output_m / 10000).toFixed(2) + "万kWh/"
-                : this.queryLeftDataRes.power_output_m + "kWh/"
+                : this.queryLeftDataRes.power_output_m
+                ? this.queryLeftDataRes.power_output_m.toFixed(2) + "kWh/"
+                : "" + "kWh/"
             }}
-            {{ this.queryLeftDataRes.equivalent_hours_m }} h
+            <span style="display: inline-block; width: 100px"
+              >{{ this.queryLeftDataRes.equivalent_hours_m ? this.queryLeftDataRes.equivalent_hours_m.toFixed(2) + "h" : "" + "h" }}
+            </span>
           </div>
           <div>当年发电量：</div>
-          <div style="float: right; margin-bottom: 3px; text-align: right">
+          <div style="float: right; height: 30px; line-height: 30px; margin-bottom: 5px; text-align: right">
             {{
               this.queryLeftDataRes.power_output_y / 10000 > 1
                 ? (this.queryLeftDataRes.power_output_y / 10000).toFixed(2) + "万kWh/"
-                : this.queryLeftDataRes.power_output_y + "kWh/"
+                : this.queryLeftDataRes.power_output_y
+                ? this.queryLeftDataRes.power_output_y.toFixed(2) + "kWh/"
+                : "" + "kWh/"
             }}
-            {{ this.queryLeftDataRes.equivalent_hours_y }} h
+            <span style="display: inline-block; width: 100px"
+              >{{ this.queryLeftDataRes.equivalent_hours_y ? this.queryLeftDataRes.equivalent_hours_y.toFixed(2) + "h" : "" + "h" }}
+            </span>
           </div>
           <div>累计发电量：</div>
-          <div style="float: right; margin-bottom: 3px; text-align: right">
+          <div style="float: right; height: 30px; line-height: 30px; margin-bottom: 5px; text-align: right">
             {{
               this.queryLeftDataRes.power_output_all / 10000 > 1
                 ? (this.queryLeftDataRes.power_output_all / 10000).toFixed(2) + "万kWh/"
-                : this.queryLeftDataRes.power_output_all + "kWh/"
+                : this.queryLeftDataRes.power_output_all
+                ? this.queryLeftDataRes.power_output_all.toFixed(2) + "kWh/"
+                : "" + "kWh/"
             }}
-            {{ this.queryLeftDataRes.equivalent_hours_all }} h
+            <span style="display: inline-block; width: 100px"
+              >{{ this.queryLeftDataRes.equivalent_hours_all ? this.queryLeftDataRes.equivalent_hours_all.toFixed(2) + "h" : "" + "h" }}
+            </span>
           </div>
         </el-card>
       </div>
       <el-card class="bottom_Right_Card">
         <span class="bottom_Right_Card_Title">┃ 事件列表</span>
-        <hr />
+        <el-divider style="background-color: '#F0F2F5'"></el-divider>
         <div class="bottom_Right_Card_ButtonArray">
           <div class="blueButton" @click="sureTrue">确认无故障</div>
           <div class="blueButton" @click="notDefine">暂不处理</div>
@@ -201,8 +220,8 @@
               {{ formatDateHMS(scope.row.occur_time) }}
             </template>
           </el-table-column>
-          <el-table-column align="center" prop="station_name" label="电站名称" width="130"> </el-table-column>
-          <el-table-column align="center" prop="equipment_name" label="设备名称" width="80"> </el-table-column>
+          <el-table-column align="center" prop="station_name" label="电站名称"> </el-table-column>
+          <el-table-column align="center" prop="equipment_name" label="设备名称"> </el-table-column>
           <el-table-column align="center" prop="emergency_content" label="事件内容"> </el-table-column>
           <el-table-column align="center" prop="emergency_level" label="告警等级" width="80"> </el-table-column>
           <el-table-column align="center" prop="collect_type" label="告警来源" width="80"> </el-table-column>
@@ -224,12 +243,17 @@
 
 <script>
 import eventActionDefine from "./components/msgCompConfig";
-import { Card, DatePicker, Radio, RadioButton, RadioGroup, Table, TableColumn, Pagination } from "element-ui";
+import { WeatherIcons, DefaultIcon } from "./images";
+import { Card, DatePicker, Radio, RadioButton, RadioGroup, Table, TableColumn, Pagination, MessageBox, Divider, Dialog } from "element-ui";
 import Vue from "vue";
 import Utils from "./utils";
 import { getWeather, queryLeftData, queryPowerData, queryGeneratingCapacity, queryApplyTable, queryViewTableInfo, longitudeAndLatitude, buttonUpdateDataList } from "./api/asset";
 import "./index.css";
 import Qs from "qs";
+import zh_CN from "ant-design-vue/lib/locale-provider/zh_CN";
+import moment from "moment";
+import "moment/locale/zh-cn";
+moment.locale("zh-cn");
 Vue.use(Card);
 Vue.use(DatePicker);
 Vue.use(Radio);
@@ -238,7 +262,12 @@ Vue.use(RadioGroup);
 Vue.use(Table);
 Vue.use(TableColumn);
 Vue.use(Pagination);
-
+Vue.use(Divider);
+Vue.use(Dialog);
+Vue.prototype.$msgbox = MessageBox;
+Vue.prototype.$alert = MessageBox.alert;
+Vue.prototype.$confirm = MessageBox.confirm;
+Vue.prototype.$prompt = MessageBox.prompt;
 export default {
   //这里写组件英文名称，容器dom的id及事件中心命名均用到这个name，请认真填写
   name: "ButtonChange",
@@ -287,6 +316,7 @@ export default {
       //必需，不可删除
       id: "",
       //业务代码
+      zh_CN,
       radioData: "日",
       pageNum: 1,
       total: 0,
@@ -307,9 +337,13 @@ export default {
       multipleSelection: "",
       tableColData: {},
       stationID: "",
+      weatherInfo: "",
+      imgss: DefaultIcon,
+      resRichu: "",
     };
   },
   mounted() {
+    console.log(Qs.parse(window.location.href.split("?")[1]));
     //业务代码
     this.powerDatePick = this.formatDate(this.powerDatePick);
     this.electricDatePick = this.formatDate(this.electricDatePick);
@@ -348,264 +382,362 @@ export default {
       }
     },
     goOneLine() {
+      let message = Qs.parse(window.location.href.split("?")[1]);
+      delete message.menuId;
       window.PubSub.publish("menuClick", {
         key: `${this.customConfig.一次接线图跳转}`,
         isSubMenu: 1,
-        pubsubParams: "",
+        pubsubParams: Qs.stringify(message),
       });
     },
     goCallMore() {
+      let message = Qs.parse(window.location.href.split("?")[1]);
+      delete message.menuId;
       window.PubSub.publish("menuClick", {
         key: `${this.customConfig.通讯拓补图跳转}`,
         isSubMenu: 1,
-        pubsubParams: "",
+        pubsubParams: Qs.stringify(message),
       });
     },
     goCharts(row) {
+      let message = Qs.parse(window.location.href.split("?")[1]);
+      delete message.menuId;
+      message.SearchTreeSelectedKey = row.id;
       window.PubSub.publish("menuClick", {
         key: `${this.customConfig.图例跳转}`,
         isSubMenu: 1,
-        pubsubParams: Qs.stringify({
-          SearchTreeSelectedKey: row.id,
-        }),
+        pubsubParams: Qs.stringify(message),
       });
       this.triggerEvent(row);
+    },
+    goStation() {
+      console.log(999);
+      let message = Qs.parse(window.location.href.split("?")[1]);
+      delete message.menuId;
+      window.PubSub.publish("menuClick", {
+        key: `${this.customConfig.电站名称跳转}`,
+        isSubMenu: 1,
+        pubsubParams: Qs.stringify(message),
+      });
     },
     handleSelectionChange(val) {
       this.multipleSelection = val;
     },
     sureTrue() {
-      let message = {
-        params: {
-          form_id: this.tableColData.components[0].form_id,
-        },
-        data: {
-          replaceCols: [],
-        },
-      };
+      this.$nextTick(() => {
+        if (document.querySelectorAll(".ppp").length == 0) {
+          let dom = document.createElement("div");
+          dom.innerText = "提示";
+          dom.classList.add("ppp");
+          let dom2 = document.querySelectorAll(".el-message-box")[0];
+          let dom3 = document.querySelectorAll(".el-message-box__header")[0];
+          dom2.insertBefore(dom, dom3);
+        }
+      });
+      this.$confirm("您确认无故障吗?", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        center: true,
+        customClass: "messagebox",
+      })
+        .then(() => {
+          let message = {
+            params: {
+              form_id: this.tableColData.components[0].form_id,
+            },
+            data: {
+              replaceCols: [],
+            },
+          };
 
-      this.multipleSelection.forEach((item, index) => {
-        let info = {
-          childrenColumnList: [],
-          queryCondition: {
-            queryParams: [{}],
-          },
-          masterColumnList: [{}, {}],
-        };
-        info.masterColumnList[0] = JSON.parse(this.tableColData.queryColumn.formViewButtons[0].response_detail).query[0];
-        info.masterColumnList[1].asset_id = JSON.parse(this.tableColData.queryColumn.formViewButtons[0].response_detail).query[0].asset_id;
-        info.masterColumnList[1].col_datatype = JSON.parse(this.tableColData.queryColumn.formViewButtons[0].response_detail).query[0].col_datatype;
-        info.masterColumnList[1].col_name = "data_id";
-        info.masterColumnList[1].col_value = item.data_id;
-        info.queryCondition.queryParams[0].colName = "data_id";
-        info.queryCondition.queryParams[0].value = item.data_id;
-        message.data.replaceCols.push(info);
-      });
-      buttonUpdateDataList(message).then((res) => {
-        this.queryApplyTableData();
-      });
+          this.multipleSelection.forEach((item, index) => {
+            let info = {
+              childrenColumnList: [],
+              queryCondition: {
+                queryParams: [{}],
+              },
+              masterColumnList: [{}, {}],
+            };
+            info.masterColumnList[0] = JSON.parse(this.tableColData.queryColumn.formViewButtons[0].response_detail).query[0];
+            info.masterColumnList[1].asset_id = JSON.parse(this.tableColData.queryColumn.formViewButtons[0].response_detail).query[0].asset_id;
+            info.masterColumnList[1].col_datatype = JSON.parse(this.tableColData.queryColumn.formViewButtons[0].response_detail).query[0].col_datatype;
+            info.masterColumnList[1].col_name = "data_id";
+            info.masterColumnList[1].col_value = item.data_id;
+            info.queryCondition.queryParams[0].colName = "data_id";
+            info.queryCondition.queryParams[0].value = item.data_id;
+            message.data.replaceCols.push(info);
+          });
+          buttonUpdateDataList(message).then((res) => {
+            this.queryApplyTableData();
+          });
+        })
+        .catch(() => {});
     },
     notDefine() {
-      let message = {
-        params: {
-          form_id: this.tableColData.components[0].form_id,
-        },
-        data: {
-          replaceCols: [],
-        },
-      };
+      this.$nextTick(() => {
+        if (document.querySelectorAll(".ppp").length == 0) {
+          let dom = document.createElement("div");
+          dom.innerText = "提示";
+          dom.classList.add("ppp");
+          let dom2 = document.querySelectorAll(".el-message-box")[0];
+          let dom3 = document.querySelectorAll(".el-message-box__header")[0];
+          dom2.insertBefore(dom, dom3);
+        }
+      });
+      this.$confirm("您确认暂不处理吗?", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        center: true,
+        customClass: "messagebox",
+      })
+        .then(() => {
+          let message = {
+            params: {
+              form_id: this.tableColData.components[0].form_id,
+            },
+            data: {
+              replaceCols: [],
+            },
+          };
 
-      this.multipleSelection.forEach((item, index) => {
-        let info = {
-          childrenColumnList: [],
-          queryCondition: {
-            queryParams: [{}],
-          },
-          masterColumnList: [{}, {}],
-        };
-        info.masterColumnList[0] = JSON.parse(this.tableColData.queryColumn.formViewButtons[1].response_detail).query[0];
-        info.masterColumnList[1].asset_id = JSON.parse(this.tableColData.queryColumn.formViewButtons[1].response_detail).query[0].asset_id;
-        info.masterColumnList[1].col_datatype = JSON.parse(this.tableColData.queryColumn.formViewButtons[1].response_detail).query[0].col_datatype;
-        info.masterColumnList[1].col_name = "data_id";
-        info.masterColumnList[1].col_value = item.data_id;
-        info.queryCondition.queryParams[0].colName = "data_id";
-        info.queryCondition.queryParams[0].value = item.data_id;
-        message.data.replaceCols.push(info);
-      });
-      buttonUpdateDataList(message).then((res) => {
-        this.queryApplyTableData();
-      });
+          this.multipleSelection.forEach((item, index) => {
+            let info = {
+              childrenColumnList: [],
+              queryCondition: {
+                queryParams: [{}],
+              },
+              masterColumnList: [{}, {}],
+            };
+            info.masterColumnList[0] = JSON.parse(this.tableColData.queryColumn.formViewButtons[1].response_detail).query[0];
+            info.masterColumnList[1].asset_id = JSON.parse(this.tableColData.queryColumn.formViewButtons[1].response_detail).query[0].asset_id;
+            info.masterColumnList[1].col_datatype = JSON.parse(this.tableColData.queryColumn.formViewButtons[1].response_detail).query[0].col_datatype;
+            info.masterColumnList[1].col_name = "data_id";
+            info.masterColumnList[1].col_value = item.data_id;
+            info.queryCondition.queryParams[0].colName = "data_id";
+            info.queryCondition.queryParams[0].value = item.data_id;
+            message.data.replaceCols.push(info);
+          });
+          buttonUpdateDataList(message).then((res) => {
+            this.queryApplyTableData();
+          });
+        })
+        .catch(() => {});
     },
     bugUp() {
-      let message = {
-        params: {
-          form_id: this.tableColData.components[0].form_id,
-        },
-        data: {
-          replaceCols: [],
-        },
-      };
+      this.$nextTick(() => {
+        if (document.querySelectorAll(".ppp").length == 0) {
+          let dom = document.createElement("div");
+          dom.innerText = "提示";
+          dom.classList.add("ppp");
+          let dom2 = document.querySelectorAll(".el-message-box")[0];
+          let dom3 = document.querySelectorAll(".el-message-box__header")[0];
+          dom2.insertBefore(dom, dom3);
+        }
+      });
+      this.$confirm("您确认缺陷上报吗?", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning",
+        center: true,
+        customClass: "messagebox",
+      })
+        .then(() => {
+          let message = {
+            params: {
+              form_id: this.tableColData.components[0].form_id,
+            },
+            data: {
+              replaceCols: [],
+            },
+          };
 
-      this.multipleSelection.forEach((item, index) => {
-        let info = {
-          childrenColumnList: [],
-          queryCondition: {
-            queryParams: [{}],
-          },
-          masterColumnList: [{}, {}],
-        };
-        info.masterColumnList[0] = JSON.parse(this.tableColData.queryColumn.formViewButtons[2].response_detail).query[0];
-        info.masterColumnList[1].asset_id = JSON.parse(this.tableColData.queryColumn.formViewButtons[2].response_detail).query[0].asset_id;
-        info.masterColumnList[1].col_datatype = JSON.parse(this.tableColData.queryColumn.formViewButtons[2].response_detail).query[0].col_datatype;
-        info.masterColumnList[1].col_name = "data_id";
-        info.masterColumnList[1].col_value = item.data_id;
-        info.queryCondition.queryParams[0].colName = "data_id";
-        info.queryCondition.queryParams[0].value = item.data_id;
-        message.data.replaceCols.push(info);
-      });
-      buttonUpdateDataList(message).then((res) => {
-        this.queryApplyTableData();
-      });
+          this.multipleSelection.forEach((item, index) => {
+            let info = {
+              childrenColumnList: [],
+              queryCondition: {
+                queryParams: [{}],
+              },
+              masterColumnList: [{}, {}],
+            };
+            info.masterColumnList[0] = JSON.parse(this.tableColData.queryColumn.formViewButtons[2].response_detail).query[0];
+            info.masterColumnList[1].asset_id = JSON.parse(this.tableColData.queryColumn.formViewButtons[2].response_detail).query[0].asset_id;
+            info.masterColumnList[1].col_datatype = JSON.parse(this.tableColData.queryColumn.formViewButtons[2].response_detail).query[0].col_datatype;
+            info.masterColumnList[1].col_name = "data_id";
+            info.masterColumnList[1].col_value = item.data_id;
+            info.queryCondition.queryParams[0].colName = "data_id";
+            info.queryCondition.queryParams[0].value = item.data_id;
+            message.data.replaceCols.push(info);
+          });
+          buttonUpdateDataList(message).then((res) => {
+            this.queryApplyTableData();
+          });
+        })
+        .catch(() => {});
     },
     longitudeAndLatitude() {
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
       };
-      let message2 = {
-        longitude: 112.982951,
-        latitude: 28.116007,
-        address: "湖南省",
-      };
-      getWeather(message2).then((resp) => {
-        console.log(resp);
-      });
       longitudeAndLatitude(message).then((res) => {
         this.longitude = res.data.longitude;
         this.latitude = res.data.latitude;
+        let message2 = {
+          address: res.data.address,
+          longitude: this.longitude,
+          latitude: this.latitude,
+        };
+        getWeather(message2).then((resp) => {
+          try {
+            console.log(resp);
+            this.weatherInfo = JSON.parse(resp.data);
+            console.log(this.weatherInfo, 574);
+          } catch (e) {}
+          this.resRichu = Utils.computeSunRiseSunSet(this.latitude, this.longitude, 8);
+          this.imgss = this.weatherInfo.data.weather ? WeatherIcons[this.weatherInfo.data.weather] : DefaultIcon;
+          console.log(this.imgss);
+        });
       });
     },
     queryLeftData() {
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
       };
       queryLeftData(message).then((res) => {
         console.log(res);
         this.queryLeftDataRes = res.data;
       });
     },
-    queryPowerData() {
+    queryPowerData(e) {
+      this.powerDatePick = e || this.powerDatePick;
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
         time: this.powerDatePick,
       };
+      let xData = [];
+      let yData = [];
+      this.powerData = [];
       queryPowerData(message).then((res) => {
-        let xData = [];
-        let yData = [];
         res.data.forEach((element) => {
-          xData.push(element.sub_time);
-          yData.push(element.AC_active_power);
+          xData.push(element.sub_time || "");
+          yData.push(typeof element.AC_active_power == "number" ? element.AC_active_power : "");
           this.powerData.push({
             时间: element.sub_time,
             发电功率: element.AC_active_power,
           });
         });
         this.top_Center_Card_StationCharts(xData, yData);
+        // this.powerData.length > 0 ? this.top_Center_Card_StationCharts(xData, yData) : console.log();
       });
     },
-    queryGeneratingCapacity() {
+    queryGeneratingCapacity(e) {
+      this.electricDatePick = e || this.electricDatePick;
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
         time: this.electricDatePick,
       };
+      let xData = [];
+      let yData = [];
+      let yData2 = [];
+      this.electricData = [];
       queryGeneratingCapacity(message).then((res) => {
-        let xData = [];
-        let yData = [];
-        let yData2 = [];
         res.data.forEach((element) => {
           xData.push(element.sub_time);
-          yData.push(element.power_output_h);
-          yData2.push(element.equivalent_hours_h);
+          yData.push(typeof element.power_output_h == "number" ? element.power_output_h : "");
+          yData2.push(typeof element.equivalent_hours_h == "number" ? element.equivalent_hours_h : "");
           this.electricData.push({
             时间: element.sub_time,
             发电量: element.power_output_h,
             等效时数: element.equivalent_hours_h,
           });
-          this.top_Right_Card_StationCharts(xData, yData, yData2);
         });
+        this.top_Right_Card_StationCharts(xData, yData, yData2);
+        // this.electricData.length > 0 ? this.top_Right_Card_StationCharts(xData||[], yData||[], yData2|[]) : console.log();
       });
     },
-    queryGeneratingCapacityMon() {
+    queryGeneratingCapacityMon(e) {
+      this.electricDatePickMon = e || this.electricDatePickMon;
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
         time: this.electricDatePickMon,
       };
+      let xData = [];
+      let yData = [];
+      let yData2 = [];
+      this.electricDataMon = [];
       queryGeneratingCapacity(message).then((res) => {
-        let xData = [];
-        let yData = [];
-        let yData2 = [];
         res.data.forEach((element) => {
           xData.push(element.sub_time);
-          yData.push(element.power_output_d);
-          yData2.push(element.equivalent_hours_d);
+          yData.push(typeof element.power_output_d == "number" ? element.power_output_d : "");
+          yData2.push(typeof element.equivalent_hours_d == "number" ? element.equivalent_hours_d : "");
           this.electricDataMon.push({
             时间: element.sub_time,
             发电量: element.power_output_d,
             等效时数: element.equivalent_hours_d,
           });
-          this.top_Right_Card_StationChartsMon(xData, yData, yData2);
         });
+        this.top_Right_Card_StationChartsMon(xData, yData, yData2);
+        // this.electricDataMon.length > 0 ? this.top_Right_Card_StationChartsMon(xData, yData, yData2) : console.log();
       });
     },
-    queryGeneratingCapacityYear() {
+    queryGeneratingCapacityYear(e) {
+      this.electricDatePickYear = e || this.electricDatePickYear;
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
         time: this.electricDatePickYear,
       };
+      let xData = [];
+      let yData = [];
+      let yData2 = [];
+      this.electricDataYear = [];
       queryGeneratingCapacity(message).then((res) => {
-        let xData = [];
-        let yData = [];
-        let yData2 = [];
         res.data.forEach((element) => {
           xData.push(element.sub_time);
-          yData.push(element.power_output_m);
-          yData2.push(element.equivalent_hours_m);
+          yData.push(typeof element.power_output_m == "number" ? element.power_output_m : "");
+          yData2.push(typeof element.equivalent_hours_m == "number" ? element.equivalent_hours_m : "");
           this.electricDataYear.push({
             时间: element.sub_time,
             发电量: element.power_output_m,
             等效时数: element.equivalent_hours_m,
           });
-          this.top_Right_Card_StationChartsYear(xData, yData, yData2);
         });
+        this.top_Right_Card_StationChartsYear(xData, yData, yData2);
+        // this.electricDataYear.length > 0 ? this.top_Right_Card_StationChartsYear(xData, yData, yData2) : console.log();
       });
     },
     queryGeneratingCapacityAll() {
       let message = {
-        stationId: this.stationID,
+        stationId: this.stationID || this.getSearch(window.location.search).SearchTreeSelectedKey,
         time: "",
       };
+      let xData = [];
+      let yData = [];
+      let yData2 = [];
+      this.electricDataAll = [];
       queryGeneratingCapacity(message).then((res) => {
-        let xData = [];
-        let yData = [];
-        let yData2 = [];
         res.data.forEach((element) => {
           xData.push(element.sub_time);
-          yData.push(element.power_output_y);
-          yData2.push(element.equivalent_hours_y);
+          yData.push(typeof element.power_output_y == "number" ? element.power_output_y : "");
+          yData2.push(typeof element.equivalent_hours_y == "number" ? element.equivalent_hours_y : "");
           this.electricDataAll.push({
             时间: element.sub_time,
             发电量: element.power_output_y,
             等效时数: element.equivalent_hours_y,
           });
-          this.top_Right_Card_StationChartsAll(xData, yData, yData2);
         });
+        this.top_Right_Card_StationChartsAll(xData, yData, yData2);
+        // this.electricDataAll.length > 0 ? this.top_Right_Card_StationChartsAll(xData, yData, yData2) : console.log();
       });
     },
     top_Center_Card_StationCharts(xData, yData) {
       const myChart = this.$echarts.init(this.$refs.top_Center_Card_StationCharts);
+      let maxValue = Math.ceil(Math.max.apply(null, yData) / 10) * 10;
       myChart.resize();
       let dataX = xData;
       let dataY = yData;
       const option = {
+        animation: false,
         color: ["#47A2FF"],
         tooltip: {
           trigger: "axis",
@@ -613,11 +745,11 @@ export default {
             type: "none",
           },
           formatter: function (params) {
-            return dataX[params[0].dataIndex] + "<br/>" + params[0].marker + "发电功率" + dataY[params[0].dataIndex] + "kW";
+            return dataX[params[0].dataIndex] + "<br/>" + params[0].marker + "发电功率" + Number(dataY[params[0].dataIndex]).toFixed(2) + "kW";
           },
         },
         grid: {
-          left: "0%",
+          left: xData.length > 0 ? "0%" : "3%",
           right: "4%",
           bottom: "7%",
           top: "60px",
@@ -651,13 +783,18 @@ export default {
         },
         yAxis: {
           type: "value",
-          min: 0,
-          minInterval: 1,
-          name: "单位（kW）",
+          min: 0, // 刻度最小值
+          max: (value) => {
+            // 百位起最大值向上取整
+            return Math.ceil(value.max / 10) * 10;
+          },
+          interval: maxValue / 5, // 刻度间隔
+          name: "单位:（kW）",
+          // interval: maxValue / 5,
           nameTextStyle: {
             fontSize: 12,
             color: "#000",
-            padding: [0, 0, 0, 30], // 上右下左与原位置距离
+            padding: [0, 0, 0, xData.length > 0 && maxValue > 0 ? 30 : 70], // 上右下左与原位置距离
           },
           splitLine: {
             show: true,
@@ -679,6 +816,9 @@ export default {
             fontSize: 12,
             fontFamily: "Bebas",
             color: "#000",
+            formatter: function (value) {
+              return value.toFixed(0);
+            },
           },
         },
         series: [
@@ -692,15 +832,47 @@ export default {
           },
         ],
       };
-      myChart.setOption(option);
+      myChart.setOption(option, true);
+      function debounce(func, ms = 1000) {
+        let timer;
+        return function (...args) {
+          if (timer) {
+            clearTimeout(timer);
+          }
+          timer = setTimeout(() => {
+            func.apply(this, args);
+          }, ms);
+        };
+      }
+      const task = () => {
+        console.log("resize");
+        myChart.resize();
+      };
+      const debounceTask = debounce(task, 1000);
+      window.addEventListener("resize", debounceTask);
     },
     top_Right_Card_StationCharts(xData, yData, yData2) {
       const myChart = this.$echarts.init(this.$refs.top_Right_Card_StationCharts);
+      let maxValue = Math.ceil(Math.max.apply(null, yData) / 10) * 10;
+      let yShow = false;
+      let y1Show = false;
+      yData2.forEach((item, index) => {
+        if (typeof item == "number") {
+          yShow = true;
+        }
+      });
+      yData.forEach((item, index) => {
+        if (item) {
+          y1Show = true;
+        }
+      });
       myChart.resize();
       let dataX = xData;
       let dataY = yData;
       let dataY2 = yData2;
       var option = {
+        animation: false,
+
         backgroundColor: "#fff",
         tooltip: {
           trigger: "axis",
@@ -709,15 +881,15 @@ export default {
           },
           formatter: function (params) {
             return `${dataX[params[0].dataIndex]}<br/>${params[0].marker}发电量：${
-              dataY[params[0].dataIndex] / 10000 > 1 ? (dataY[params[0].dataIndex] / 10000).toFixed(2) + "万kWh" : dataY[params[0].dataIndex] + "kWh"
+              dataY[params[0].dataIndex] / 10000 > 1 ? (dataY[params[0].dataIndex] / 10000).toFixed(2) + "万kWh" : Number(dataY[params[0].dataIndex]).toFixed(2) + "kWh"
             }<br>${params[1].marker}等效时数：${dataY2[params[0].dataIndex]}h`;
           },
         },
         grid: {
           top: "60px",
           bottom: "7%",
-          left: "5%",
-          right: "5%",
+          left: y1Show ? "3%" : "6.5%",
+          right: "3%",
           containLabel: true,
         },
         legend: {
@@ -754,14 +926,24 @@ export default {
         yAxis: [
           {
             type: "value",
-            name: "单位（kWh）",
+            name: "单位:（kWh）",
             type: "value",
+            min: 0, // 刻度最小值
+            max: (value) => {
+              // 百位起最大值向上取整
+              return Math.ceil(value.max / 10) * 10;
+            },
+            interval: maxValue / 5, // 刻度间隔
             nameTextStyle: {
               color: "#000",
+              padding: [0, dataX.length > 0 ? -20 : -50, 0, 0],
             },
             axisLabel: {
               textStyle: {
                 color: "#000",
+              },
+              formatter: function (value) {
+                return Number(value).toFixed(0);
               },
             },
             splitLine: {
@@ -779,10 +961,10 @@ export default {
           },
           {
             type: "value",
-            name: "单位（h）",
+            name:  "单位:（h）" ,
             nameTextStyle: {
               color: "#000",
-              padding: [0, -10, 0, 30], // 上右下左与原位置距离
+              padding: [0, xData.length > 0 ? 20 : 60, 0, xData.length > 0 ? 30 : 0], // 上右下左与原位置距离
             },
             scale: false,
             position: "right",
@@ -800,6 +982,12 @@ export default {
               textStyle: {
                 fontSize: 12,
                 color: "#000",
+              },
+            },
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: "#B8B8B8",
               },
             },
           },
@@ -834,15 +1022,54 @@ export default {
           },
         ],
       };
-      myChart.setOption(option);
+      myChart.setOption(option, true);
+      function debounce(func, ms = 1000) {
+        let timer;
+        return function (...args) {
+          if (timer) {
+            clearTimeout(timer);
+          }
+          timer = setTimeout(() => {
+            func.apply(this, args);
+          }, ms);
+        };
+      }
+      const task = () => {
+        console.log("resize");
+        myChart.resize();
+      };
+      const debounceTask = debounce(task, 1000);
+      window.addEventListener("resize", debounceTask);
     },
     top_Right_Card_StationChartsMon(xData, yData, yData2) {
       const myChart = this.$echarts.init(this.$refs.top_Right_Card_StationChartsMon);
       myChart.resize();
+      let yShow = false;
+      let y1Show = false;
+      yData2.forEach((item, index) => {
+        if (typeof item == "number") {
+          yShow = true;
+        }
+      });
+      yData.forEach((item, index) => {
+        if (item) {
+          y1Show = true;
+        }
+      });
+      let show10000 = false;
+      if (Math.max.apply(null, yData) / 10000 > 1) {
+        show10000 = true;
+        for (let k = 0; k < yData.length; k++) {
+          yData[k] = Number(yData[k]) / 10000;
+        }
+      }
+      let maxValue = Math.ceil(Math.max.apply(null, yData) / 10) * 10;
       let dataX = xData;
       let dataY = yData;
       let dataY2 = yData2;
       var option = {
+        animation: false,
+
         backgroundColor: "#fff",
         tooltip: {
           trigger: "axis",
@@ -851,15 +1078,15 @@ export default {
           },
           formatter: function (params) {
             return `${dataX[params[0].dataIndex]}<br/>${params[0].marker}发电量：${
-              dataY[params[0].dataIndex] / 10000 > 1 ? (dataY[params[0].dataIndex] / 10000).toFixed(2) + "万kWh" : dataY[params[0].dataIndex] + "kWh"
+              show10000 ? dataY[params[0].dataIndex].toFixed(2) + "万kWh" : Number(dataY[params[0].dataIndex]).toFixed(2) + "kWh"
             }<br>${params[1].marker}等效时数：${dataY2[params[0].dataIndex]}h`;
           },
         },
         grid: {
           top: "60px",
           bottom: "7%",
-          left: "5%",
-          right: "5%",
+          left: y1Show ? "3%" : "6.5%",
+          right: "3%",
           containLabel: true,
         },
         legend: {
@@ -891,14 +1118,24 @@ export default {
         yAxis: [
           {
             type: "value",
-            name: "单位（kWh）",
+            name: show10000 ? "单位:（万kWh）" : "单位:（kWh）",
             type: "value",
+            min: 0, // 刻度最小值
+            max: (value) => {
+              // 百位起最大值向上取整
+              return Math.ceil(value.max / 10) * 10;
+            },
+            interval: maxValue / 5, // 刻度间隔
             nameTextStyle: {
               color: "#000",
+              padding: [0, xData.length > 0 ? -0 : -50, 0, 0],
             },
             axisLabel: {
               textStyle: {
                 color: "#000",
+              },
+              formatter: function (value) {
+                return Number(value).toFixed(0);
               },
             },
             splitLine: {
@@ -916,10 +1153,10 @@ export default {
           },
           {
             type: "value",
-            name: "单位（h）",
+            name:  "单位:（h）" ,
             nameTextStyle: {
               color: "#000",
-              padding: [0, -10, 0, 30], // 上右下左与原位置距离
+              padding: [0, xData.length > 0 ? 20 : 60, 0, xData.length > 0 ? 30 : 0], // 上右下左与原位置距离
             },
             scale: false,
             position: "right",
@@ -930,6 +1167,12 @@ export default {
             },
             splitLine: {
               show: false,
+            },
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: "#B8B8B8",
+              },
             },
             axisLabel: {
               show: true,
@@ -971,15 +1214,54 @@ export default {
           },
         ],
       };
-      myChart.setOption(option);
+      myChart.setOption(option, true);
+      function debounce(func, ms = 1000) {
+        let timer;
+        return function (...args) {
+          if (timer) {
+            clearTimeout(timer);
+          }
+          timer = setTimeout(() => {
+            func.apply(this, args);
+          }, ms);
+        };
+      }
+      const task = () => {
+        console.log("resize");
+        myChart.resize();
+      };
+      const debounceTask = debounce(task, 1000);
+      window.addEventListener("resize", debounceTask);
     },
     top_Right_Card_StationChartsYear(xData, yData, yData2) {
       const myChart = this.$echarts.init(this.$refs.top_Right_Card_StationChartsYear);
       myChart.resize();
+      let yShow = false;
+      let y1Show = false;
+      yData2.forEach((item, index) => {
+        if (typeof item == "number") {
+          yShow = true;
+        }
+      });
+      yData.forEach((item, index) => {
+        if (item) {
+          y1Show = true;
+        }
+      });
+      let show10000 = false;
+      if (Math.max.apply(null, yData) / 10000 > 1) {
+        show10000 = true;
+        for (let k = 0; k < yData.length; k++) {
+          yData[k] = Number(yData[k]) / 10000;
+        }
+      }
+      let maxValue = Math.ceil(Math.max.apply(null, yData) / 10) * 10;
       let dataX = xData;
       let dataY = yData;
       let dataY2 = yData2;
       var option = {
+        animation: false,
+
         backgroundColor: "#fff",
         tooltip: {
           trigger: "axis",
@@ -988,15 +1270,15 @@ export default {
           },
           formatter: function (params) {
             return `${dataX[params[0].dataIndex]}<br/>${params[0].marker}发电量：${
-              dataY[params[0].dataIndex] / 10000 > 1 ? (dataY[params[0].dataIndex] / 10000).toFixed(2) + "万kWh" : dataY[params[0].dataIndex] + "kWh"
+              show10000 ? dataY[params[0].dataIndex].toFixed(2) + "万kWh" : Number(dataY[params[0].dataIndex]).toFixed(2) + "kWh"
             }<br>${params[1].marker}等效时数：${dataY2[params[0].dataIndex]}h`;
           },
         },
         grid: {
           top: "60px",
           bottom: "7%",
-          left: "5%",
-          right: "5%",
+          left: xData.length > 0 ? "2%" : "6%",
+          right: xData.length > 0 ? "3%" : "4%",
           containLabel: true,
         },
         legend: {
@@ -1028,14 +1310,24 @@ export default {
         yAxis: [
           {
             type: "value",
-            name: "单位（kWh）",
+            name: show10000 ? "单位:（万kWh）" : "单位:（kWh）",
             type: "value",
+            min: 0, // 刻度最小值
+            max: (value) => {
+              // 百位起最大值向上取整
+              return Math.ceil(value.max / 10) * 10;
+            },
+            interval: maxValue / 5, // 刻度间隔
             nameTextStyle: {
               color: "#000",
+              padding: [0, xData.length > 0 ? -30 : -30, 0, 0], // 上右下左与原位置距离
             },
             axisLabel: {
               textStyle: {
                 color: "#000",
+              },
+              formatter: function (value) {
+                return Number(value).toFixed(0);
               },
             },
             splitLine: {
@@ -1053,10 +1345,10 @@ export default {
           },
           {
             type: "value",
-            name: "单位（h）",
+            name: "单位:（h）" ,
             nameTextStyle: {
               color: "#000",
-              padding: [0, -10, 0, 30], // 上右下左与原位置距离
+              padding: [0, xData.length > 0 ? 20 : 60, 0, xData.length > 0 ? 30 : 0], // 上右下左与原位置距离
             },
             scale: false,
             position: "right",
@@ -1074,6 +1366,12 @@ export default {
               textStyle: {
                 fontSize: 12,
                 color: "#000",
+              },
+            },
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: "#B8B8B8",
               },
             },
           },
@@ -1108,15 +1406,54 @@ export default {
           },
         ],
       };
-      myChart.setOption(option);
+      myChart.setOption(option, true);
+      function debounce(func, ms = 1000) {
+        let timer;
+        return function (...args) {
+          if (timer) {
+            clearTimeout(timer);
+          }
+          timer = setTimeout(() => {
+            func.apply(this, args);
+          }, ms);
+        };
+      }
+      const task = () => {
+        console.log("resize");
+        myChart.resize();
+      };
+      const debounceTask = debounce(task, 1000);
+      window.addEventListener("resize", debounceTask);
     },
     top_Right_Card_StationChartsAll(xData, yData, yData2) {
       const myChart = this.$echarts.init(this.$refs.top_Right_Card_StationChartsAll);
+      let yShow = false;
+      let y1Show = false;
+      yData2.forEach((item, index) => {
+        if (typeof item == "number") {
+          yShow = true;
+        }
+      });
+      yData.forEach((item, index) => {
+        if (item) {
+          y1Show = true;
+        }
+      });
+      let show10000 = false;
+      if (Math.max.apply(null, yData) / 10000 > 1) {
+        show10000 = true;
+        for (let k = 0; k < yData.length; k++) {
+          yData[k] = Number(yData[k]) / 10000;
+        }
+      }
+      let maxValue = Math.ceil(Math.max.apply(null, yData) / 10) * 10;
       myChart.resize();
       let dataX = xData;
       let dataY = yData;
       let dataY2 = yData2;
       var option = {
+        animation: false,
+
         backgroundColor: "#fff",
         tooltip: {
           trigger: "axis",
@@ -1125,15 +1462,15 @@ export default {
           },
           formatter: function (params) {
             return `${dataX[params[0].dataIndex]}<br/>${params[0].marker}发电量：${
-              dataY[params[0].dataIndex] / 10000 > 1 ? (dataY[params[0].dataIndex] / 10000).toFixed(2) + "万kWh" : dataY[params[0].dataIndex] + "kWh"
+              show10000 ? dataY[params[0].dataIndex].toFixed(2) + "万kWh" : Number(dataY[params[0].dataIndex]).toFixed(2) + "kWh"
             }<br>${params[1].marker}等效时数：${dataY2[params[0].dataIndex]}h`;
           },
         },
         grid: {
           top: "60px",
           bottom: "7%",
-          left: "5%",
-          right: "5%",
+          left: xData.length > 0 ? "0%" : "6%",
+          right: xData.length > 0 ? "3%" : "6%",
           containLabel: true,
         },
         legend: {
@@ -1165,14 +1502,25 @@ export default {
         yAxis: [
           {
             type: "value",
-            name: "单位（kWh）",
+            name: show10000 ? "单位:（万kWh）" : "单位:（kWh）",
             type: "value",
+            min: 0, // 刻度最小值
+            max: (value) => {
+              // 百位起最大值向上取整
+              return Math.ceil(value.max / 10) * 10;
+            },
+            interval: maxValue / 5, // 刻度间隔
+            scale: false,
             nameTextStyle: {
               color: "#000",
+              padding: [0, xData.length > 0 ? -50 : -25, 0, 0], // 上右下左与原位置距离
             },
             axisLabel: {
               textStyle: {
                 color: "#000",
+              },
+              formatter: function (value) {
+                return Number(value).toFixed(0);
               },
             },
             splitLine: {
@@ -1190,10 +1538,10 @@ export default {
           },
           {
             type: "value",
-            name: "单位（h）",
+            name: "单位:（h）",
             nameTextStyle: {
               color: "#000",
-              padding: [0, -10, 0, 30], // 上右下左与原位置距离
+              padding: [0, xData.length > 0 ? 20 : 60, 0, xData.length > 0 ? 30 : 0], // 上右下左与原位置距离
             },
             scale: false,
             position: "right",
@@ -1204,6 +1552,12 @@ export default {
             },
             splitLine: {
               show: false,
+            },
+            axisLine: {
+              show: true,
+              lineStyle: {
+                color: "#B8B8B8",
+              },
             },
             axisLabel: {
               show: true,
@@ -1245,9 +1599,27 @@ export default {
           },
         ],
       };
-      myChart.setOption(option);
+      myChart.setOption(option, true);
+      function debounce(func, ms = 1000) {
+        let timer;
+        return function (...args) {
+          if (timer) {
+            clearTimeout(timer);
+          }
+          timer = setTimeout(() => {
+            func.apply(this, args);
+          }, ms);
+        };
+      }
+      const task = () => {
+        console.log("resize");
+        myChart.resize();
+      };
+      const debounceTask = debounce(task, 1000);
+      window.addEventListener("resize", debounceTask);
     },
     async queryApplyTableData() {
+      this.tableData = [];
       let message = {
         pageNum: this.pageNum,
         pageSize: 5,
@@ -1266,14 +1638,12 @@ export default {
         view_id: `${this.customConfig.view_id}`,
       };
       await queryViewTableInfo(params).then(async (res) => {
-        console.log(res.data.components);
-
-        this.tableData = [];
         let query = {
           view_id: `${this.customConfig.view_id}`,
           data: message,
         };
         await this.queryApplyTable(query);
+        this.tableData = [];
         this.startData.forEach((item, index) => {
           let info = {
             occur_time: "",
@@ -1354,7 +1724,6 @@ export default {
     },
     async queryApplyTable(message) {
       let res = await queryApplyTable(message);
-      console.log(res.data.results);
       this.startData = res.data.results;
       this.total = res.data.totalCount;
     },
@@ -1371,19 +1740,21 @@ export default {
         };
         websocket.onopen = () => {
           console.log("连接成功");
-          let timer = setInterval(() => {
-            console.log("心跳");
-            this.queryPowerData();
-            this.queryGeneratingCapacity();
-            this.queryGeneratingCapacityMon();
-            this.queryGeneratingCapacityYear();
-            this.queryGeneratingCapacityAll();
-            let ping = { type: "ping" };
-            websocket.send(JSON.stringify(ping));
-          }, 5000);
+          // let timer = setInterval(() => {
+          //   console.log("心跳");
+          //   let ping = { type: "ping" };
+          //   websocket.send(JSON.stringify(ping));
+          // }, 5000);
         };
         websocket.onmessage = (event) => {
           console.log("onmessage");
+          this.queryLeftData();
+          this.queryPowerData();
+          this.queryGeneratingCapacity();
+          this.queryGeneratingCapacityMon();
+          this.queryGeneratingCapacityYear();
+          this.queryGeneratingCapacityAll();
+          this.queryApplyTableData();
         };
         window.onbeforeunload = () => {
           closeWebSocket();
@@ -1407,12 +1778,16 @@ export default {
     },
     exportElectric() {
       let message = {};
+      let time = "";
       if (this.radioData == "日") {
         message = this.electricData;
+        time = this.electricDatePick;
       } else if (this.radioData == "月") {
         message = this.electricDataMon;
+        time = this.electricDatePickMon;
       } else if (this.radioData == "年") {
         message = this.electricDataYear;
+        time = this.electricDatePickYear;
       } else if (this.radioData == "总") {
         message = this.electricDataAll;
       }
@@ -1429,16 +1804,18 @@ export default {
         }
         str += "</tr>";
       } // Worksheet名
-      const worksheet = "Sheet1";
+      const worksheet = "发电量-" + this.radioData + "-" + this.queryLeftDataRes.name + "-" + time;
       const uri = "data:application/vnd.ms-excel;base64,"; // 下载的表格模板数据
-      const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:x="urn:schemas-microsoft-com:office:excel"
-    xmlns="http://www.w3.org/TR/REC-html40">
-    <head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-    <x:Name>${worksheet}</x:Name>
-    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
-    </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-    </head><body><table>${str}</table></body></html>`; // 下载模板 // 输出base64编码
+      const template = `<html
+             xmlns:o="urn:schemas-microsoft-com:office:office"
+             xmlns:x="urn:schemas-microsoft-com:office:excel"
+        xmlns="http://www.w3.org/TR/REC-html40">
+      <head> <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+          <x:Name>${worksheet}</x:Name>
+          <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
+          </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--> </head>
+      <body><table>${str}</table></body>
+      </html>`;
       const base64 = function (s) {
         return window.btoa(unescape(encodeURIComponent(s)));
       };
@@ -1449,7 +1826,7 @@ export default {
       };
       const a = document.createElement("a");
       a.href = uri + base64(format(template));
-      a.download = "发电量" + ".xls";
+      a.download = "发电量-" + this.radioData + "-" + this.queryLeftDataRes.name + "-" + time + ".xls";
       a.click();
     },
     exportPower() {
@@ -1466,16 +1843,20 @@ export default {
         }
         str += "</tr>";
       } // Worksheet名
-      const worksheet = "Sheet1";
+      const worksheet = "功率-" + this.queryLeftDataRes.name + "-" + this.powerDatePick;
+      console.log(str);
       const uri = "data:application/vnd.ms-excel;base64,"; // 下载的表格模板数据
-      const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:x="urn:schemas-microsoft-com:office:excel"
-    xmlns="http://www.w3.org/TR/REC-html40">
-    <head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
-    <x:Name>${worksheet}</x:Name>
-    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
-    </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
-    </head><body><table>${str}</table></body></html>`; // 下载模板 // 输出base64编码
+      const template = `<html
+             xmlns:o="urn:schemas-microsoft-com:office:office"
+             xmlns:x="urn:schemas-microsoft-com:office:excel"
+        xmlns="http://www.w3.org/TR/REC-html40">
+      <head> <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+          <x:Name>${worksheet}</x:Name>
+          <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>
+          </x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--> </head>
+      <body><table>${str}</table></body>
+      </html>`;
+      console.log(template);
       const base64 = function (s) {
         return window.btoa(unescape(encodeURIComponent(s)));
       };
@@ -1486,7 +1867,7 @@ export default {
       };
       const a = document.createElement("a");
       a.href = uri + base64(format(template));
-      a.download = "功率" + ".xls";
+      a.download = "功率-" + this.queryLeftDataRes.name + "-" + this.powerDatePick + ".xls";
       a.click();
     },
     handleCurrentChange(val) {
@@ -1501,7 +1882,11 @@ export default {
       const h = (date.getHours() + ":").padStart(3, "0");
       const m = (date.getMinutes() + ":").padStart(3, "0");
       const s = (date.getSeconds() + "").padStart(2, "0");
-      return Y + M + D;
+      if (row) {
+        return Y + M + D;
+      } else {
+        return "";
+      }
     },
     formatDateMon(row) {
       const date = new Date(row);
@@ -1525,8 +1910,8 @@ export default {
     },
     formatDateHMS(row) {
       const date = new Date(row);
-      const Y = date.getFullYear() + ".";
-      const M = date.getMonth() + 1 + ".";
+      const Y = date.getFullYear() + "-";
+      const M = date.getMonth() + 1 + "-";
       const D = date.getDate() + " ";
       const h = (date.getHours() + ":").padStart(3, "0");
       const m = (date.getMinutes() + ":").padStart(3, "0");
@@ -1601,12 +1986,14 @@ export default {
       height: 11%;
       width: 100%;
       margin-bottom: 15px;
+      color: #5e605f;
       /deep/.el-card__body {
-        padding: 15px 2px 15px 18px;
+        padding: 13px 2px 15px 18px;
+        cursor: pointer;
       }
     }
     .top_Left_Card_ButtonArray {
-      height: 20.5%;
+      height: 22.5%;
       width: 100%;
       margin-bottom: 15px;
       .blueButton {
@@ -1614,7 +2001,7 @@ export default {
         height: 30px;
         border-radius: 2px;
         background: #0084ff;
-        margin-bottom: 2%;
+        margin-bottom: 1%;
         color: rgba(255, 255, 255, 1);
         font-size: 16px;
         font-weight: 500;
@@ -1626,20 +2013,21 @@ export default {
       /deep/.el-card__body {
         padding: 15px 15px;
         display: flex;
-        justify-content: space-between;
+        justify-content: space-around;
         flex-wrap: wrap;
       }
     }
     .top_Left_Card_Station_Info {
-      height: 35.5%;
+      height: 33.5%;
       width: 100%;
       margin-bottom: 15px;
+      line-height: 20px;
       /deep/.el-card__body {
         padding: 15px 18px;
       }
       div {
         margin-bottom: 8px;
-        color: rgba(0, 0, 0, 1);
+        color: #5e605f;
         font-size: 16px;
         font-weight: 400;
         font-family: "Alibaba PuHuiTi";
@@ -1649,12 +2037,30 @@ export default {
     }
     .top_Left_Card_Weather {
       width: 100%;
-      height: 22.5%;
-      /deep/.el-card__body {
-        padding: 10px 20px 10px 14px;
-      }
+      height: calc(100% - 67% - 45px);
+      font-size: 16px;
+      line-height: 18px;
+      font-weight: 400;
       div {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
+      }
+      .top_Left_Card_Weather_Left,
+      .top_Left_Card_Weather_Right {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: #5e605f;
+        img {
+          margin-left: 45px;
+        }
+        width: 49%;
+        height: 100%;
+        margin-bottom: 0px;
+      }
+      /deep/.el-card__body {
+        display: flex;
+        height: 100%;
+        padding: 10px 20px 10px 14px;
       }
     }
   }
@@ -1676,7 +2082,7 @@ export default {
     hr {
       margin-top: 13px;
       margin-bottom: 14px;
-      border-color: rgba(231, 231, 231, 1);
+      border-color: #e7e7e7;
     }
     .top_Center_Card_Date_Operation {
       display: flex;
@@ -1685,6 +2091,9 @@ export default {
       .top_Center_Card_Date_Box {
         height: 32px;
         display: flex;
+        .ant-input {
+          border-radius: 2px !important;
+        }
         .top_Center_Card_Date {
           width: 133px;
           height: 32px;
@@ -1720,7 +2129,7 @@ export default {
     hr {
       margin-top: 13px;
       margin-bottom: 14px;
-      border-color: rgba(231, 231, 231, 1);
+      border-color: #e7e7e7;
     }
     .top_Right_Card_Date_Operation {
       display: flex;
@@ -1738,6 +2147,7 @@ export default {
         background: #fff;
         border-color: #0084ff;
       }
+
       .top_Right_Card_Date_Box {
         height: 32px;
         display: flex;
@@ -1745,7 +2155,10 @@ export default {
           width: 133px;
           height: 32px;
         }
-
+        /deep/.el-picker-panel {
+          position: relative;
+          z-index: 10000;
+        }
         /deep/.el-input__inner {
           height: 32px;
           background: rgba(239, 240, 243, 1);
@@ -1777,36 +2190,41 @@ export default {
       margin-bottom: 15px;
       /deep/.el-card__body {
         padding: 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
       }
       .bottom_Left_Card_Station1 {
-        margin-bottom: 5%;
-        line-height: 50px;
+        // line-height: 55px;
         display: flex;
+        align-items: center;
         justify-content: space-between;
         span {
           margin-left: 15px;
         }
         .span2 {
           margin-left: 0px;
-          margin-right: 15px;
+          margin-right: 10px;
         }
         img {
-          margin-top: 12px;
           margin-left: 10px;
         }
       }
       .bottom_Left_Card_Station2 {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         span {
-          line-height: 50px;
+          // line-height: 55px;
           margin-left: 15px;
         }
         .colorText_Array {
           display: flex;
           justify-content: space-around;
-          width: 70%;
-          margin-top: 5px;
+          width: 65%;
+          margin-right: 10px;
+          font-size: 16px;
           .green {
             color: #44d49e;
           }
@@ -1816,20 +2234,28 @@ export default {
           .colorText {
             width: 55px;
             height: 40px;
+            text-align: right;
           }
         }
       }
       .bottom_Left_Card_Station1,
       .bottom_Left_Card_Station2 {
         width: calc(100% - 10px);
-        height: 50px;
+        height: 43%;
         border-radius: 4px;
         border: 1px solid rgba(208, 218, 228, 1);
+        font-size: 16px;
+        line-height: 20px;
+        color: #5e605f;
       }
     }
     .bottom_Left_Card_Station_Use {
       width: 100%;
       height: 56.5%;
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 16px;
+      color: #5e605f;
       /deep/.el-card__body {
         padding: 11px 15px;
       }
@@ -1852,7 +2278,7 @@ export default {
     hr {
       margin-top: 13px;
       margin-bottom: 15px;
-      border-color: rgba(231, 231, 231, 1);
+      border-color: #e7e7e7;
     }
     .blueButtonTable {
       width: 50px;
@@ -1891,7 +2317,7 @@ export default {
       height: 32px;
       display: flex;
       justify-content: flex-end;
-      margin-top: 15px;
+      margin-top: 20px;
       span {
         color: rgba(51, 51, 51, 1);
         font-size: 14px;
@@ -1925,6 +2351,9 @@ export default {
     line-height: 14px;
   }
 }
+/deep/.el-table__row {
+  height: 32px;
+}
 /deep/.el-table .el-table__cell.gutter {
   background: #f2f3f5;
 }
@@ -1934,9 +2363,126 @@ export default {
 /deep/.el-card {
   border: 0px;
 }
+/deep/.el-divider {
+  margin: 14px 0;
+  background: #f0f2f5;
+}
+/deep/.el-month-table {
+  .cell {
+    height: 26px;
+    line-height: 26px;
+    margin-top: 10px;
+  }
+  .current {
+    .cell {
+      background: #0454f2;
+      height: 26px;
+      line-height: 26px;
+      border-radius: 5px;
+      color: #fff;
+      margin-top: 10px;
+    }
+  }
+}
 </style>
-<style>
+<style lang="less">
 .flexCenter {
   padding: 4px 0px 1px 0px !important;
+}
+.el-month-table,
+.el-year-table {
+  .cell {
+    height: 26px !important;
+    line-height: 26px !important;
+    margin-top: 10px !important;
+  }
+  .current {
+    .cell {
+      background: #0454f2;
+      height: 26px;
+      line-height: 26px;
+      border-radius: 5px;
+      color: #fff !important;
+      margin-top: 10px;
+    }
+  }
+}
+.top_Center_Card_Date_Box,
+.top_Right_Card_Date_Box {
+  .ant-input {
+    border-radius: 2px !important;
+    background: rgba(239, 240, 243, 1) !important;
+    padding: 4px 7px !important;
+  }
+  .anticon-calendar {
+    display: none;
+  }
+}
+.ant-calendar-selected-day {
+  .ant-calendar-date {
+    width: 28px !important;
+    border-radius: 2px !important;
+    background: #0454f2 !important;
+    color: #fff !important;
+  }
+}
+.ivu-input {
+  border-radius: 2px !important;
+  background: rgba(239, 240, 243, 1) !important;
+}
+.ivu-date-picker-cells {
+  width: 280px !important;
+}
+.ivu-date-picker-cells-cell {
+  width: 40px !important;
+  margin: 10px 26px !important;
+}
+.ivu-icon-ios-calendar-outline {
+  display: none !important;
+}
+.ivu-date-picker-cells-cell-selected {
+  background: #0454f2 !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  em {
+    background: #0454f2 !important;
+    height: 22px !important;
+    line-height: 22px !important;
+    box-shadow: 0 0 0 0 !important;
+    margin-top: 0px !important;
+  }
+}
+.application-content-wrap::-webkit-scrollbar {
+  width: 0px;
+}
+.ppp {
+  margin-top: -40px;
+  position: relative;
+  top: 56px;
+  left: 34px;
+  height: 65px;
+}
+.messagebox {
+  width: 520px;
+  .el-message-box__headerbtn {
+    top: -6px;
+  }
+  .el-icon-warning {
+    color: red;
+    font-size: 40px !important;
+  }
+  .el-message-box__btns {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    margin-top: 30px;
+    .el-button {
+      width: 100px;
+    }
+  }
+  .el-button--primary {
+    margin-right: 30px;
+    background: #0454f2;
+  }
 }
 </style>

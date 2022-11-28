@@ -3,6 +3,14 @@ import App from "./App.vue";
 import { sysVariables, appVariables, customConfig, themeInfo } from "@/components/mockData.js";
 import * as echarts from "echarts";
 Vue.prototype.$echarts = echarts;
+import ViewUI  from 'view-design';
+import {DatePicker,ConfigProvider } from 'ant-design-vue';
+import 'view-design/dist/styles/iview.css';
+import 'ant-design-vue/dist/antd.css';
+import moment from "moment"
+Vue.prototype.$moment = moment;
+Vue.use(DatePicker,ConfigProvider );
+Vue.use(ViewUI );
 if (process.env.NODE_ENV !== "production") {
   window.eventCenter = {
     triggerEvent(componentId, eventName) {

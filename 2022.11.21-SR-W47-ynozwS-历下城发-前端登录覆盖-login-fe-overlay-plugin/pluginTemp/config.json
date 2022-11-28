@@ -1,0 +1,15 @@
+{
+  "id": "04f29b43-0d5a-4cca-bcbb-39b0b1b7dd4b",
+  "type": "login-fe-overlay",
+  "main": "main.535da9c7.js",
+  "version": "2",
+  "props": {
+    "appid": "",
+    "isMobile": false,
+    "register_type": "",
+    "loginName": "",
+    "password": "",
+    "imageCode": "",
+    "captcha": ""
+  }
+}

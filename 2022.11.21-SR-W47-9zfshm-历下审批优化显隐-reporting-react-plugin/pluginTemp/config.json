@@ -1,0 +1,12 @@
+{
+  "id": "e7d2e030-1169-48a9-9f6b-6f6a53eae2ed2222",
+  "type": "reporting",
+  "main": "main.483b33c6.js",
+  "version": "2",
+  "props": {
+    "styleArr": "[\"title\",\"height\",\"key\", \"eventCenterConfig\",\"hide\"]",
+    "columnStyle": "{title:'自定义'}",
+    "componentAttributes": "{\"style\":[\"title\",\"height\"],\"data\":[\"key\"],\"interaction\":[\"eventCenterConfig\",\"hide\",\"action-disabled\"]}",
+    "assetColumnList": "[{\"col_name\":\"自定义\",\"col_datatype\":0}]"
+  }
+}

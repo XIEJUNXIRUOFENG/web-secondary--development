@@ -27,12 +27,6 @@ const DesignConfiguration = ({ changeConfiguration, configuration }) => {
         form={form}
         onValuesChange={onFormLayoutChange}
       >
-        <Form.Item label="宽度：" name="width" initialValue={520}>
-          <InputNumber />
-        </Form.Item>
-        <Form.Item label="高度：" name="height" initialValue={640}>
-          <InputNumber />
-        </Form.Item>
         <Form.Item label="校验资产ID：" name="checkAssetsId">
           <Input />
         </Form.Item>

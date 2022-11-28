@@ -18,13 +18,17 @@
     "@njsdata/app-sdk": "^1.0.0",
     "@vue/babel-helper-vue-jsx-merge-props": "^1.2.1",
     "@vue/babel-preset-jsx": "^1.2.4",
+    "ant-design-vue": "1.7.8",
     "axios": "^0.23.0",
     "core-js": "^3.6.5",
     "echarts": "^5.4.0",
     "element-ui": "^2.15.9",
     "jquery": "^3.6.0",
+    "moment": "^2.29.4",
     "qs": "^6.11.0",
     "querystringify": "^2.2.0",
+    "svg-sprite-loader": "^6.0.11",
+    "view-design": "^4.7.0",
     "vue": "^2.7.8"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 {
-  "id": "35963f17-b16c-4779-9c74-650f8001176a",
+  "id": "b32f6450-ada1-41b6-8998-6bf1a8c0f8a4",
   "type": "app",
-  "main": "app.c9920b0c.js",
+  "main": "app.a058cb5f.js",
   "version": "2",
   "props": {
     "type": "customize",
@@ -11,6 +11,7 @@
     "lib": [],
     "css_script": [],
     "customconf": [
+      "电站名称跳转",
       "一次接线图跳转",
       "通讯拓补图跳转",
       "图例跳转",

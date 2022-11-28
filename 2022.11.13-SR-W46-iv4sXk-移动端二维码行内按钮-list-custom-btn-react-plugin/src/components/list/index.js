@@ -4,8 +4,11 @@ import PropTypes from "prop-types";
 import { Button } from "antd";
 import { queryAssetById } from './../../api/asset';
 import { decrypt } from "../../utils/rsa"
+import { newJSBridge } from "../../utils/tgJSBridge"
 
 import './index.less';
+
+newJSBridge(window)
 
 const List = ({
   dataSource,
@@ -13,9 +16,6 @@ const List = ({
   dataId,
   deleteData
 }) => {
-
-  const width = customParams?.width;
-  const height = customParams?.height;
   const checkAssetsId = customParams?.checkAssetsId || '4d0c2c48-7c54-b20f-b406-977745e50847';
   const checkKey = customParams?.checkKey || 'product_id';
   const dataIdKey = customParams?.dataId || 'dataId';
@@ -24,39 +24,40 @@ const List = ({
   const [dialogVisible, setDialogVisible] = useState(false);
 
   useEffect(() => {
-    if (window.IotJSInterface) {
-      window.IotJSInterface.putQRScanResult = putQRScanResult;
-    } else {
-      window.IotJSInterface = {
-        putQRScanResult: putQRScanResult
-      }
-    }
     // 判断当前系统是ios还是安卓
     let u = navigator.userAgent;
     let isAndroid = u.indexOf("Android") > -1 || u.indexOf("Adr") > -1; //android终端
     let isIOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
     if (isAndroid) {
       console.log('安卓手机')
+      if (window.IotJSInterface) {
+        window.IotJSInterface.putQRScanResult = putQRScanResult;
+      } else {
+        window.IotJSInterface = {
+          putQRScanResult: putQRScanResult
+        }
+      }
       window.FEParksJSInterface.startQRScanner()
       setPhonePowers("Android")
     }
     if (isIOS) {
       console.log('苹果手机')
-      window.webkit.messageHandlers.FEParksJSInterface.startQRScanner();
+      window.jsBridge.bind('SetWebHTMLEditorContent', (json) => { pointCode(json) });
+      try {
+        window.jsBridge.postNotification("GetWebHTMLEditorContent", {
+          uiControlType: 15
+        })
+      } catch (error) {
+        console.log('调用js桥唤起二维码失败', error);
+      }
       setPhonePowers("ios")
     }
     // openCode()
   }, [])
 
-  const openCode = () => {
-    switch (phonePowers) {
-      case 'Android':
-        window.FEParksJSInterface.startQRScanner()
-        break;
-      case 'ios':
-        window.webkit.messageHandlers.FEParksJSInterface.startQRScanner();
-        break;
-    }
+  const pointCode = (point) => {
+    // console.log('point', point);
+    putQRScanResult(point.OcToJs_JSON.data)
   }
 
   const diaLogClose = () => {
@@ -75,7 +76,7 @@ const List = ({
       }
     ]
     let { data } = await queryAssetById(checkAssetsId, params)
-    console.log('data', data);
+    // console.log('data', data);
     if (data[2] > 0) {
       let urlA = infoUrl.indexOf('?')
       if (urlA != "-1") {

@@ -1,0 +1,14 @@
+{
+  "id": "2da54e83-e63c-474b-9772-cd6ea8687d6d",
+  "type": "reporting",
+  "main": "app.c0966eaa.js",
+  "version": "2",
+  "props": {
+    "styleArr": "[\"title\",\"key\", \"eventCenterConfig\"]",
+    "columnStyle": "{title:'自定义'}",
+    "componentAttributes": "{\"style\":[\"title\"],\"data\":[\"key\"],\"interaction\":[\"eventCenterConfig\"]}",
+    "assetColumnList": "[{\"col_name\":\"自定义\",\"col_datatype\":0}]"
+  },
+  "requirement-number": "SR-W47-JluHJm",
+  "requirement-name": "评分组件"
+}
