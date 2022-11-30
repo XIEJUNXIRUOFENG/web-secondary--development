@@ -161,7 +161,7 @@ export default class App extends Component {
 
       let statusList
       if (tempZd) {
-        statusList = tempZd.substation_no
+        statusList = [tempZd.substation_no]
       } else {
         statusList = this.childHanfler(tree)
         statusList.forEach((x, i) => {
@@ -172,7 +172,7 @@ export default class App extends Component {
 
 
       this.setState({
-        treeData: tree, statusList, regionFiled: parName
+        treeData: tree, statusList, regionFiled: parName, statusListAll: statusList
       }, () => {
         this.queryAlterFn()
         let time1 = setInterval(() => {
@@ -281,7 +281,9 @@ export default class App extends Component {
 
       if (regionFiled != '全国') {
         let temp = []
+
         statusList.forEach(item => {
+
           data.forEach(x => {
 
             if (x[areaFiled] == item && x.clear_time == null) temp.push(x)
@@ -294,7 +296,7 @@ export default class App extends Component {
       }
 
 
-      const arrOptions = this.props.optiFieldValueR || ['1', '2', '3', '4']
+      const arrOptions = this.props?.optiFieldValueR || ['1', '2', '3', '4']
       let a = {}
       let b = []
 
@@ -307,7 +309,6 @@ export default class App extends Component {
           a[key] = 1
         }
       })
-
 
       let temp = [{ 紧急: 0, }, { 高: 0, }, { 中: 0, }, { 低: 0 }]
       temp.forEach((x, i) => {
@@ -358,7 +359,7 @@ export default class App extends Component {
     buttons: [],
     counting: 0,
     current: 'SubMenu', clickStatus: false, officeno: null, statusList: [], office_name: '全国', ctiy: '', substation: '',
-    menuData: [], treeData: [], warningAlter: [], regionValue: '全国', tiemObj: null, regionFiled: '全国'
+    menuData: [], treeData: [], warningAlter: [], regionValue: '全国', tiemObj: null, regionFiled: '全国', statusListAll: []
   };
   //将城市结构的数据转成扁平数据
   flatHandler = async (data, office_name) => {
@@ -381,12 +382,13 @@ export default class App extends Component {
         })
 
 
-        if (proBoolean && (x.province_name == parName || office_name == '全国')) provinceArr.push({ id: String(x.province_id), name: x.province_name, parentid: null, statu: true })
+        if (proBoolean && (x.province_name == parName || office_name == '全国')) provinceArr.push({ id: String(x.province_id), name: x.province_name, parentid: office_name == '全国' ? '0' : null, statu: true })
         cityArr.forEach((cit, i) => {
           cityBoolean = !(cit.id == x.city_id)
         })
+
         let nameId = x.province_name == parName || office_name == '全国' ? String(x.city_id).substr(0, strL - 2) : null
-        if (cityBoolean && x.city_name && x.city_name != x.province_name) cityArr.push({ id: String(x.city_id), name: x.city_name, parentid: nameId, statu: true })
+        if (cityBoolean && x.city_name && (x.city_name != x.province_name || x.country_name)) cityArr.push({ id: String(x.city_id), name: x.city_name, parentid: nameId, statu: true })
         if (x.country_name) countryArr.push({ id: String(x.country_id), name: x.country_name, parentid: String(x.country_id).substr(0, strl - 2) })
       }
 
@@ -402,7 +404,14 @@ export default class App extends Component {
       zuidiji.push({ id: x.substation_no + 'x', name: x.substation_name, parentid: String(x.city) })
     })
 
-    return [...cityArr, ...zuidiji, ...provinceArr]
+    if (office_name == '全国') {
+      let nationArr = [{ id: '0', name: '全国', parentid: null, statu: true }]
+
+      return [...cityArr, ...zuidiji, ...provinceArr, ...nationArr]
+    } else {
+      return [...cityArr, ...zuidiji, ...provinceArr]
+    }
+
   }
 
 
@@ -533,61 +542,136 @@ export default class App extends Component {
   //区域选择
   onChangeC = (_, arrsel) => {
 
+
     const { changeAppVariables, appVarKey = 'province_id|city_id|substation_no|test', } = this.props
-    const { officeno, city } = this.state
-    let leng = arrsel.length
-    let regionFiled = _.length == 3 ? _[leng - 1].replace('x', '') : _[leng - 1]
-    let regionValue = arrsel[leng - 1].name
-    let arrList = leng == 3 ? _[leng - 1].replace('x', '') : arrsel[leng - 1]
-    let statusList = []
-    if (arrList.children && arrList.statu) {
-      statusList = this.childHanfler(arrList.children)
-      statusList.forEach((x, i) => {
-        x = x.substr(0, x.length - 1)
-        statusList[i] = x
+    const { officeno, city, office_name, statusListAll } = this.state
+    // return
+    if (office_name == '全国') {
+      if (_.length == 1) {
+        let AppVariables = {}
+        let appArr = appVarKey.split('|')
+        appArr.forEach(item => {
+          AppVariables[item] = undefined
+        })
+
+        this.setState({ regionValue: '全国', regionFiled: '', statusList: statusListAll, clickStatus: true }, () => {
+
+          this.queryAlterFn()
+        })
+        document.querySelector('.resetBtn').click()
+
+        changeAppVariables && changeAppVariables(AppVariables)
+      } else {
+        let _2 = _.slice(1)
+        let leng = _2.length
+        let leng2 = arrsel.length
+        let regionFiled = _2.length == 3 ? _2[leng - 1].replace('x', '') : _2[leng - 1]
+        let regionValue = arrsel[leng2 - 1].name
+        let arrList = leng == 3 ? _2[leng - 1].replace('x', '') : arrsel[leng2 - 1]
+        let statusList = []
+
+        if (arrList.children && arrList.statu) {
+          statusList = this.childHanfler(arrList.children)
+          statusList.forEach((x, i) => {
+            x = x.substr(0, x.length - 1)
+            statusList[i] = x
+          })
+        } else {
+          statusList = arrList.statu ? [] : [arrList]
+        }
+        this.setState({ regionValue, regionFiled: regionFiled, statusList, clickStatus: true }, () => {
+
+          this.queryAlterFn()
+        })
+        let AppVariables = {}
+        let appArr = appVarKey.split('|')
+        let temp = {}
+        if (_2[0].length > 2) {
+
+          AppVariables[appArr[0]] = officeno
+          temp[appArr[0]] = officeno
+          for (let i = 1; i < 3; i++) {
+            let x = appArr[i]
+            AppVariables[x] = i == 2 && _2.length == 2 ? _2[i - 1].substr(0, _2[leng - 1].length - 1) : _2[i - 1]
+            temp[x] = AppVariables[x]
+          }
+
+        } else if (appArr.length == 1) {
+
+          AppVariables[appVarKey] = _2[leng - 1].substr(0, _2[leng - 1].length - 1)
+          temp = JSON.stringify(AppVariables[appVarKey])
+        } else {
+
+          for (let i = 0; i < 3; i++) {
+            let x = appArr[i]
+            AppVariables[x] = i == 2 && _2.length == 3 ? _2[i].substr(0, _2[leng - 1].length - 1) : _2[i]
+            temp[x] = AppVariables[x]
+          }
+
+        }
+        if (appArr[3]) AppVariables[appArr[3]] = JSON.stringify(temp)
+
+
+
+        changeAppVariables && changeAppVariables(AppVariables)
+      }
+
+    } else {
+      let leng = arrsel.length
+      let regionFiled = _.length == 3 ? _[leng - 1].replace('x', '') : _[leng - 1]
+      let regionValue = arrsel[leng - 1].name
+      let arrList = leng == 3 ? _[leng - 1].replace('x', '') : arrsel[leng - 1]
+      let statusList = []
+      if (arrList.children && arrList.statu) {
+        statusList = this.childHanfler(arrList.children)
+        statusList.forEach((x, i) => {
+          x = x.substr(0, x.length - 1)
+          statusList[i] = x
+        })
+      } else {
+        statusList = arrList.statu ? [] : [arrList]
+      }
+
+
+
+
+      this.setState({ regionValue, regionFiled: regionFiled, statusList, clickStatus: true }, () => {
+
+        this.queryAlterFn()
       })
-    } else {
-      statusList = arrList.statu ? [] : [arrList]
+      let AppVariables = {}
+      let appArr = appVarKey.split('|')
+      let temp = {}
+      if (_[0].length > 2) {
+
+        AppVariables[appArr[0]] = officeno
+        temp[appArr[0]] = officeno
+        for (let i = 1; i < 3; i++) {
+          let x = appArr[i]
+          AppVariables[x] = i == 2 && _.length == 2 ? _[i - 1].substr(0, _[leng - 1].length - 1) : _[i - 1]
+          temp[x] = AppVariables[x]
+        }
+
+      } else if (appArr.length == 1) {
+
+        AppVariables[appVarKey] = _[leng - 1].substr(0, _[leng - 1].length - 1)
+        temp = JSON.stringify(AppVariables[appVarKey])
+      } else {
+
+        for (let i = 0; i < 3; i++) {
+          let x = appArr[i]
+          AppVariables[x] = i == 2 && _.length == 3 ? _[i].substr(0, _[leng - 1].length - 1) : _[i]
+          temp[x] = AppVariables[x]
+        }
+
+      }
+      if (appArr[3]) AppVariables[appArr[3]] = JSON.stringify(temp)
+
+
+
+      changeAppVariables && changeAppVariables(AppVariables)
     }
 
-
-
-
-    this.setState({ regionValue, regionFiled: regionFiled, statusList, clickStatus: true }, () => {
-
-      this.queryAlterFn()
-    })
-    let AppVariables = {}
-    let appArr = appVarKey.split('|')
-    let temp = {}
-    if (_[0].length > 2) {
-
-      AppVariables[appArr[0]] = officeno
-      temp[appArr[0]] = officeno
-      for (let i = 1; i < 3; i++) {
-        let x = appArr[i]
-        AppVariables[x] = i == 2 && _.length == 2 ? _[i - 1].substr(0, _[leng - 1].length - 1) : _[i - 1]
-        temp[x] = AppVariables[x]
-      }
-
-    } else if (appArr.length == 1) {
-
-      AppVariables[appVarKey] = _[leng - 1].substr(0, _[leng - 1].length - 1)
-      temp = JSON.stringify(AppVariables[appVarKey])
-    } else {
-
-      for (let i = 0; i < 3; i++) {
-        let x = appArr[i]
-        AppVariables[x] = i == 2 && _.length == 3 ? _[i].substr(0, _[leng - 1].length - 1) : _[i]
-        temp[x] = AppVariables[x]
-      }
-
-    }
-    if (appArr[3]) AppVariables[appArr[3]] = JSON.stringify(temp)
-    // let appOBj = leng == 3 ? [_[0], _[1], _[2].replace('x', '')] : _
-
-
-    changeAppVariables && changeAppVariables(AppVariables)
     window.eventCenter?.triggerEvent(this.props?.componentId, "valueChange", {
       value: this.props?.componentId
     })
@@ -645,7 +729,7 @@ export default class App extends Component {
     const { menuData } = this.state
 
     let value = e[0]
-    let index = menuData.findIndex((x, i) => {
+    let index = menuData?.findIndex((x, i) => {
       return x.key == value
     })
     if (value) {
@@ -788,7 +872,7 @@ export default class App extends Component {
 
           <div className="lineRight">
             <Cascader options={treeData} popupClassName='tow_Cascader' fieldNames={{ children: 'children', value: 'id', label: 'name' }}
-              onDropdownVisibleChange={this.onDropdownChange}
+
               changeOnSelect={true}
               className='dddd' onChange={this.onChangeC}>
               <div className='aTag'><a href="#">{regionValue}   </a><DownOutlined /></div>

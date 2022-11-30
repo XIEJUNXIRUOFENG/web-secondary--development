@@ -74,7 +74,7 @@
           </div>
           <div class="alarmt_two_main_table">
             <div class="alarmt_two_main_table_title  border_title">防御结果
-              <button class="alarmt_two_main_button" @click="tableToExcel(tableData)">导出 </button>
+              <button class="alarmt_two_main_button" @click="tableToExcel(dataAll)">导出 </button>
             </div>
             <div class="alarmt_two_main_table_main">
               <el-table :data="tableData" style="width: 100%" stripe>
@@ -247,7 +247,7 @@ export default {
     'paramsObj.province': {
       handler(val) {
         if (!this.totalArr.substationOp) return
-        if (val == '') return
+        if (val == '' || val == undefined) return
         let substationOp = this.totalArr.substationOp
         this.substationOp = substationOp.filter((x, i) => {
 
@@ -274,7 +274,7 @@ export default {
     'paramsObj.city': {
       handler(val) {
         if (!this.totalArr.substationOp) return
-        if (val == '') return
+        if (val == '' || val == undefined) return
         let substationOp = this.totalArr.substationOp
         this.substationOp = substationOp.filter((x, i) => {
           let filed = String(x.id)
@@ -299,34 +299,39 @@ export default {
     },
   },
   mounted() {
-    this.province = this.variable.default_value && JSON.parse(this.variable.default_value).province_id || this.variable.current_value && JSON.parse(this.variable.current_value).province_id || ''
-    this.city = this.variable.default_value && JSON.parse(this.variable.default_value).city_id || this.variable.current_value && JSON.parse(this.variable.current_value).city_id || ''
-    this.substationName = this.variable.default_value && JSON.parse(this.variable.default_value).substation_no || this.variable.current_value && JSON.parse(this.variable.current_value).substation_no || ''
-    this.paramsObj.province = this.province == '' ? '' : Number(this.province)
-    this.paramsObj.city = this.city == '' ? '' : Number(this.city)
-    let substationOp = {}
-    if (this.totalArr.substationOp) {
-      substationOp = this.totalArr.substationOp.find((x, i) => {
-        return x.statno == this.substationName
-      })
-    }
-    this.paramsObj.substationName = substationOp.value
+
 
     this.pubSub &&
       this.pubSub.subscribe(
         "updateChart" + this.componentId,
         (data) => {
-          this.province = data.variable.default_value && JSON.parse(this.variable.default_value).province_id || data.variable.current_value && JSON.parse(data.variable.current_value).province_id || ''
-          this.city = data.variable.default_value && JSON.parse(this.variable.default_value).city_id || data.variable.current_value && JSON.parse(data.variable.current_value).city_id || ''
-          this.substationName = data.variable.default_value && JSON.parse(this.variable.default_value).substation_no || data.variable.current_value && JSON.parse(data.variable.current_value).substation_no || ''
+          this.province = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).province_id || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).province_id || ''
+          this.city = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).city_id || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).city_id || ''
+          this.substationName = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).substation_no || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).substation_no || ''
           this.paramsObj.province = this.province == '' ? '' : Number(this.province)
           this.paramsObj.city = this.city == '' ? '' : Number(this.city)
           let substationOp = {}
-          substationOp = this.totalArr.substationOp.find((x, i) => {
-            return x.statno == this.substationName
-          })
+          let provinceOp = {}
+          let cityOp = {}
+          if (this.totalArr.substationOp) {
+            substationOp = this.totalArr.substationOp.find((x, i) => {
+              return x.statno == this.substationName
+            })
+          }
+          if (this.totalArr.provinceOp) {
+            provinceOp = this.totalArr.provinceOp.find((x, i) => {
+              return x.value == this.province
+            })
+          }
+          if (this.totalArr.cityOp) {
+            cityOp = this.totalArr.cityOp.find((x, i) => {
+              return x.value == this.city
+            })
+          }
 
           this.paramsObj.substationName = substationOp?.value
+          this.paramsObj.province = provinceOp?.value
+          this.paramsObj.city = cityOp?.value
         }
       );
     window.componentCenter?.register &&
@@ -370,8 +375,12 @@ export default {
       return colorFont
     },
     queryTable() { //请求接口数据
-      let params = this.paramsObj
+      let params = { ... this.paramsObj }
+      params.province = this.paramsObj.province || this.province
+      params.city = this.paramsObj.city || this.city
+      params.substationName = this.paramsObj.substationName || this.substationName
       TOPNAlarmInfo(params).then(res => {
+
         this.dataAll = res.data
 
         this.dataAll.forEach(x => {
@@ -392,7 +401,7 @@ export default {
     //下拉菜单数据
     querySelect() {
       queryDropDownBox().then(res => {
-        console.log(res.data);
+
         let tempTotal = res.data
         let objArr = { provinceOp: [], cityOp: [], substationOp: [] }
         tempTotal.forEach((x, i) => {
@@ -408,6 +417,35 @@ export default {
         for (const key in objArr) {
           this[key] = objArr[key]
         }
+
+
+        this.province = this.variable?.default_value && JSON.parse(this.variable?.default_value).province_id || this.variable?.current_value && JSON.parse(this.variable?.current_value).province_id || ''
+        this.city = this.variable?.default_value && JSON.parse(this.variable?.default_value).city_id || this.variable?.current_value && JSON.parse(this.variable?.current_value).city_id || ''
+        this.substationName = this.variable?.default_value && JSON.parse(this.variable?.default_value).substation_no || this.variable?.current_value && JSON.parse(this.variable?.current_value).substation_no || ''
+        this.paramsObj.province = this.province == '' ? '' : Number(this.province)
+        this.paramsObj.city = this.city == '' ? '' : Number(this.city)
+        let substationOp = {}
+        let provinceOp = {}
+        let cityOp = {}
+        if (this.totalArr.substationOp) {
+          substationOp = this.totalArr.substationOp.find((x, i) => {
+            return x.statno == this.substationName
+          })
+        }
+        if (this.totalArr.provinceOp) {
+          provinceOp = this.totalArr.provinceOp.find((x, i) => {
+            return x.value == this.province
+          })
+        }
+        if (this.totalArr.cityOp) {
+          cityOp = this.totalArr.cityOp.find((x, i) => {
+            return x.value == this.city
+          })
+        }
+
+        this.paramsObj.substationName = substationOp?.value
+        this.paramsObj.province = provinceOp?.value
+        this.paramsObj.city = cityOp?.value
       }).catch(err => {
         console.log(err);
       })
@@ -932,6 +970,10 @@ export default {
         /deep/.is-disabled .el-input__inner {
           color: #666666;
 
+        }
+
+        /deep/ .is-disabled .el-input__inner::-webkit-input-placeholder {
+          color: #666666;
         }
 
         /deep/.el-select {

@@ -182,22 +182,23 @@ export default {
       handler(val) {
 
         if (this.provinceData.length == 0) return
-        if (val?.province_name == undefined || val == undefined) return
+        if (val == '' || val == undefined || val.province_name == undefined) return
         this.citySelect = {};
         this.cityOption = [];
         this.stationSelect = {};
         this.stationOption = [];
 
         this.cityData.forEach((item, index) => {
-          if (item.province_name == val.province_name) {
+          if (item.province_name == val?.province_name) {
             this.cityOption.push(item);
           }
         });
         this.stationData.forEach((item, index) => {
-          if (item.province_name == val.province_name) {
+          if (item.province_name == val?.province_name) {
             this.stationOption.push(item);
           }
         });
+
         if (!this.city && !this.substationName && this.province) this.searchTable()
       },
 
@@ -208,12 +209,12 @@ export default {
       handler(val) {
 
         if (!this.provinceData.length == 0) return
-        if (val?.city_name == undefined || val == undefined) return
+        if (val == '' || val == undefined || val.city_name == undefined) return
         this.stationSelect = {};
         this.stationOption = [];
 
         this.stationData.forEach((item, index) => {
-          if (item.city_name == val.city_name) {
+          if (item.city_name == val?.city_name) {
             this.stationOption.push(item);
           }
         });
@@ -253,13 +254,15 @@ export default {
           this.stationOption.push(item);
         }
       });
+      this.provinceOption = this.removeDuplicateObj(this.provinceOption, 'province_name')
+      this.cityOption = this.removeDuplicateObj(this.cityOption, 'city_name')
       this.provinceData = this.provinceOption;
       this.cityData = this.cityOption;
       this.stationData = this.stationOption;
 
-      this.province = this.variable.default_value && JSON.parse(this.variable.default_value).province_id || this.variable.current_value && JSON.parse(this.variable.current_value).province_id || ''
-      this.city = this.variable.default_value && JSON.parse(this.variable.default_value).city_id || this.variable.current_value && JSON.parse(this.variable.current_value).city_id || ''
-      this.substationName = this.variable.default_value && JSON.parse(this.variable.default_value).substation_no || this.variable.current_value && JSON.parse(this.variable.current_value).substation_no || ''
+      this.province = this.variable?.default_value && JSON.parse(this.variable?.default_value).province_id || this.variable?.current_value && JSON.parse(this.variable?.current_value).province_id || ''
+      this.city = this.variable?.default_value && JSON.parse(this.variable?.default_value).city_id || this.variable?.current_value && JSON.parse(this.variable?.current_value).city_id || ''
+      this.substationName = this.variable?.default_value && JSON.parse(this.variable?.default_value).substation_no || this.variable?.current_value && JSON.parse(this.variable?.current_value).substation_no || ''
 
       let substationOp = {}
       let cityOp = {}
@@ -288,10 +291,9 @@ export default {
       this.pubSub.subscribe(
         "updateChart" + this.componentId,
         (data) => {
-          this.province = data.variable.default_value && JSON.parse(this.variable.default_value).province_id || data.variable.current_value && JSON.parse(data.variable.current_value).province_id || ''
-          this.city = data.variable.default_value && JSON.parse(this.variable.default_value).city_id || data.variable.current_value && JSON.parse(data.variable.current_value).city_id || ''
-          this.substationName = data.variable.default_value && JSON.parse(this.variable.default_value).substation_no || data.variable.current_value && JSON.parse(data.variable.current_value).substation_no || ''
-
+          this.province = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).province_id || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).province_id || ''
+          this.city = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).city_id || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).city_id || ''
+          this.substationName = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).substation_no || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).substation_no || ''
           let substationOp = {}
           let cityOp = {}
           let provinceOp = {}
@@ -330,7 +332,7 @@ export default {
   },
   methods: {
     changeProvince(val) {
-      console.log(val);
+
       this.citySelect = {};
       this.cityOption = [];
       this.stationSelect = {};
@@ -358,9 +360,9 @@ export default {
     changeStation(val) { },
     searchTable() {
       let message = {
-        province: this.provinceSelect?.province_id || "", //省
-        city: this.citySelect?.city_id || "", //市
-        substationName: this.stationSelect?.substation_name || "", //电站名称
+        province: this.provinceSelect?.province_id || this.province || "", //省
+        city: this.citySelect?.city_id || this.city || "", //市
+        substationName: this.stationSelect?.substation_name || this.substationName || "", //电站名称
         period: this.period,
         // pageSize: this.pageSize || "", //页面数据条数  数字
         // pageNo: this.pageNo || "", //页码  数字
@@ -373,9 +375,10 @@ export default {
       if (!this.substationName) this.stationSelect = {};
       if (!this.province) {
         this.provinceOption = this.provinceData;
-        this.cityOption = this.cityData;
+        this.cityOption = [...this.cityData];
         this.stationOption = this.stationData;
       }
+
 
       this.period = "年";
       // let message = {
@@ -385,10 +388,11 @@ export default {
       //   period: this.period,
       // };
       // this.newLineChart(message)
+      this.searchTable()
     },
     newLineChart(message) {
       pollingFlawTrend(message).then((res) => {
-        console.log(res.data);
+
         let dateStr = "";
         let echartStr = "";
         let unitStr = "";
@@ -445,6 +449,17 @@ export default {
         this.initEchartFn()
         this.initEchartFnTwo()
       });
+    },
+    //去重
+    removeDuplicateObj(arr, key) {
+      let obj = {};
+      arr = arr.reduce((newArr, next) => {
+        obj[next[key]] ? "" : (obj[next[key]] = true && newArr.push(next));
+        return newArr;
+      }, []);
+      return arr
+
+
     },
 
     tableToExcel(tableData) {
@@ -779,6 +794,10 @@ export default {
         /deep/.is-disabled .el-input__inner {
           color: #666666;
 
+        }
+
+        /deep/ .is-disabled .el-input__inner::-webkit-input-placeholder {
+          color: #666666;
         }
 
         .spacing {

@@ -49,7 +49,7 @@
       <el-table-column type="index" width="50" label="序号"> </el-table-column>
       <el-table-column prop="province_name" label="所在省份" width="140"> </el-table-column>
       <el-table-column prop="city_name" label="所在市区" width="140"> </el-table-column>
-      <el-table-column prop="substation_level" label="重点目标等级" width="170"> </el-table-column>
+      <el-table-column prop="substation_level" label="重点目标等级" width="170" :formatter="levelFn"> </el-table-column>
       <el-table-column prop="device_type" label="设备类型" max-width="150"> </el-table-column>
       <el-table-column prop="device_unit_type" label="部件类型" max-width="150"> </el-table-column>
       <el-table-column prop="defect_level" label="缺陷类型" max-width="150"> </el-table-column>
@@ -80,6 +80,7 @@ Vue.use(Input);
 Vue.use(DatePicker);
 Vue.use(Select);
 Vue.use(Option);
+const levelTemp = ['一级', '二级', '三级']
 export default {
   name: "Main",
   components: {},
@@ -105,30 +106,7 @@ export default {
           value: "3",
           label: "3级",
         },
-        {
-          value: "4",
-          label: "4级",
-        },
-        {
-          value: "5",
-          label: "5级",
-        },
-        {
-          value: "6",
-          label: "6级",
-        },
-        {
-          value: "7",
-          label: "7级",
-        },
-        {
-          value: "8",
-          label: "8级",
-        },
-        {
-          value: "9",
-          label: "9级",
-        },
+
       ],
       levelSelect: {},
       provinceOption: [],
@@ -157,22 +135,23 @@ export default {
       handler(val) {
 
         if (this.provinceData.length == 0) return
-        if (val?.province_name == undefined || val == undefined) return
+        if (val == '' || val == undefined || val.province_name == undefined) return
         this.citySelect = {};
         this.cityOption = [];
         this.stationSelect = {};
         this.stationOption = [];
 
         this.cityData.forEach((item, index) => {
-          if (item.province_name == val.province_name) {
+          if (item.province_name == val?.province_name) {
             this.cityOption.push(item);
           }
         });
         this.stationData.forEach((item, index) => {
-          if (item.province_name == val.province_name) {
+          if (item.province_name == val?.province_name) {
             this.stationOption.push(item);
           }
         });
+
         if (!this.city && !this.substationName && this.province) this.searchTable()
       },
 
@@ -183,12 +162,12 @@ export default {
       handler(val) {
 
         if (!this.provinceData.length == 0) return
-        if (val?.city_name == undefined || val == undefined) return
+        if (val == '' || val == undefined || val.city_name == undefined) return
         this.stationSelect = {};
         this.stationOption = [];
 
         this.stationData.forEach((item, index) => {
-          if (item.city_name == val.city_name) {
+          if (item.city_name == val?.city_name) {
             this.stationOption.push(item);
           }
         });
@@ -222,6 +201,10 @@ export default {
           this.stationOption.push(item);
         }
       });
+
+
+      this.provinceOption = this.removeDuplicateObj(this.provinceOption, 'province_name')
+      this.cityOption = this.removeDuplicateObj(this.cityOption, 'city_name')
       this.provinceData = this.provinceOption;
       this.cityData = this.cityOption;
       this.stationData = this.stationOption;
@@ -257,9 +240,9 @@ export default {
     this.searchTable();
     this.pubSub &&
       this.pubSub.subscribe("updateChart" + this.componentId, (data) => {
-        this.province = data.variable.default_value && JSON.parse(data.variable.default_value).province_id || data.variable.current_value && JSON.parse(data.variable.current_value).province_id || ''
-        this.city = data.variable.default_value && JSON.parse(data.variable.default_value).city_id || data.variable.current_value && JSON.parse(data.variable.current_value).city_id || ''
-        this.substationName = data.variable.default_value && JSON.parse(data.variable.default_value).substation_no || data.variable.current_value && JSON.parse(data.variable.current_value).substation_no || ''
+        this.province = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).province_id || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).province_id || ''
+        this.city = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).city_id || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).city_id || ''
+        this.substationName = data?.variable?.current_value && JSON.parse(data?.variable?.current_value).substation_no || data?.variable?.default_value && JSON.parse(data?.variable?.default_value).substation_no || ''
 
         let substationOp = {}
         let cityOp = {}
@@ -287,6 +270,17 @@ export default {
     this.id = id ? `secondary_analyzer_${id}` : `secondary_bigscreen_${Utils.generateUUID()}`;
   },
   methods: {
+    //去重
+    removeDuplicateObj(arr, key) {
+      let obj = {};
+      arr = arr.reduce((newArr, next) => {
+        obj[next[key]] ? "" : (obj[next[key]] = true && newArr.push(next));
+        return newArr;
+      }, []);
+      return arr
+
+
+    },
     changeProvince(val) {
       console.log(val);
       this.citySelect = {};
@@ -334,9 +328,9 @@ export default {
     changeStation(val) { },
     searchTable() {
       let message = {
-        province: this.provinceSelect?.province_id || "", //省
-        city: this.citySelect?.city_id || "", //市
-        substationName: this.stationSelect?.substation_name || "", //电站名称
+        province: this.provinceSelect?.province_id || this.province || "", //省
+        city: this.citySelect?.city_id || this.city || "", //市
+        substationName: this.stationSelect?.substation_name || this.substationName || "", //电站名称
         level: this.levelSelect.value || "", //等级
         startTime: this.searchDate[0] || "",
         endTime: this.searchDate[1] || "",
@@ -351,6 +345,11 @@ export default {
         });
         this.total = res.data.total;
       });
+    },
+
+    levelFn(row, column, cellValue, index) {
+      let res = levelTemp[cellValue - 1]
+      return res
     },
     tableToExcel(tableData) {
       const headArr = Object.keys(tableData[0]); // 要导出的json数据 // 列标题
@@ -504,6 +503,10 @@ export default {
   /deep/.is-disabled .el-input__inner {
     color: #666666;
 
+  }
+
+  /deep/ .is-disabled .el-input__inner::-webkit-input-placeholder {
+    color: #666666;
   }
 }
 
@@ -727,35 +730,27 @@ export default {
 }
 </style>
 <style>
-.inputSelectBacPoper .el-select-dropdown__list,
-.inputSelectBacPoper .el-picker-panel__content {
-  background: linear-gradient(180deg, rgba(8, 57, 87, 0.9) 0%, rgba(9, 24, 39, 0.9) 100%) !important;
-}
-
-.inputSelectBacPoper .el-picker-panel {
-  border: 0px;
-}
-
 .inputSelectBacPoper {
-  border: 1px solid rgba(21, 154, 255, 0.7) !important;
+  background: linear-gradient(180deg, rgba(8, 57, 87, 0.9) 0%, rgba(9, 24, 39, 0.9) 100%) !important;
+  border: 1px solid rgba(21, 154, 255, 0.7) !important
 }
 
-.inputSelectBacPoper .popper__arrow::after,
-.inputSelectBacPoper .popper__arrow {
-  border-bottom-color: rgba(21, 154, 255, 0.7) !important;
+.inputSelectBacPoper.el-popper[x-placement^=bottom] .popper__arrow {
+  border-bottom-color: rgba(21, 154, 255, 0.7);
 }
 
-.inputSelectBacPoper .available {
-  color: #99afcc;
+.inputSelectBacPoper.el-popper[x-placement^=bottom] .popper__arrow::after {
+  border-bottom-color: rgba(21, 154, 255, 0.7);
 }
 
-.inputSelectBacPoper .in-range div {
-  background: rgb(51, 125, 150) !important;
+.inputSelectBacPoper .el-select-dropdown__item {
+  color: #99AFCC;
 }
 
 .inputSelectBacPoper .el-select-dropdown__item.hover,
-.inputSelectBacPoper .el-select-dropdown__item:hover {
+.el-select-dropdown__item:hover {
   background: linear-gradient(270deg, rgba(91, 222, 218, 0.3) -7.2%, rgba(23, 82, 101, 0.5) 100%);
-  color: #d0deee;
+  color: #D0DEEE;
+
 }
 </style>

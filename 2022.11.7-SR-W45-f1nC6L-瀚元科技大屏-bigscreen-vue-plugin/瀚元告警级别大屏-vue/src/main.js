@@ -25,7 +25,7 @@ if (process.env.NODE_ENV !== "production") {
   window.CUSTOM_PLUGIN.set(
     process.env.VUE_APP_CUSTOM_PLUGIN_ID,
     (dom, props, context, eventBus) => {
-      console.log(props, '===12');
+
       if (dom.childNodes.length > 0) {
         dom.removeChild(dom.childNodes[0]);
       }

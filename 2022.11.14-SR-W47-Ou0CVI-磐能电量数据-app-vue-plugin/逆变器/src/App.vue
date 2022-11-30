@@ -1080,6 +1080,20 @@ export default {
       param.time = moment(this.timeStart).format('YYYY-MM-DD')
       param.type = this.value
       let { data } = await queryOperationCurve(param)
+
+      const ex = { pvdy: "U", pvdl: "A", mpptdy: "U", mpptdl: "A" }
+      const exUnit = ex[this.fdField]
+      if (exUnit) {
+        const showList = [];
+        data.forEach(i => {
+          const { PV } = i;
+          if (!showList.includes(PV + exUnit)) {
+            showList.push(PV + exUnit)
+          }
+        })
+        serData[this.fdField] = showList;
+      }
+
       let eachartData = {}
       let seriesData = []
       data.forEach((x, i) => {
@@ -1133,6 +1147,7 @@ export default {
           id: serName[this.fdField][i],
           symbolRotate: rotae,
           data: dataA,
+
           itemStyle: {
             color: serColor[this.fdField] && serColor[this.fdField][i] || color[i]
           }

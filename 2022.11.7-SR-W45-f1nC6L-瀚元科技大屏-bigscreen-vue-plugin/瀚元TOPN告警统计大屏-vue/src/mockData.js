@@ -1,5 +1,5 @@
 export default {
-  variable: { default_value: "测试的数据", id: "测试的ID" },
+  variable: { default_value: undefined, id: "测试的ID" },
   options: {
     // auto: true,
     // showToolbar: false,
