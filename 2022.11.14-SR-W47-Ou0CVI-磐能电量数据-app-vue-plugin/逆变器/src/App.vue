@@ -1283,6 +1283,10 @@ export default {
         series: seriesData
       };
 
+      if (['pvdy', 'pvdl', 'mpptdy', 'mpptdl'].includes(this.fdField)) {
+        delete options.xAxis.axisLabel;
+      }
+
 
       this.Gechart2 = echarts.init(this.$refs.echart_curve);
       this.Gechart2.setOption(options, { notMerge: true });
