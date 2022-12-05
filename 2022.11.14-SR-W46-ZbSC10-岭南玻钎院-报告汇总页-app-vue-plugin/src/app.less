@@ -1,6 +1,7 @@
 .glassbraze_table {
     padding: 8px;
 
+    width: calc(100% - 16px);
 
     .ant-btn-primary {
         border-color: #0454f2;
@@ -22,16 +23,32 @@
 
     .glassbraze_table_export {
         // text-align: right;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
 
         .two_row_item {
             display: flex;
             align-items: center;
+
+            .ant-input-affix-wrapper {
+                border-radius: 6px;
+            }
+
+            .ant-picker-range {
+                border-radius: 6px;
+            }
         }
 
         // .two_row_ping {
         //     justify-content: flex-end;
         // }
+    }
+
+    .two_row_item_two {
+        margin-top: 20px
+    }
+
+    .two_row_production {
+        padding-left: 28px;
     }
 
     .two_row_button {
@@ -93,4 +110,10 @@
     cursor: pointer;
     background: #fff;
     border-radius: 4px;
+}
+
+.Pagination_two {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
 }

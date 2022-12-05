@@ -1,0 +1,34 @@
+{
+  "id": "8aa78f8d-be5a-4880-a5c8-691a8f43d7dd",
+  "type": "analyzer",
+  "main": "app.0ed81db3.js",
+  "version": "2",
+  "props": {
+    "img": "custom_table.png",
+    "type": "k23dasd547",
+    "disableimg": "disabled_custom_table.png",
+    "name": "vue实现测试",
+    "domId": "ex_custom_table_15",
+    "lib": [],
+    "cssDep": [],
+    "scriptName": "app.a515a2e6.js",
+    "optionModules": [],
+    "vars": [
+      "colorArrlist",
+      "fontFamilyBar",
+      "fontColorBar",
+      "fontSizeBar",
+      "fontFamilySum",
+      "fontColorSum",
+      "fontSizeSum",
+      "fontFamilyTitle",
+      "fontColorTitle",
+      "fontSizeTitle",
+      "radius",
+      "coordinateY",
+      "barWidth"
+    ]
+  },
+  "requirement-number": "SR-W48-WdtC4a",
+  "requirement-name": "南控极坐标柱状图"
+}
