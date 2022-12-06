@@ -120,7 +120,7 @@
                   <el-table-column prop="AcMeasuredActive" :formatter="oneFixed" label="交流输出|总有功功率|(kW)" align="center"
                     min-width="110" :render-header="renderheader">
                   </el-table-column>
-                  <el-table-column prop="AcMeasuringReactive" :formatter="oneFixed" label="交流输出|总无功功率|(kW)"
+                  <el-table-column prop="AcMeasuringReactive" :formatter="oneFixed" label="交流输出|总无功功率|(kvar)"
                     align="center" min-width="110" :render-header="renderheader">
                   </el-table-column>
                   <el-table-column prop="InputP" label="直流输入功率|（kW）" :formatter="oneFixed" align="center"
@@ -248,8 +248,8 @@
               :cell-style="{ padding: 0 + 'px', color: '#000000', height: '40px' }"
               :header-row-style="{ height: '35px' }">
 
-              <el-table-column v-for="(x, i) in columnRand" :key="i" :label="x.label" :formatter="lsFixed"
-                :prop="x.field" align="center" :width="x.width || 120"
+              <el-table-column v-for="(x, i) in columnRand" :key="i" :label="x.label" :fixed="x.fixed"
+                :formatter="lsFixed" :prop="x.field" align="center" :width="x.width || 120"
                 :render-header="x.rander ? renderheader : renderFn">
                 <el-table-column v-for="(item, index) in x.children" :key='index' :label='item.label' align="center"
                   :formatter="lsFixed" :width="item.width || 120" :prop='item.field'>
@@ -326,8 +326,8 @@ for (let i = 1; i <= 24; i++) {
   PvIfeild.push(`PV${i}A`)
 }
 for (let i = 1; i <= 12; i++) {
-  MpUfeild.push(`PV${i}U`)
-  MpIfeild.push(`PV${i}A`)
+  MpUfeild.push(`MPPT${i}U`)
+  MpIfeild.push(`MPPT${i}A`)
 }
 
 
@@ -436,7 +436,7 @@ export default {
       hiostyTime: new Date(),
       //历史表头
       columnRand: [
-        { label: '数据时间', field: 'time', width: 180 },
+        { label: '数据时间', field: 'time', width: 180, fixed: 'left' },
         { label: '直流输入总功率|（kW）', field: 'InputP', width: 150, rander: true },
         { label: '交流输出总有功|功率(kW)', field: 'AcMeasuredActive', width: 140, rander: true },
         { label: '交流输出总无功|功率（kvar）', field: 'AcMeasuringReactive', width: 140, rander: true },
@@ -514,7 +514,7 @@ export default {
       realDataB: [],
       //逆变器id
       equipmentId: null ||
-        1999117999234,
+        1999116999240,
     }
   },
   mounted() {
@@ -707,14 +707,41 @@ export default {
           }
           PV2.push(obj)
         })
+        let a
 
         MPPT.forEach((x, i) => {
-          if (!x.MPPT) MPPT.splice(i, 1)
+          if (!x.MPPT) a = MPPT.splice(i, 1)
         })
         MPPT = this.removeDuplicateObj(MPPT, 'MPPT')
         MPPT.sort(function (a, b) {
           return a.MPPT.replace('MPPT', '') - b.MPPT.replace('MPPT', '')
         })
+
+        let tempMppt = []
+        MPPT.forEach(x => {
+          let obj = {}
+          obj.MPPT = x.MPPT
+
+          obj.status = x.status
+          let tempObj = {}
+
+          for (const key in x) {
+
+            if (key.indexOf(obj.MPPT + 'A') != -1 || key.indexOf(obj.MPPT + 'U') != -1) {
+              let valueK = key.indexOf('A') != -1 ? 'current_MPPT' : 'voltage_MPPT'
+
+              tempObj[valueK] = x[key]
+
+            }
+          }
+
+
+
+          obj = { ...obj, ...tempObj }
+          tempMppt.push(obj)
+        })
+
+        MPPT = [...tempMppt]
         MPPT.splice(12)
 
 
@@ -1080,7 +1107,6 @@ export default {
       param.time = moment(this.timeStart).format('YYYY-MM-DD')
       param.type = this.value
       let { data } = await queryOperationCurve(param)
-
       const ex = { pvdy: "U", pvdl: "A", mpptdy: "U", mpptdl: "A" }
       const exUnit = ex[this.fdField]
       if (exUnit) {
@@ -1094,6 +1120,10 @@ export default {
         serData[this.fdField] = showList;
       }
 
+
+
+
+
       let eachartData = {}
       let seriesData = []
       data.forEach((x, i) => {
@@ -1102,17 +1132,33 @@ export default {
         }
       })
       let tempLength
+
       serData[this.fdField].forEach(x => {
         if (!eachartData[x]) {
+
           eachartData[x] = []
           for (let i = 0; i < tempLength; i++) {
             eachartData[x].push(null)
           }
           eachartData[x][0] = 0
+
         } else {
           tempLength = eachartData[x].length
         }
       })
+
+      serData[this.fdField].forEach(x => {
+        if (eachartData[x].length < tempLength) {
+
+          eachartData[x] = []
+          for (let i = 0; i < tempLength; i++) {
+            eachartData[x].push(null)
+          }
+          eachartData[x][0] = 0
+
+        }
+      })
+
 
 
       serData[this.fdField].forEach((x, i) => {
@@ -1147,7 +1193,7 @@ export default {
           id: serName[this.fdField][i],
           symbolRotate: rotae,
           data: dataA,
-
+          sampling: "lttb",
           itemStyle: {
             color: serColor[this.fdField] && serColor[this.fdField][i] || color[i]
           }
@@ -1233,6 +1279,7 @@ export default {
 
 
           data: eachartData.sub_time
+          // data: a
         },
         yAxis: [
           {
@@ -1282,11 +1329,9 @@ export default {
         ],
         series: seriesData
       };
-
       if (['pvdy', 'pvdl', 'mpptdy', 'mpptdl'].includes(this.fdField)) {
         delete options.xAxis.axisLabel;
       }
-
 
       this.Gechart2 = echarts.init(this.$refs.echart_curve);
       this.Gechart2.setOption(options, { notMerge: true });
@@ -1866,6 +1911,11 @@ export default {
     line-height: 32px;
   }
 
+  /deep/.el-table__body tr.hover-row>td.el-table__cell {
+    background-color: rgb(212, 238, 255) !important;
+  }
+
+
 
   /deep/ .el-table {
     color: #000;
@@ -1876,9 +1926,29 @@ export default {
 
   }
 
+  /deep/ .el-table__body-wrapper .hover-row .el-table__cell {
+    background-color: rgb(212, 238, 255)
+  }
+
+  /deep/.el-table__fixed tr:hover {
+    background-color: rgb(212, 238, 255);
+  }
+
   /deep/ .el-table--enable-row-hover .el-table__body tr:hover>td.el-table__cell {
     background-color: rgb(212, 238, 255);
   }
+
+
+
+  /deep/ .el-table .el-table__fixed-body-wrapper .el-table__row--striped td.el-table__cell {
+    background: #f8fcff;
+    border-color: #d8dfe7;
+  }
+
+  /deep/ .el-table .el-table__fixed-body-wrapper .el-table__row td.el-table__cell {
+    border-color: #d8dfe7;
+  }
+
 
   /deep/ .el-table .el-table__body-wrapper .el-table__row--striped td.el-table__cell {
     background: #f8fcff;
@@ -1895,6 +1965,13 @@ export default {
     color: #000000;
   }
 
+  /deep/ .el-table__fixed-header-wrapper .is-group tr {
+    background-color: #ebf5ff;
+    border-color: #d8dfe7;
+    color: #000000;
+  }
+
+
   /deep/ .el-table th.el-table__cell {
     background-color: transparent;
     border-color: #d8dfe7;
@@ -1910,6 +1987,13 @@ export default {
     // :nth-child(0) {
     //   padding-left: 24px;
     // }
+  }
+
+  /deep/.el-table__row--striped:hover td.el-table__cell {
+
+    background-color: rgb(212, 238, 255);
+
+
   }
 
   /deep/ .el-table__footer-wrapper tbody td.el-table__cell {
