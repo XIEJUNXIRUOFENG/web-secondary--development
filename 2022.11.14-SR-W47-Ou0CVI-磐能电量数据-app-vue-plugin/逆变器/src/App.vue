@@ -1107,14 +1107,17 @@ export default {
       param.time = moment(this.timeStart).format('YYYY-MM-DD')
       param.type = this.value
       let { data } = await queryOperationCurve(param)
+
+      const seriesKey = { pvdy: "PV", pvdl: "PV", mpptdy: "MPPT", mpptdl: "MPPT" }
       const ex = { pvdy: "U", pvdl: "A", mpptdy: "U", mpptdl: "A" }
+      const key = seriesKey[this.fdField]
       const exUnit = ex[this.fdField]
       if (exUnit) {
         const showList = [];
         data.forEach(i => {
-          const { PV } = i;
-          if (!showList.includes(PV + exUnit)) {
-            showList.push(PV + exUnit)
+          const listKey = i[key] + exUnit;
+          if (!showList.includes(listKey)) {
+            showList.push(listKey)
           }
         })
         serData[this.fdField] = showList;

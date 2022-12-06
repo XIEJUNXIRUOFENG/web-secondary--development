@@ -317,10 +317,10 @@ const PendingHandle = (props) => {
    // 三位分节法
    const NumFormat = (value) => {
       if (!value) return "";
-      var intPart = Number(value).toFixed(0);
-      var intPartFormat = intPart.toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
-      var floatPart = ".00";
-      var value2Array = value.toString().split(".");
+      let intPart = Number(String(value).split(".")[0]);
+      let intPartFormat = intPart.toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
+      let floatPart = ".00";
+      let value2Array = value.toString().split(".");
       if (value2Array.length === 2) {
          floatPart = value2Array[1].toString();
          if (floatPart.length === 1) {
@@ -329,7 +329,7 @@ const PendingHandle = (props) => {
             return intPartFormat + "." + floatPart;
          }
       } else {
-         return intPartFormat;
+         return intPartFormat + floatPart;
       }
    };
 

@@ -124,19 +124,18 @@ const AlreadyHandle = (props) => {
       },
       {
          title: "处理时间",
-         dataIndex: "flow_inst_create_time",
-         key: "flow_inst_create_time",
+         dataIndex: "flow_inst_last_modify_time",
+         key: "flow_inst_last_modify_time",
          width: 150,
          ellipsis: true,
-         render: (_, record) => <div>{moment(record.flow_inst_create_time).format("yyyy年MM月DD日")}</div>,
+         render: (_, record) => <div>{moment(record.flow_inst_last_modify_time).format("yyyy年MM月DD日")}</div>,
       },
       {
          title: "创建人",
-         dataIndex: "flow_inst_create_time",
-         key: "flow_inst_create_time",
+         dataIndex: "flow_inst_create_member_name",
+         key: "flow_inst_create_member_name",
          width: 150,
          ellipsis: true,
-         render: (_, record) => <div>超级管理员</div>,
       },
       {
          title: "经办人",
@@ -314,10 +313,10 @@ const AlreadyHandle = (props) => {
    // 三位分节法
    const NumFormat = (value) => {
       if (!value) return "";
-      var intPart = Number(value).toFixed(0);
-      var intPartFormat = intPart.toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
-      var floatPart = ".00";
-      var value2Array = value.toString().split(".");
+      let intPart = Number(String(value).split(".")[0]);
+      let intPartFormat = intPart.toString().replace(/(\d)(?=(?:\d{3})+$)/g, "$1,");
+      let floatPart = ".00";
+      let value2Array = value.toString().split(".");
       if (value2Array.length === 2) {
          floatPart = value2Array[1].toString();
          if (floatPart.length === 1) {
@@ -326,7 +325,7 @@ const AlreadyHandle = (props) => {
             return intPartFormat + "." + floatPart;
          }
       } else {
-         return intPartFormat;
+         return intPartFormat + floatPart;
       }
    };
 
