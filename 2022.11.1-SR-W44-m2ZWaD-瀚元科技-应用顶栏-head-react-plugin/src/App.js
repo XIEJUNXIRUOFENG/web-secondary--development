@@ -117,7 +117,8 @@ export default class App extends Component {
       );
     let { data } = await this.userHanfler()
     let office_name = data.office_name
-    this.setState({ office_name })
+    let loginName = data.loginName
+    this.setState({ office_name, loginName })
 
     menuData = JSON.parse(menuData)
     menuData.forEach((x, i) => {
@@ -359,7 +360,7 @@ export default class App extends Component {
     buttons: [],
     counting: 0,
     current: 'SubMenu', clickStatus: false, officeno: null, statusList: [], office_name: '全国', ctiy: '', substation: '',
-    menuData: [], treeData: [], warningAlter: [], regionValue: '全国', tiemObj: null, regionFiled: '全国', statusListAll: []
+    menuData: [], treeData: [], warningAlter: [], regionValue: '全国', tiemObj: null, regionFiled: '全国', statusListAll: [], loginName: ''
   };
   //将城市结构的数据转成扁平数据
   flatHandler = async (data, office_name) => {
@@ -551,14 +552,14 @@ export default class App extends Component {
         let AppVariables = {}
         let appArr = appVarKey.split('|')
         appArr.forEach(item => {
-          AppVariables[item] = undefined
+          AppVariables[item] = ''
         })
 
         this.setState({ regionValue: '全国', regionFiled: '', statusList: statusListAll, clickStatus: true }, () => {
 
           this.queryAlterFn()
         })
-        document.querySelector('.resetBtn').click()
+        document.querySelector('.resetBtn') && document.querySelector('.resetBtn').click()
 
         changeAppVariables && changeAppVariables(AppVariables)
       } else {
@@ -751,13 +752,22 @@ export default class App extends Component {
     this.setState({ counting: 1 })
   }
   warningClick = (type) => {
-    const { alarmUrl, alarmField, history } = this.props
+    const { alarmUrl, alarmField, history, alarmAppKey, changeAppVariables } = this.props
+
+
 
     if (alarmUrl.indexOf('applicationview/content/view') != -1) {
-
-      history.push(`${alarmUrl}${alarmField}=${type}`)
+      let obej = {}
+      obej[alarmAppKey] = type
+      changeAppVariables && changeAppVariables(obej)
+      history.push(`${alarmUrl}`)
+      console.log(obej, '======dataParams');
     } else {
-      window.open(`${alarmUrl}${alarmField}=${type}`)
+      let obej = {}
+      obej[alarmAppKey] = type
+      changeAppVariables && changeAppVariables(obej)
+      window.open(`${alarmUrl}`)
+
     }
   }
   onDropdownChange = (value) => {
@@ -813,7 +823,7 @@ export default class App extends Component {
 
     } = this.props || {};
 
-    const { selectButton, current, menuData, treeData, warningAlter, regionValue } = this.state;
+    const { selectButton, loginName, current, menuData, treeData, warningAlter, regionValue } = this.state;
     if (this.props.isConfig) {
       return <Setting {...this.props} />;
     }
@@ -911,7 +921,7 @@ export default class App extends Component {
                     color: '#fff'
                   }}
                 >
-                  {window?.currentUser?.loginName || "默认"}
+                  {loginName || "默认"}
                   <DownOutlined />
                 </span>
               </Dropdown>
