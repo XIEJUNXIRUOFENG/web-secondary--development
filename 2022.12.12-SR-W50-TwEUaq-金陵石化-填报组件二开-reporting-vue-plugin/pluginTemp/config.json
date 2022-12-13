@@ -1,0 +1,14 @@
+{
+  "id": "8089684c-1109-428c-88e7-978172fd7901",
+  "type": "reporting",
+  "main": "app.8c9782cf.js",
+  "version": "2",
+  "props": {
+    "styleArr": "[\"title\",\"key\", \"eventCenterConfig\"]",
+    "columnStyle": "{title:'自定义'}",
+    "componentAttributes": "{\"style\":[\"title\"],\"data\":[\"key\"],\"interaction\":[\"eventCenterConfig\"]}",
+    "assetColumnList": "[{\"col_name\":\"自定义\",\"col_datatype\":0}]"
+  },
+  "requirement-number": "需求编号",
+  "requirement-name": "需求名称"
+}
