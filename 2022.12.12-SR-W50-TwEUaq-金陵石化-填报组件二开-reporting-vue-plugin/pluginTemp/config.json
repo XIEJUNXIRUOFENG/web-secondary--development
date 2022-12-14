@@ -1,5 +1,5 @@
 {
-  "id": "8089684c-1109-428c-88e7-978172fd7901",
+  "id": "cee9fcd9-a6fb-4ff7-abaa-67e84d582ca5",
   "type": "reporting",
   "main": "app.8c9782cf.js",
   "version": "2",
@@ -9,6 +9,6 @@
     "componentAttributes": "{\"style\":[\"title\"],\"data\":[\"key\"],\"interaction\":[\"eventCenterConfig\"]}",
     "assetColumnList": "[{\"col_name\":\"自定义\",\"col_datatype\":0}]"
   },
-  "requirement-number": "需求编号",
-  "requirement-name": "需求名称"
+  "requirement-number": "填报组件二开",
+  "requirement-name": "SR-W50-TwEUaq"
 }
