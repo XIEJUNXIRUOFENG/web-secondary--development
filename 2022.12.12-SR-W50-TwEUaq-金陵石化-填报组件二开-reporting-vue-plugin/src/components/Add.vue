@@ -6,7 +6,7 @@
           <img class="planImg" src="../../pluginTemp/images/Category.png" alt="">
           <span class="planTitle">计划列表</span>
         </div>
-        <div class="addIcon">＋</div>
+        <div class="addIcon" @click="addPalnt">＋</div>
       </div>
       <el-menu
         v-if="plantList.length > 0"
@@ -35,6 +35,55 @@
     <div class="rightConcent">
       <component :is="componentType" :dataSource="{}" :componentType="changeComponentType"/>
     </div>
+    <el-drawer
+      ref="planDrawer"
+      custom-class="planDrawer"
+      size="30%"
+      :visible.sync="planDrawer"
+      label-position="top"
+      :show-close="false"
+      direction="rtl">
+      <template slot="title">
+        <span class="drawerTitle">计划信息</span>
+        <el-button type="primary" @click="planSbumit()">提交</el-button>
+      </template>
+      <div class="drawer_content">
+        <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
+          <el-form-item label="申报人：" :label-width="formLabelWidth" :clearable="true" :readonly="true" prop="reportMember">
+            <el-input v-model="planForm.reportMember" autocomplete="off" placeholder="请输入"></el-input>
+          </el-form-item>
+          <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="reportUnit">
+            <el-select v-model="planForm.reportUnit" placeholder="请选择">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="secondUnit">
+            <el-select v-model="planForm.secondUnit" placeholder="请选择">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="reportDate">
+            <el-date-picker
+              v-model="planForm.reportDate"
+              format="yyyy-MM-DD"
+              type="date"
+              placeholder="请选择日期">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="计划类型：" :label-width="formLabelWidth" prop="reportType">
+            <el-select v-model="planForm.reportType" placeholder="请选择">
+              <el-option label="区域一" value="shanghai"></el-option>
+              <el-option label="区域二" value="beijing"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="质量记录号：" :label-width="formLabelWidth" prop="reportNum">
+            <el-input v-model="planForm.reportNum" autocomplete="off" placeholder="请输入" :clearable="true"></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -42,11 +91,16 @@
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
 import EmptyRep from "./childRep/emptyRep";
-import { Menu, MenuItem, Submenu } from "element-ui";
+import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, DatePicker} from "element-ui";
 
 Vue.use(Menu);
 Vue.use(MenuItem);
 Vue.use(Submenu);
+Vue.use(Drawer);
+Vue.use(Form);
+Vue.use(FormItem);
+Vue.use(Button);
+Vue.use(DatePicker);
 
 export default {
   name: "Add",
@@ -61,17 +115,50 @@ export default {
   //     return "EmptyRep";
   //   },
   // },
-  data() {
+  data() { 
+    let currentUser = window?.currentUser || {};
     return {
+      currentUser,
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
       childConfig: {},
       componentType: "EmptyRep",
-      plantList: []
+      plantList: [],
+      planDrawer: false,
+      formLabelWidth: "80",
+      planForm: {
+        reportMember: '',
+        reportUnit: '',
+        secondUnit: '',
+        reportDate: new Date(),
+        reportType: '',
+        reportNum: '' 
+      },
+      rules: {
+        reportMember: [
+          { required: true, message: '请输入申报人', trigger: 'blur' }
+        ],
+        reportUnit: [
+          { required: true, message: '请输入申报单位', trigger: 'change' }
+        ],
+        secondUnit: [
+          { required: true, message: '请输入申报子单元', trigger: 'change' }
+        ],
+        reportDate: [
+          { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
+        ],
+        reportNum: [
+          { required: true, message: '请输入质量记录号', trigger: 'blur' }
+        ],
+        reportType: [
+          { required: true, message: '请选择计划类型', trigger: 'change' }
+        ],
+      }
     };
   },
   mounted() {
+    console.log('currentUser', this.currentUser);
     window?.componentCenter?.register(
       this.customConfig.componentId,
       "comp",
@@ -84,7 +171,7 @@ export default {
       console.error("configuration解析错误", error);
     }
   },
-  methods: {
+  methods: {  
     // 展开菜单栏
     handleOpen(key, keyPath) {
       console.log(key, keyPath);
@@ -93,20 +180,28 @@ export default {
     handleClose(key, keyPath) {
       console.log(key, keyPath);
     },
-    async inputChange(e) {
-      this.data = e;
-      let { formConfig, component, onChange } = this.customConfig;
-      await window.eventCenter.triggerEventNew({
-        objectId: formConfig?.id,
-        componentId: component.id,
-        type: "report",
-        event: "change",
-        payload: {
-          value: e,
-        },
-      });
-      onChange(e);
+    // 新增 
+    addPalnt() {
+      this.planDrawer = true;
     },
+    // 计划提交
+    planSbumit(){
+      this.$refs.planDrawer.closeDrawer()
+    },
+    // async inputChange(e) {
+    //   this.data = e;
+    //   let { formConfig, component, onChange } = this.customConfig;
+    //   await window.eventCenter.triggerEventNew({
+    //     objectId: formConfig?.id,
+    //     componentId: component.id,
+    //     type: "report",
+    //     event: "change",
+    //     payload: {
+    //       value: e,
+    //     },
+    //   });
+    //   onChange(e);
+    // },
     // 切换组件
     changeComponentType(comName) {
       this.componentType = comName;
@@ -206,6 +301,29 @@ export default {
     display: flex;
     flex: 1;
     background: pink;
+  }
+  /deep/ .el-drawer__wrapper{
+    .planDrawer {
+      margin: 10px !important;
+      border-radius: 6px !important;
+      height: calc(100% - 20px) !important;
+      .el-drawer__header {
+        margin-bottom: 0 !important;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ebebeb;
+      }
+      .el-drawer__body {
+        padding: 15px !important;
+        .drawer_content {
+          .el-select {
+            width: 100% !important;
+          }
+          .el-date-editor--date {
+            width: 100% !important;
+          }
+        }
+      }
+    }
   }
 }
 </style>
