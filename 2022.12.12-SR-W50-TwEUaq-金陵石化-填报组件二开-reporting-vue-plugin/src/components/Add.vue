@@ -32,65 +32,68 @@
         <span>尚未创建计划</span>
       </div>
     </div>
+    <!-- 右侧 -->
     <div class="rightConcent">
-      <component :is="componentType" :dataSource="{}" :componentType="changeComponentType"/>
-    </div>
-    <el-drawer
-      ref="planDrawer"
-      custom-class="planDrawer"
-      size="30%"
-      :visible.sync="planDrawer"
-      label-position="top"
-      :show-close="false"
-      direction="rtl">
-      <template slot="title">
-        <span class="drawerTitle">计划信息</span>
-        <el-button type="primary" @click="planSbumit()">提交</el-button>
-      </template>
-      <div class="drawer_content">
-        <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
-          <el-form-item label="申报人：" :label-width="formLabelWidth" :clearable="true" :readonly="true" prop="reportMember">
-            <el-input v-model="planForm.reportMember" autocomplete="off" placeholder="请输入"></el-input>
-          </el-form-item>
-          <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="reportUnit">
-            <el-select v-model="planForm.reportUnit" placeholder="请选择">
-              <el-option label="区域一" value="shanghai"></el-option>
-              <el-option label="区域二" value="beijing"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="secondUnit">
-            <el-select v-model="planForm.secondUnit" placeholder="请选择">
-              <el-option label="区域一" value="shanghai"></el-option>
-              <el-option label="区域二" value="beijing"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="reportDate">
-            <el-date-picker
-              v-model="planForm.reportDate"
-              format="yyyy-MM-DD"
-              type="date"
-              placeholder="请选择日期">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="计划类型：" :label-width="formLabelWidth" prop="reportType">
-            <el-select v-model="planForm.reportType" placeholder="请选择">
-              <el-option label="区域一" value="shanghai"></el-option>
-              <el-option label="区域二" value="beijing"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="质量记录号：" :label-width="formLabelWidth" prop="reportNum">
-            <el-input v-model="planForm.reportNum" autocomplete="off" placeholder="请输入" :clearable="true"></el-input>
-          </el-form-item>
-        </el-form>
+      <!-- <component v-if="plantList.length > 0" :is="componentType" :dataSource="{}" :componentType="changeComponentType"/> -->
+        <!-- 空白页 -->
+      <div v-if="componentType == 'emptyPage'" class="rightEmptyBox">
+        <img class="rightEmptyIcon" src="../../pluginTemp/images/plantTask.png" alt="">
+        <span class="rightEmptyText">请创建工程计划</span>
+        <el-button style="width: 124px; font-size: 16px;" size="small" type="primary" @click="addPalnt()" round plain>＋新增计划</el-button>
       </div>
-    </el-drawer>
+      <!-- 计划新增 -->
+      <div v-if="componentType == 'PlantForm'" class="addplantBox">
+        <div class="PlantForm_title">
+          <span class="drawerTitle">计划信息</span>
+          <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="saveSub" round>
+            <img class="saveIcon" src="../../pluginTemp/images/saveIcon.png" alt="">
+            保存
+          </el-button>
+        </div>
+        <div class="PlantForm_content">
+          <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
+            <el-form-item label="申报人：" :label-width="formLabelWidth" :readonly="true" prop="reportMember">
+              <el-input v-model="planForm.reportMember" :clearable="true" placeholder="请输入"></el-input>
+            </el-form-item>
+            <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="reportUnit">
+              <el-select v-model="planForm.reportUnit" placeholder="请选择">
+                <el-option label="区域一" value="shanghai"></el-option>
+                <el-option label="区域二" value="beijing"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="secondUnit">
+              <el-select v-model="planForm.secondUnit" placeholder="请选择">
+                <el-option label="区域一" value="shanghai"></el-option>
+                <el-option label="区域二" value="beijing"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="reportDate">
+              <el-date-picker
+                v-model="planForm.reportDate"
+                format="yyyy-MM-DD"
+                type="date"
+                placeholder="请选择日期">
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item label="计划类型：" :label-width="formLabelWidth" prop="reportType">
+              <el-select v-model="planForm.reportType" placeholder="请选择">
+                <el-option label="区域一" value="shanghai"></el-option>
+                <el-option label="区域二" value="beijing"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="质量记录号：" :label-width="formLabelWidth" prop="reportNum"> 
+              <el-input v-model="planForm.reportNum" autocomplete="off" placeholder="请输入" :clearable="true"></el-input>
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
-import EmptyRep from "./childRep/emptyRep";
 import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, DatePicker} from "element-ui";
 
 Vue.use(Menu);
@@ -107,26 +110,22 @@ export default {
   props: {
     customConfig: Object,
   },
-  components: {
-    EmptyRep
-  },
   // computed: {
   //   componentType: function () {
-  //     return "EmptyRep";
+  //     return "PlantForm";
   //   },
   // },
   data() { 
     let currentUser = window?.currentUser || {};
     return {
-      currentUser,
+      currentUser, // 当前用户
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
-      childConfig: {},
-      componentType: "EmptyRep",
-      plantList: [],
-      planDrawer: false,
-      formLabelWidth: "80",
+      componentType: "PlantForm", // 组件类型 emptyPage-空白页 PlantForm-计划新增
+      plantList: [], // 大JSON
+      formLabelWidth: "80", // 表单label宽
+      // 计划表单
       planForm: {
         reportMember: '',
         reportUnit: '',
@@ -135,6 +134,7 @@ export default {
         reportType: '',
         reportNum: '' 
       },
+      // 校验
       rules: {
         reportMember: [
           { required: true, message: '请输入申报人', trigger: 'blur' }
@@ -180,13 +180,14 @@ export default {
     handleClose(key, keyPath) {
       console.log(key, keyPath);
     },
-    // 新增 
+    // 新增计划
     addPalnt() {
-      this.planDrawer = true;
+      this.componentType = "PlantForm";
     },
-    // 计划提交
-    planSbumit(){
-      this.$refs.planDrawer.closeDrawer()
+    // 保存提交
+    saveSub() {
+      let { onChange } = this.customConfig;
+      onChange(e);
     },
     // async inputChange(e) {
     //   this.data = e;
@@ -202,10 +203,6 @@ export default {
     //   });
     //   onChange(e);
     // },
-    // 切换组件
-    changeComponentType(comName) {
-      this.componentType = comName;
-    },
     Event_Center_getName() {
       let { formConfig, component } = this.customConfig;
       return `${formConfig?.form_name}-${component.columnStyle.title}`;
@@ -225,9 +222,10 @@ export default {
 
 <style lang="less" scoped>
 .liuChen-page {
+  padding: 15px;
   display: flex;
-  width: 100%;
-  height: 100%;
+  width: calc(100% - 30px) !important;
+  height: calc(100% - 30px);
   background-color: #e7edef;
   .leftTree {
     padding: 24px 16px 0 16px;
@@ -278,7 +276,7 @@ export default {
       margin-top: 10px;
     }
     .emptyBox {
-      margin-top: 50px;
+      margin-top: 110px;
       width: 100%;
       display: flex;
       flex-direction: column;
@@ -297,30 +295,65 @@ export default {
       }
     }
   }
+  // 右侧
   .rightConcent {
+    margin-left: 15px;
     display: flex;
     flex: 1;
-    background: pink;
-  }
-  /deep/ .el-drawer__wrapper{
-    .planDrawer {
-      margin: 10px !important;
-      border-radius: 6px !important;
-      height: calc(100% - 20px) !important;
-      .el-drawer__header {
-        margin-bottom: 0 !important;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #ebebeb;
+    height: 100%;
+    background: #FFFFFF;
+    border-radius: 8px;
+    // 空白页
+    .rightEmptyBox {
+      margin-top: 50%;
+      transform: translateY(-50%);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      color: #626973;
+      .rightEmptyIcon {
+        height: 50px;
+        width: 50px;
       }
-      .el-drawer__body {
-        padding: 15px !important;
-        .drawer_content {
-          .el-select {
-            width: 100% !important;
-          }
-          .el-date-editor--date {
-            width: 100% !important;
-          }
+      .rightEmptyText {
+        margin: 28px 0 10px 0;
+        font-family: PingFang SC;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 24px;
+      }
+    }
+    // 计划新增
+    .addplantBox {
+      padding: 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      .PlantForm_title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .drawerTitle {
+          font-weight: 500;
+          font-size: 16px;
+          color: #373A55;
+        }
+        .saveIcon {
+          margin-bottom: -1px;
+          margin-right: 2px;
+          width: 13px;
+          height: 13px;
+        }
+      }
+      .PlantForm_content {
+        margin-top: 24px;
+        .el-select {
+          width: 100% !important;
+        }
+        .el-date-editor--date {
+          width: 100% !important;
         }
       }
     }
