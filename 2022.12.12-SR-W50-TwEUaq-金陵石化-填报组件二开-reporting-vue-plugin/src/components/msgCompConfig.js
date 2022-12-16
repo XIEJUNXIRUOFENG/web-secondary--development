@@ -1,13 +1,13 @@
 // 组件可派发事件
 export const events = [
   {
-    key: "change",
-    name: "内容改变",
+    key: "calculation",
+    name: "金额计算事件",
     payload: [
       {
-        name: "内容",
+        name: "金额计算",
         key: "value",
-        dataType: "string",
+        dataType: "object",
       },
     ],
   },
@@ -17,13 +17,13 @@ export const events = [
 export const actions = [
   {
     key: "setValue",
-    name: "设值",
+    name: "金额设值",
     isSupportChild: true, // 是否支持子表
     params: [
       {
         key: "value",
         name: "值",
-        dataType: "string",
+        dataType: "object",
       },
     ],
   },

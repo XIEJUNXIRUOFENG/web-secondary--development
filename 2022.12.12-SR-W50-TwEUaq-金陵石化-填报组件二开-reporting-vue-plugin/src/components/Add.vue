@@ -149,7 +149,9 @@
           <div class="title_class">
             <div class="title_class_start">
               <img class="imgTile" src="../../pluginTemp/images/layer.png" alt="" srcset="">
-              <span class="spanTile"> Ⅱ套大修：装置动力检测</span>
+              <span class="spanTile"> {{
+                  tasksPrievw.project_name
+              }}</span>
             </div>
             <div class="title_class_end">
               <el-button circle type="small"> <i class="el-icon-edit"></i> </el-button>
@@ -199,9 +201,11 @@
           <div class="task_opear_main">
             <div class="task_operaList_item" v-for="(item, i) in tasksPrievw.procedures" :key="i">
               <div class="task_opera_name text_class">{{ item.process_name }}</div>
-              <div class="task_opera_step text_class"><span class="title_label">工序步骤：</span>{{ item.steps.length }}</div>
-              <div class="task_opera_procedure text_class"><span
-                  class="title_label">物料清单：</span>{{ item.materials.length }}</div>
+              <div class="task_opera_step text_class"><span class="title_label">工序步骤：</span>{{ item.steps.length }}
+              </div>
+              <div class="task_opera_procedure text_class"><span class="title_label">物料清单：</span>{{
+                  item.materials.length
+              }}</div>
               <div class="task_opera_cz"><img style="vertical-align: middle;" src="../../pluginTemp/images/Edit.png"
                   alt="" srcset=""> 编辑</div>
             </div>
@@ -228,7 +232,7 @@
           <el-form :model="operationForm" :rules="rules" ref="operationForm" size="small">
             <el-form-item label="工序名称:" :label-width="formLabelWidth" :clearable="true" :readonly="true"
               prop="procedures_name">
-              <el-input v-model="operationForm.name" autocomplete="off" placeholder="请输入"></el-input>
+              <el-input v-model="operationForm.process_name" autocomplete="off" placeholder="请输入"></el-input>
             </el-form-item>
             <el-form-item label="工序步骤:" :label-width="formLabelWidth" prop="">
               <div class="procedures_name_table_detailed">
@@ -238,14 +242,14 @@
                   <el-table-column prop="loadValue" label="工序描述">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input :controls="false" type="text" size="small" />
+                        <el-input v-model="scope.row.process_desc" :controls="false" type="text" size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column prop="vnotchesWidth" label="工程量单位">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="'work_unit'">
-                        <el-select v-model="scope.row.work_unit" placeholder="请选择">
+                        <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
                           <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
                             :value="item.data_id"></el-option>
 
@@ -256,7 +260,8 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="工程量数量">
                     <template slot-scope="scope">
-                      <el-input-number controls-position="right" size="small" />
+                      <el-input-number v-model="scope.row.quantity_engineering_quantity" controls-position="right"
+                        size="small" />
                     </template>
                   </el-table-column>
 
@@ -280,42 +285,46 @@
                   </el-table-column>
                   <el-table-column prop="loadValue" label="物料编码">
                     <template slot-scope="scope">
-                      <el-input :controls="false" disabled="true" type="text" size="small" />
+                      <el-input v-model="scope.row.material_code" :controls="false" disabled="true" type="text"
+                        size="small" />
                     </template>
                   </el-table-column>
                   <el-table-column prop="vnotchesWidth" label="物料名称">
                     <template slot-scope="scope">
-                      <el-input :controls="false" disabled="true" type="text" size="small" />
+                      <el-input v-model="scope.row.material_name" :controls="false" disabled="true" type="text"
+                        size="small" />
                     </template>
                   </el-table-column>
 
                   <el-table-column prop="sampleThickness" label="材料标准">
                     <template slot-scope="scope">
-                      <el-input :controls="false" type="text" size="small" />
+                      <el-input v-model="scope.row.standard_materials" :controls="false" type="text" size="small" />
                     </template>
                   </el-table-column>
 
                   <el-table-column prop="sampleThickness" label="补充说明">
                     <template slot-scope="scope">
-                      <el-input :controls="false" type="text" size="small" />
+                      <el-input v-model="scope.row.additional_note" :controls="false" type="text" size="small" />
                     </template>
                   </el-table-column>
 
                   <el-table-column prop="sampleThickness" label="主单位">
                     <template slot-scope="scope">
-                      <el-input :controls="false" type="text" disabled="true" size="small" />
+                      <el-input v-model="scope.row.main_unit" :controls="false" type="text" disabled="true"
+                        size="small" />
                     </template>
                   </el-table-column>
 
                   <el-table-column prop="sampleThickness" label="副单位">
                     <template slot-scope="scope">
-                      <el-input :controls="false" type="text" disabled="true" size="small" />
+                      <el-input v-model="scope.row.auxiliary_unit" :controls="false" type="text" disabled="true"
+                        size="small" />
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料需求量">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input :controls="false" type="text" size="small" />
+                        <el-input v-model="scope.row.material_demand" :controls="false" type="text" size="small" />
                       </el-form-item>
 
                     </template>
@@ -323,21 +332,23 @@
                   <el-table-column prop="sampleThickness" label="材料采购量（主单位）">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input :controls="false" type="text" size="small" />
+                        <el-input v-model="scope.row.material_purchase_main" :controls="false" type="text"
+                          size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（副单位）">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input :controls="false" type="text" size="small" />
+                        <el-input v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text"
+                          size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
 
                   <el-table-column prop="sampleThickness" label="是否提供车间">
                     <template slot-scope="scope">
-                      <el-select v-model="scope.row.workshop_flag" placeholder="请选择">
+                      <el-select v-model="scope.row.whether_workshop_supply" placeholder="请选择">
                         <el-option label="是" value="1"></el-option>
                         <el-option label="否" value="0"></el-option>
                       </el-select>
@@ -348,7 +359,7 @@
                   <el-table-column label="操作">
                     <template slot-scope="scope">
                       <el-button type="text" @click="procedureDelFn(scope)" size="small">计算</el-button>
-                      <el-button type="text" @click="procedureDelFn(scope)" size="small">删除</el-button>
+                      <el-button type="text" @click="calculationClick(scope.row)" size="small">删除</el-button>
                     </template>
                   </el-table-column>
                   <div slot="append" class="child_end_fill">
@@ -407,7 +418,7 @@ export default {
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
-      componentType: "Task", // 组件类型 emptyPage-空白页 PlantForm-计划新增
+      componentType: "Procedure", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
       formLabelWidth: "80", // 表单label宽
       detailedTable: [],  // 工序步骤数据
@@ -501,6 +512,7 @@ export default {
       this.plantList = JSON.parse(this.customConfig.data)
       this.taskForm = this.plantList[0].tasks[0]
       this.tasksPrievw = this.plantList[0].tasks[0]
+      this.operationForm = this.plantList[0].procedures[0]
     } catch (error) {
       console.error("configuration解析错误", error);
     }
@@ -513,7 +525,6 @@ export default {
       queryDevices().then(res => { this.devicesArr = res.data }).catch(err => { this.devicesArr = [] }) //关联设备
       queryFunArea().then(res => { this.funAreaArr = res.data }).catch(err => { this.funAreaArr = [] })//功能区域
     },
-
     // 展开菜单栏
     handleOpen(key, keyPath) {
       console.log(key, keyPath);
@@ -540,7 +551,6 @@ export default {
       const i = row.$index
       this.detailedTable.splice(i, 1)
     },
-
     //物料删除
     procedureDelFn(row) {
       const i = row.$index
@@ -576,8 +586,23 @@ export default {
       let { formConfig, component } = this.customConfig;
       return `${formConfig?.form_name}-${component.columnStyle.title}`;
     },
+    //逻辑控制 计算
+    async calculationClick(e) {
+      await window.eventCenter.triggerEventNew({
+        objectId: formConfig?.id,
+        componentId: component.id,
+        type: "report",
+        event: "  calculation",
+        payload: {
+          value: e,
+        },
+      });
+    },
+    //金额计算设值
     do_EventCenter_setValue({ value }) {
-      this.data = value;
+      this.procedureTable[value.index].material_demand = value.material_demand
+      this.procedureTable[value.index].material_purchase_main = value.material_purchase_main
+      this.procedureTable[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
     },
     Event_Center_getName() {
       return this.data;
@@ -973,6 +998,7 @@ export default {
             height: 54px;
             background: #F7F8F9;
             border-radius: 8px;
+            margin-bottom: 8px;
 
             .text_class {
               font-family: 'PingFang SC';
