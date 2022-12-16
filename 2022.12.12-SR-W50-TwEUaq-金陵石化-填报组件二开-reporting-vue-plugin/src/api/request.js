@@ -1,47 +1,57 @@
-// import axios from "axios";
-// import qs from "querystringify";
+import axios from "axios";
+import qs from "querystringify";
 
-// // const apiContextPath = "http://192.168.1.240:43214";
+// const apiContextPath = "http://192.168.1.240:43214";
+let apiContextPath = "";
+if (process.env.NODE_ENV === "development") {
+    document.cookie =
+        "token=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY3MTE3NDAxMDI3MCwidXNlcklkIjoiMTIzNDU2Nzg5MCJ9.JzvWm4PYlVE5QTsWzTJIPGPiKSKWwiFRa_54r2L_jek";
+    document.cookie =
+        "refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY3MTE3NDAxMDM0OX0.JRv2K1Q5fTkv4jwTwLXqCYvqqVrFOVO6-dO6xNPAKJ0";
+    document.cookie = "username=admin";
+    document.cookie = "windowOnline=true";
+    apiContextPath = "/api";
+}
 
-// const instance = axios.create({
-//   baseURL: `/sdata/rest`,
-//   timeout: 60000,
-//   validateStatus: function (status) {
-//     return status >= 200 && status < 300; // default
-//   },
-//   headers:
-//     (window.location.search && qs.parse(window.location.search).token) ||
-//     window.token
-//       ? { token: qs.parse(window.location.search).token || window.token }
-//       : {},
-// });
+const instance = axios.create({
+    baseURL: `${apiContextPath}/sdata/rest`,
+    timeout: 60000,
+    validateStatus: function (status) {
+        return status >= 200 && status < 300; // default
+    },
+    headers:
+        (window.location.search && qs.parse(window.location.search).token) ||
+            window.token
+            ? { token: qs.parse(window.location.search).token || window.token }
+            : {},
+});
 
-// instance.defaults.headers.post["Content-Type"] = "application/json";
+instance.defaults.headers.post["Content-Type"] = "application/json";
 
-// instance.interceptors.response.use(
-//   response => {
-//     let { data } = response;
-//     if (typeof data === "string") {
-//       data = JSON.parse(data);
-//     }
-//     if (data && data.status !== 200 && !(data instanceof Blob)) {
-//       return Promise.reject(response);
-//     }
-//     if (data instanceof Blob) {
-//       response.data = data;
-//       return response;
-//     }
+instance.interceptors.response.use(
+    response => {
+        let { data } = response;
+        if (typeof data === "string") {
+            data = JSON.parse(data);
+        }
+        if (data && data.status !== 200 && !(data instanceof Blob)) {
+            return Promise.reject(response);
+        }
+        if (data instanceof Blob) {
+            response.data = data;
+            return response;
+        }
 
-//     response.data = data && data.result;
-//     return response;
-//   },
-//   error => {
-//     if (error.response && error.response.status === 401) {
-//       return;
-//     }
+        response.data = data && data.result;
+        return response;
+    },
+    error => {
+        if (error.response && error.response.status === 401) {
+            return;
+        }
 
-//     return Promise.reject(error.response);
-//   }
-// );
+        return Promise.reject(error.response);
+    }
+);
 
-// export default instance;
+export default instance;
