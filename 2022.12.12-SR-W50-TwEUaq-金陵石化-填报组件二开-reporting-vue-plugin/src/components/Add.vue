@@ -403,9 +403,10 @@
                       <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_main`"
                         :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
-                          @change="changeItemState(scope.$index, 'purchase_main_state')"
-                          v-model="scope.row.material_purchase_main" :controls="false" type="text" size="small" />
+                          @change="changeItemState(scope.$index, 'purchase_main_state')"></el-input>
+
                       </el-form-item>
+
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（副单位）">
@@ -418,7 +419,6 @@
                       </el-form-item>
                     </template>
                   </el-table-column>
-
                   <el-table-column prop="sampleThickness" label="是否提供车间">
                     <template slot-scope="scope">
                       <el-select v-model="scope.row.whether_workshop_supply" placeholder="请选择">
@@ -495,7 +495,7 @@
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
 import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
-import { queryUnit, queryDevices, queryFunArea, queryMaterials } from '../api/asset'
+import { queryUnit, queryDevices, queryFunArea, queryMaterials, queryAllMuBan } from '../api/asset'
 Vue.use(Menu);
 Vue.use(MenuItem);
 Vue.use(Submenu);
@@ -675,21 +675,17 @@ export default {
       "procedures": [{ 
         "data_id": "",
         "process_name": "工序1",
-        "remark": "",
-        "parent_id": "",
-        "mode_type": "Procedure",
-        "steps": [{ 
           "data_id": "",
-          "process_desc": "步骤1",
+          "process_desc": "步骤1awd",
           "parent_id": "",
-          "unit_engineering_quantity": "",
+          "unit_engineering_quantity": "小时",
           "quantity_engineering_quantity": "3",
           "mode_type": "Step"
         }],
         "materials": [{ 
           "data_id": "",
           "parent_id": "",
-          "material_name": "物料A",
+          "material_name": "物料Aad",
           "material_code": "ASF334",
           "standard_materials": "标准AB",
           "additional_note": "备注",
@@ -762,6 +758,9 @@ export default {
     changeForm(item) {
       this.menuActive = item.seletKey;
       console.log('activeitem', item);
+      let { mode_type } = item;
+      this.clickAddType = mode_type;
+      this.clickSonAddTtem = item;
       switch (item.mode_type) {
         case "Plan":
           this.componentType = "PlantForm";
@@ -799,49 +798,84 @@ export default {
     remoteMethod(query) {
       if (query !== '') {
         this.loading = true;
-        setTimeout(() => {
+        let params = {
+          mode_type: this.clickAddType,
+          name: query
+        }
+        queryAllMuBan(params).then(res => {
           this.loading = false;
-          this.options = this.list.filter(item => {
-            return item.label.toLowerCase()
-              .indexOf(query.toLowerCase()) > -1;
-          });
-        }, 200);
+          let { data } = res;
+          this.remoteFilter = data;
+          console.log('全局搜索res', this.remoteFilter);
+        }).catch(err => {
+          this.loading = false;
+          this.remoteFilter = [];
+          console.log('全局搜索err', err);
+        })
       } else {
-        this.options = [];
+        this.remoteFilter = [];
+      }
+    },
+    // 模板切换
+    selectMuBan(item) {
+      this.remoteValue = item;
+      console.log('this.clickSonAddTtem', this.clickSonAddTtem);
+
+      switch (this.clickAddType) {
+        case "Plan":
+          this.plantList[0] = JSON.parse(JSON.stringify(item));
+          console.log(this.plantList);
+          break;
+        case "Task":
+          // this.clickSonAddTtem
+          this.componentType = "Task";
+          break;
+        case "Procedure":
+          this.componentType = "Procedure";
+          break;
       }
     },
     // 任务,工序新增与删除
     handleCommand({ mod, item, index }) {
       console.log(mod, item, index);
+      let { mode_type } = item;
+      this.clickAddType = mode_type;
       if (mod == 'add') {
-        let { mode_type } = item;
         this.clickAddTtem = item;
-        this.clickAddType = mode_type;
-        // this.planForm = {
-        //   data_id: "", // 主键
-        //   plan_name: "", // 计划名称
-        //   plan_number: "", //计划编号
-        //   plan_type: "", // 计划类型
-        //   applicant: "", // 申报人
-        //   applicant_unit: "", // 申报单位
-        //   subunit: "", // 子单元
-        //   applicant_date: new Date(), // 申报日期
-        //   quality_record_number: "", // 质量记录号
-        //   mode_type: "Plan", // 类型
-        // }
+        this.planForm = {
+          data_id: "", // 主键
+          plan_name: "", // 计划名称
+          plan_number: "", //计划编号
+          plan_type: "", // 计划类型
+          applicant: "", // 申报人
+          applicant_unit: "", // 申报单位
+          subunit: "", // 子单元
+          applicant_date: new Date(), // 申报日期
+          quality_record_number: "", // 质量记录号
+          mode_type: "Plan", // 类型
+        }
         this.dialogVisible = true;
       } else {
-        // item.splice(index, 1);
-        console.log('item', item);
-        this.forKey(this.plantList);
+        let keyVal = ''
+        if (mode_type == "Plan") {
+          keyVal = 'tasks'
+        } else {
+          keyVal = 'procedures'
+        }
+        this.$nextTick(() => {
+          item[keyVal].splice(index, 1);
+          console.log('item', item);
+          this.forKey(this.plantList);
+          this.changeForm(item)
+        })
       }
     },
     // 名称
-    closeDialog(formName) {
-      this.$refs[formName].validate((valid) => {
+    async closeDialog(formName) {
+      await this.$refs[formName].validate((valid) => {
         if (valid) {
           let { addName } = this.nameForm;
-
+          let size = 0;
           switch (this.clickAddType) {
             case "Plan":
               if (this.clickAddTtem.tasks) {
@@ -852,22 +886,27 @@ export default {
               }
               this.tasksPrievw = { project_name: addName, mode_type: 'Task' }
               this.componentType = "Task";
+              size = this.clickAddTtem.tasks.length;
+              this.clickSonAddTtem = this.clickAddTtem.tasks[size - 1];
               break;
             case "Task":
               if (this.clickAddTtem.procedures) {
                 console.log('this.clickAddTtem.procedures', this.clickAddTtem.procedures);
                 this.clickAddTtem.procedures.push({ process_name: addName, steps: [], materials: [], mode_type: 'Procedure' })
+                this.forKey(this.plantList);
               } else {
                 let procedures = [{ process_name: addName, steps: [], materials: [], mode_type: 'Procedure' }];
                 this.clickAddTtem.procedures = procedures;
+                this.forKey(this.plantList);
               }
-              this.operationForm = { process_name: addName, steps: [], materials: [], mode_type: 'Procedure' }
+              size = this.clickAddTtem.procedures.length;
               this.componentType = "Procedure";
+              this.clickSonAddTtem = this.clickAddTtem.procedures[size - 1]
               break;
           }
           this.dialogVisible = false;
           this.nameForm.addName = '';
-          this.forKey(this.plantList);
+          this.changeForm(this.clickSonAddTtem)
         } else {
           console.log('error submit!!');
           return false;
@@ -1020,8 +1059,23 @@ export default {
       let { formConfig, component } = this.customConfig;
       return `${formConfig?.form_name}-${component.columnStyle.title}`;
     },
+    //逻辑控制 计算
+    async calculationClick(e) {
+      await window.eventCenter.triggerEventNew({
+        objectId: formConfig?.id,
+        componentId: component.id,
+        type: "report",
+        event: "  calculation",
+        payload: {
+          value: e,
+        },
+      });
+    },
+    //金额计算设值
     do_EventCenter_setValue({ value }) {
-      this.data = value;
+      this.procedureTable[value.index].material_demand = value.material_demand
+      this.procedureTable[value.index].material_purchase_main = value.material_purchase_main
+      this.procedureTable[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
     },
     Event_Center_getName() {
       return this.data;
