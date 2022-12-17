@@ -487,7 +487,7 @@ Vue.use(Select);
 Vue.use(Upload);
 
 export default {
-  name: "Add",
+  name: "AddMultiple",
   props: {
     customConfig: Object,
   },
@@ -660,6 +660,7 @@ export default {
     }]
   }]`;
     console.log('currentUser', this.currentUser);
+
     window?.componentCenter?.register(
       this.customConfig.componentId,
       "comp",
@@ -949,8 +950,23 @@ export default {
       let { formConfig, component } = this.customConfig;
       return `${formConfig?.form_name}-${component.columnStyle.title}`;
     },
+    //逻辑控制 计算
+    async calculationClick(e) {
+      await window.eventCenter.triggerEventNew({
+        objectId: formConfig?.id,
+        componentId: component.id,
+        type: "report",
+        event: "  calculation",
+        payload: {
+          value: e,
+        },
+      });
+    },
+    //金额计算设值
     do_EventCenter_setValue({ value }) {
-      this.data = value;
+      this.procedureTable[value.index].material_demand = value.material_demand
+      this.procedureTable[value.index].material_purchase_main = value.material_purchase_main
+      this.procedureTable[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
     },
     Event_Center_getName() {
       return this.data;
