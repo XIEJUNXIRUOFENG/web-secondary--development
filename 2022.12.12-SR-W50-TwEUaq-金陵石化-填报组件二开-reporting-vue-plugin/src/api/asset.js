@@ -17,3 +17,6 @@ export const queryDevices = () =>
 
 export const queryFunArea = () =>
   request.get(`ext/plan/apply/queryFunArea`);  //查询功能区域  
+
+export const queryMaterials = () =>
+  request.get(`ext/plan/apply/queryMaterials`);  //查询物料  

@@ -6,24 +6,67 @@
           <img class="planImg" src="../../pluginTemp/images/Category.png" alt="">
           <span class="planTitle">计划列表</span>
         </div>
-        <div class="addIcon" @click="addPalnt">＋</div>
+        <div v-if="plantList.length == 0" class="addIcon" @click="addPalnt">＋</div>
       </div>
-      <el-menu v-if="plantList.length > 0" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
-        <el-submenu index="1">
-          <template slot="title">
-
-            <span>导航一</span>
-          </template>
-          <el-menu-item index="1-1">选项1</el-menu-item>
-          <el-menu-item index="1-2">选项2</el-menu-item>
-          <el-menu-item index="1-3">选项3</el-menu-item>
-          <el-submenu index="1-4">
-            <template slot="title">选项4</template>
-            <el-menu-item index="1-4-1">选项1</el-menu-item>
-          </el-submenu>
-        </el-submenu>
-      </el-menu>
-      <div v-else class="emptyBox">
+      <!-- 菜单 -->
+      <div v-if="plantList.length > 0" class="menu_list">
+        <!-- 计划 -->
+        <div class="menu_item" v-for="planTtem, planIndx in plantList" :key="planTtem.seletKey">
+          <div class="menu_item_box planIdent" :class="{ 'menu_item_box_active': menuActive == planTtem.seletKey }"
+            @click="changeForm(planTtem)">
+            <img class="menuIcon" src="../../pluginTemp/images/menuIcon.png" alt="">
+            <span class="menuPlanTitle">{{ planTtem.plan_name }}</span>
+            <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
+              <span class="el-dropdown-link">
+                <i class="el-icon-more"
+                  :style="{ 'color': menuActive == planTtem.seletKey ? '#FFFFFF' : '#373A55' }"></i>
+              </span>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item :command="{ mod: 'add', item: planTtem, index: planIndx }">新增</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </div>
+          <!-- 任务 -->
+          <div class="menu_item" v-for="taskItem, taskIndx in planTtem.tasks" :key="taskItem.seletKey">
+            <div class="menu_item_box taskIdent" :class="{ 'menu_item_box_active': menuActive == taskItem.seletKey }"
+              @click="changeForm(taskItem)">
+              <img class="menuIcon" src="../../pluginTemp/images/menuIcon.png" alt="">
+              <span class="taskTitle">{{ taskItem.project_name }}</span>
+              <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
+                <span class="el-dropdown-link">
+                  <i class="el-icon-more"
+                    :style="{ 'color': menuActive == taskItem.seletKey ? '#FFFFFF' : '#373A55' }"></i>
+                </span>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item :command="{ mod: 'add', item: taskItem, index: taskIndx }">新增</el-dropdown-item>
+                  <el-dropdown-item
+                    :command="{ mod: 'del', item: planTtem.tasks, index: taskItem.seletKey }">删除</el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </div>
+            <!-- 工序 -->
+            <div class="menu_item" v-for="procedure in taskItem.procedures" :key="procedure.seletKey">
+              <div class="menu_item_box stepIdent" :class="{ 'menu_item_box_active': menuActive == procedure.seletKey }"
+                @click="changeForm(procedure)">
+                <div class="dotIcon"></div>
+                <span class="stepTitle">{{ procedure.process_name }}</span>
+                <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
+                  <span class="el-dropdown-link">
+                    <i class="el-icon-more"
+                      :style="{ 'color': menuActive == procedure.seletKey ? '#FFFFFF' : '#373A55' }"></i>
+                  </span>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item
+                      :command="{ mod: 'del', item: taskItem.procedures, index: procedure.seletKey }">删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 菜单无数据 -->
+      <div v-if="plantList.length == 0" class="emptyBox">
         <img class="emptyIcon" src="../../pluginTemp/images/emptyIcon.png" alt="">
         <span>尚未创建计划</span>
       </div>
@@ -41,42 +84,56 @@
       <!-- 计划新增 -->
       <div v-if="componentType == 'PlantForm'" class="addplantBox">
         <div class="PlantForm_title">
-          <span class="drawerTitle">计划信息</span>
-          <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="saveSub" round>
+          <div>
+            <span class="drawerTitle">计划信息</span>
+            <el-select v-model="remoteValue" multiple filterable remote reserve-keyword placeholder="请输入关键词"
+              :remote-method="remoteMethod" :loading="loading">
+              <el-option v-for="item in remoteFilter" :key="item.value" :label="item.label" :value="item.value">
+              </el-option>
+            </el-select>
+          </div>
+          <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="saveSub('planForm')"
+            round>
             <img class="saveIcon" src="../../pluginTemp/images/saveIcon.png" alt="">
             保存
           </el-button>
         </div>
         <div class="PlantForm_content">
           <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
-            <el-form-item label="申报人：" :label-width="formLabelWidth" :readonly="true" prop="reportMember">
-              <el-input v-model="planForm.reportMember" :clearable="true" placeholder="请输入"></el-input>
+            <el-form-item label="计划名称：" :label-width="formLabelWidth" prop="addName">
+              <el-input v-model="planForm.plan_name" :clearable="true" placeholder="请输入名称"></el-input>
             </el-form-item>
-            <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="reportUnit">
-              <el-select v-model="planForm.reportUnit" placeholder="请选择">
+            <el-form-item label="申报人：" :label-width="formLabelWidth" prop="applicant">
+              <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input>
+            </el-form-item>
+            <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="applicant_unit">
+              <el-select v-model="planForm.applicant_unit" placeholder="请选择" :readonly="true">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="secondUnit">
-              <el-select v-model="planForm.secondUnit" placeholder="请选择">
+            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
+              <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="reportDate">
-              <el-date-picker v-model="planForm.reportDate" format="yyyy-MM-DD" type="date" placeholder="请选择日期">
+            <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="applicant_date">
+              <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-DD" type="date" placeholder="请选择日期">
               </el-date-picker>
             </el-form-item>
-            <el-form-item label="计划类型：" :label-width="formLabelWidth" prop="reportType">
-              <el-select v-model="planForm.reportType" placeholder="请选择">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+            <el-form-item label="计划类型：" :label-width="formLabelWidth" prop="plan_type">
+              <el-select v-model="planForm.plan_type" placeholder="请选择">
+                <el-option v-for="item in planTypeList" :key="item" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="质量记录号：" :label-width="formLabelWidth" prop="reportNum">
-              <el-input v-model="planForm.reportNum" autocomplete="off" placeholder="请输入" :clearable="true"></el-input>
+            <el-form-item label="质量记录号：" :label-width="formLabelWidth" prop="quality_record_number">
+              <el-input v-model="planForm.quality_record_number" autocomplete="off" placeholder="请输入"
+                :clearable="true"></el-input>
             </el-form-item>
+            <!-- <el-form-item label="预估工程费：" :label-width="formLabelWidth" prop="quality_record_number"> 
+              <el-input v-model="planForm.quality_record_number" autocomplete="off" placeholder="请输入" :clearable="true"></el-input>
+            </el-form-item> -->
           </el-form>
         </div>
       </div>
@@ -85,7 +142,7 @@
         <div class="operation_headr">
           <div class="operation_headr_back"><i class="el-icon-back"></i> <span>工程任务</span></div>
           <div class="operation_headr_itme">
-            <el-button type="primary" round>
+            <el-button type="primary" @click="saveTask()" round>
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
                 xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd"
@@ -132,11 +189,13 @@
               </el-input>
             </el-form-item>
             <el-form-item label="附件信息：" :label-width="formLabelWidth" prop="file">
-              <div> <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/"
-                  :on-change="handleChange" :file-list="taskForm.file">
+              <div>
+                <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/"
+                  :on-change="handleChange">
 
                   <button class="Task_add_upload"><span class="iconfont">&#xe63d;</span> 上传附件</button>
-                </el-upload></div>
+                </el-upload>
+              </div>
 
             </el-form-item>
           </el-form>
@@ -154,7 +213,7 @@
               }}</span>
             </div>
             <div class="title_class_end">
-              <el-button circle type="small"> <i class="el-icon-edit"></i> </el-button>
+              <el-button circle type="small" @click="taskEdit(tasksPrievw)"> <i class="el-icon-edit"></i> </el-button>
             </div>
           </div>
           <el-descriptions :column="4">
@@ -195,7 +254,7 @@
               <img src="../../pluginTemp/images/hengLine.png" alt="" srcset="">
               任务工序
             </div>
-            <div class="addIcon">＋</div>
+            <div class="addIcon" @click="handleCommand({ mod: 'add', item: tasksPrievw, index: null })">＋</div>
           </div>
 
           <div class="task_opear_main">
@@ -206,8 +265,8 @@
               <div class="task_opera_procedure text_class"><span class="title_label">物料清单：</span>{{
                   item.materials.length
               }}</div>
-              <div class="task_opera_cz"><img style="vertical-align: middle;" src="../../pluginTemp/images/Edit.png"
-                  alt="" srcset=""> 编辑</div>
+              <div class="task_opera_cz" @click="proceduresEdit(item, i, tasksPrievw)"><img
+                  style="vertical-align: middle;" src="../../pluginTemp/images/Edit.png" alt="" srcset=""> 编辑</div>
             </div>
           </div>
         </div>
@@ -215,7 +274,9 @@
       <!-- 工序新增 -->
       <div class="Operation-page" v-if="componentType == 'Procedure'">
         <div class="operation_headr">
-          <div class="operation_headr_back"><i class="el-icon-back"></i> <span>工序名称</span></div>
+          <div class="operation_headr_back"><i v-if="backState.operation" @click="backFn()" class="el-icon-back"></i>
+            <span>工序名称</span>
+          </div>
           <div class="operation_headr_itme">
             <el-button type="primary" round @click="OperationSave">
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
@@ -236,19 +297,23 @@
             </el-form-item>
             <el-form-item label="工序步骤:" :label-width="formLabelWidth" prop="">
               <div class="procedures_name_table_detailed">
-                <el-table :data="detailedTable" style="width: 100%" border stripe header-cell-class-name='listBan'>
+                <el-table :data="operationForm?.steps" style="width: 100%" border stripe
+                  header-cell-class-name='listBan'>
                   <el-table-column type="index" width="50" label="序号">
                   </el-table-column>
                   <el-table-column prop="loadValue" label="工序描述">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="'work_name'">
+                      <el-form-item :clearable="true" :prop="`steps[${scope.$index}].process_desc`"
+                        :rules="{ required: true, message: '请输入工序描述', trigger: 'blur' }">
                         <el-input v-model="scope.row.process_desc" :controls="false" type="text" size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column prop="vnotchesWidth" label="工程量单位">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="'work_unit'">
+                      <el-form-item :clearable="true"
+                        :prop="scope.row.quantity_engineering_quantity ? `steps[${scope.$index}].unit_engineering_quantity` : ''"
+                        :rules="{ required: Boolean(scope.row.quantity_engineering_quantity), message: '请选择工程量', trigger: 'change' }">
                         <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
                           <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
                             :value="item.data_id"></el-option>
@@ -280,18 +345,19 @@
             </el-form-item>
             <el-form-item label="物料清单:" :label-width="formLabelWidth" prop="">
               <div class="procedures_name_table_detailed  procedures_name_table_procedure">
-                <el-table :data="procedureTable" style="width: 100%" border stripe header-cell-class-name='listBan'>
+                <el-table :data="operationForm?.materials" style="width: 100%" border stripe
+                  header-cell-class-name='listBan'>
                   <el-table-column type="index" width="50" label="序号">
                   </el-table-column>
                   <el-table-column prop="loadValue" label="物料编码">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.material_code" :controls="false" disabled="true" type="text"
+                      <el-input v-model="scope.row.material_code" :controls="false" :disabled="true" type="text"
                         size="small" />
                     </template>
                   </el-table-column>
                   <el-table-column prop="vnotchesWidth" label="物料名称">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.material_name" :controls="false" disabled="true" type="text"
+                      <el-input v-model="scope.row.material_name" :controls="false" :disabled="true" type="text"
                         size="small" />
                     </template>
                   </el-table-column>
@@ -310,38 +376,45 @@
 
                   <el-table-column prop="sampleThickness" label="主单位">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.main_unit" :controls="false" type="text" disabled="true"
+                      <el-input v-model="scope.row.main_unit" :controls="false" type="text" :disabled="true"
                         size="small" />
                     </template>
                   </el-table-column>
 
                   <el-table-column prop="sampleThickness" label="副单位">
                     <template slot-scope="scope">
-                      <el-input v-model="scope.row.auxiliary_unit" :controls="false" type="text" disabled="true"
+                      <el-input v-model="scope.row.auxiliary_unit" :controls="false" type="text" :disabled="true"
                         size="small" />
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料需求量">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input v-model="scope.row.material_demand" :controls="false" type="text" size="small" />
+                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_demand`"
+                        :rules="{ required: true, message: '请输入材料需求量', trigger: 'blur' }">
+                        <el-input :class="{ ITEMRED: scope.row.demand_state }" v-model="scope.row.material_demand"
+                          :controls="false" @change="changeItemState(scope.$index, 'demand_state')" type="text"
+                          size="small" />
                       </el-form-item>
 
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（主单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input v-model="scope.row.material_purchase_main" :controls="false" type="text"
-                          size="small" />
+                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_main`"
+                        :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
+                        <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
+                          @change="changeItemState(scope.$index, 'purchase_main_state')"
+                          v-model="scope.row.material_purchase_main" :controls="false" type="text" size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（副单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="'work_name'">
-                        <el-input v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text"
-                          size="small" />
+                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_auxiliary`"
+                        :rules="{ required: true, message: '请输入材料采购量（副单位）', trigger: 'blur' }">
+                        <el-input :class="{ ITEMRED: scope.row.purchase_auxiliary_state }"
+                          @change="changeItemState(scope.$index, 'purchase_auxiliary_state')"
+                          v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text" size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
@@ -358,8 +431,8 @@
 
                   <el-table-column label="操作">
                     <template slot-scope="scope">
-                      <el-button type="text" @click="procedureDelFn(scope)" size="small">计算</el-button>
-                      <el-button type="text" @click="calculationClick(scope.row)" size="small">删除</el-button>
+                      <el-button type="text" @click="calculationClick(scope)" size="small">计算</el-button>
+                      <el-button type="text" @click="procedureDelFn(scope.row)" size="small">删除</el-button>
                     </template>
                   </el-table-column>
                   <div slot="append" class="child_end_fill">
@@ -375,14 +448,66 @@
         </div>
       </div>
     </div>
+    <!-- 弹窗 -->
+    <el-dialog title="请输入名称" :visible.sync="dialogVisible" width="30%">
+      <el-form :model="nameForm" :rules="rules" ref="addNameForm" size="small">
+        <el-form-item label="名称：" :label-width="formLabelWidth" prop="addName">
+          <el-input v-model.trim="nameForm.addName" :clearable="true" placeholder="请输入"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="closeDialog('addNameForm')">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 物料清单新增弹窗 -->
+    <el-dialog title="物料清单表" :visible.sync="materialsVisible" width="80%">
+      <el-table :data="materialsTable" row-key="data_id" ref="multipleTable" stripe style="width: 100%"
+        tooltip-effect="dark" @selection-change="handleSelectionChange"
+        :header-cell-style="{ padding: 0 + 'px', fontSize: '12px', fontWeight: 400 }"
+        :header-row-style="{ height: '30px' }">
+        <el-table-column type="selection" :reserve-selection="true" width="55" fixed="left">
+        </el-table-column>
+        <el-table-column type="index" label="序列" width="55" fixed="left">
+        </el-table-column>
+        <el-table-column prop="material_code" label="物料编号">
+        </el-table-column>
+        <el-table-column prop="material_name" label="物料名称">
+        </el-table-column>
+        <el-table-column prop="main_unit" label="主单位">
+        </el-table-column>
+        <el-table-column prop="auxiliary_unit" label="副单位">
+        </el-table-column>
+      </el-table>
+      <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
+        class="two_pagination" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper" :total="total">
+      </el-pagination>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="materialsVisible = false">取 消</el-button>
+        <el-button type="primary" @click="addmaterials()">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
-import { Menu, MenuItem, Descriptions, DescriptionsItem, Table, TableColumn, Option, Submenu, InputNumber, Select, Upload, Input, Drawer, Form, FormItem, Button, DatePicker } from "element-ui";
-import { queryUnit, queryDevices, queryFunArea } from '../api/asset'
+import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
+import { queryUnit, queryDevices, queryFunArea, queryMaterials } from '../api/asset'
+Vue.use(Menu);
+Vue.use(MenuItem);
+Vue.use(Submenu);
+Vue.use(Drawer);
+Vue.use(Form);
+Vue.use(FormItem);
+Vue.use(Button);
+Vue.use(DatePicker);
+Vue.use(Dropdown);
+Vue.use(DropdownMenu);
+Vue.use(DropdownItem);
+Vue.use(Dialog);
 Vue.use(Menu);
 Vue.use(MenuItem);
 Vue.use(Submenu);
@@ -400,9 +525,9 @@ Vue.use(Input);
 Vue.use(InputNumber);
 Vue.use(Select);
 Vue.use(Upload);
-
+Vue.use(Pagination)
 export default {
-  name: "AddMultiple",
+  name: "Add",
   props: {
     customConfig: Object,
   },
@@ -420,6 +545,7 @@ export default {
       configuration: {},
       componentType: "Procedure", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
+      menuActive: '',
       formLabelWidth: "80", // 表单label宽
       detailedTable: [],  // 工序步骤数据
       procedureTable: [], //物料数据
@@ -428,14 +554,35 @@ export default {
       stepsUnit: [],//工程量单位
       fileList: [],//上传文件保存
       tasksPrievw: {},//工程任务详情
+      dialogVisible: false,
+      materialsVisible: false,
+      backState: { operation: "" },//返回状态
+      nameForm: {
+        addName: ""
+      },
+      materialsTable: [],//物料清单表
+      selectionData: [],//选中数据
+      loading: false, // 远程搜索
+      remoteFilter: [], // 模板数据
+      remoteValue: {}, // 选中模板
+      clickAddTtem: {}, // 新增项父级数据
+      clickAddType: "", // 新增项父级类型
+      currentPage: 1,//当前页数
+      pageSize: 10,//页数大小
+      total: 0,
+      dataAll: [],//存放所有数据
       // 计划表单
       planForm: {
-        reportMember: '',
-        reportUnit: '',
-        secondUnit: '',
-        reportDate: new Date(),
-        reportType: '',
-        reportNum: ''
+        data_id: "", // 主键
+        plan_name: "", // 计划名称
+        plan_number: "", // 计划编号
+        plan_type: "", // 计划类型
+        applicant: "", // 申报人
+        applicant_unit: "", // 申报单位
+        subunit: "", // 子单元
+        applicant_date: new Date(), // 申报日期
+        quality_record_number: "NL/QR-PD-06", // 质量记录号
+        mode_type: "Plan", // 类型
       },
       //工程任务表单
       taskForm: {
@@ -454,25 +601,29 @@ export default {
       operationForm: {
         name: ''
       },
+      planTypeList: ['临时', '月度', '大修单项', '维保'],  // 计划类型
       // 校验
       rules: {
-        reportMember: [
+        applicant: [
           { required: true, message: '请输入申报人', trigger: 'blur' }
         ],
-        reportUnit: [
+        applicant_unit: [
           { required: true, message: '请输入申报单位', trigger: 'change' }
         ],
-        secondUnit: [
+        subunit: [
           { required: true, message: '请输入申报子单元', trigger: 'change' }
         ],
-        reportDate: [
+        applicant_date: [
           { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
         ],
-        reportNum: [
+        quality_record_number: [
           { required: true, message: '请输入质量记录号', trigger: 'blur' }
         ],
-        reportType: [
+        plan_type: [
           { required: true, message: '请选择计划类型', trigger: 'change' }
+        ],
+        addName: [
+          { required: true, message: '请输入名称', trigger: 'blur' }
         ],
         project_name: [
           { required: true, message: '请输入工程名', trigger: 'blur' }
@@ -492,15 +643,69 @@ export default {
         work_name: [
           { required: true, message: '请输入工序描述', trigger: 'blur' }
         ],
-        procedures_name: [
+        project_name: [
           { required: true, message: '请输入工序名称', trigger: 'blur' }
         ]
       }
     };
   },
   mounted() {
+    let josnData = ` [{
+    "data_id": "",
+    "plan_name": "计划计划",
+    "plan_number": "2022-301W01",
+    "plan_type": "月度",
+    "applicant": "1234567890",
+    "applicant_unit": "123456789",
+    "subunit": "",
+    "applicant_date": "2022-12-23",
+    "quality_record_number": "AWF323434",
+    "mode_type": "Plan",
+    "tasks": [{ 
+      "data_id": "",
+      "project_name": "任务1",
+      "project_type": "A",
+      "parent_id": "",
+      "function_area": "区域1",
+      "associated_devices": "设备1",
+      "requirement_for_construction": "标准11",
+      "remark": "备注",
+      "file": "/stopere/werere/sd.pdf",
+      "mode_type": "Task",
+      "procedures": [{ 
+        "data_id": "",
+        "process_name": "工序1",
+        "remark": "",
+        "parent_id": "",
+        "mode_type": "Procedure",
+        "steps": [{ 
+          "data_id": "",
+          "process_desc": "步骤1",
+          "parent_id": "",
+          "unit_engineering_quantity": "",
+          "quantity_engineering_quantity": "3",
+          "mode_type": "Step"
+        }],
+        "materials": [{ 
+          "data_id": "",
+          "parent_id": "",
+          "material_name": "物料A",
+          "material_code": "ASF334",
+          "standard_materials": "标准AB",
+          "additional_note": "备注",
+          "main_unit": "个", 
+          "auxiliary_unit": "个",
+          "material_demand": "3",
+          "material_purchase_main": "",
+          "material_purchase_auxiliary": "",
+          "whether_workshop_supply": "",
+          "mode_type": "Material"
+        }]
+      }
+      ]
+    }]
+  }]`;
     console.log('currentUser', this.currentUser);
-
     window?.componentCenter?.register(
       this.customConfig.componentId,
       "comp",
@@ -509,21 +714,41 @@ export default {
     );
     try {
       this.configuration = JSON.parse(this.propsConfiguration);
-      this.plantList = JSON.parse(this.customConfig.data)
+      // this.plantList = JSON.parse(this.customConfig.data)
+      this.plantList = JSON.parse(josnData);
+      if (this.plantList.length > 0) {
+        this.forKey(this.plantList);
+        this.changeForm(this.plantList[0])
+      } else {
+        this.componentType = 'emptyPage';
+      }
       this.taskForm = this.plantList[0].tasks[0]
       this.tasksPrievw = this.plantList[0].tasks[0]
-      this.operationForm = this.plantList[0].procedures[0]
+      this.operationForm = this.plantList[0].tasks[0].procedures[0];
+      setTimeout(() => {
+        console.log('this.plantList', this.plantList)
+      }, 500)
     } catch (error) {
       console.error("configuration解析错误", error);
     }
     this.querySelect()
   },
   methods: {
-    //选择框查询
-    querySelect() {
-      queryUnit().then(res => { this.stepsUnit = res.data }).catch(err => { this.stepsUnit = [] }) //工程量单位
-      queryDevices().then(res => { this.devicesArr = res.data }).catch(err => { this.devicesArr = [] }) //关联设备
-      queryFunArea().then(res => { this.funAreaArr = res.data }).catch(err => { this.funAreaArr = [] })//功能区域
+    // 生成唯一key
+    forKey(list) {
+      list.forEach((x, index) => {
+        x.seletKey = `00${index}`;
+        if (x.tasks?.length > 0) {
+          x.tasks.forEach((y, yIndex) => {
+            y.seletKey = `${x.seletKey}-00${yIndex}`;
+            if (y.procedures?.length > 0) {
+              y.procedures.forEach((els, elsIndex) => {
+                els.seletKey = `${y.seletKey}-00${elsIndex}`;
+              })
+            }
+          })
+        }
+      })
     },
     // 展开菜单栏
     handleOpen(key, keyPath) {
@@ -533,18 +758,131 @@ export default {
     handleClose(key, keyPath) {
       console.log(key, keyPath);
     },
+    // 点击菜单
+    changeForm(item) {
+      this.menuActive = item.seletKey;
+      console.log('activeitem', item);
+      switch (item.mode_type) {
+        case "Plan":
+          this.componentType = "PlantForm";
+          break;
+        case "Task":
+          this.componentType = "Task";
+          this.tasksPrievw = item;
+          break;
+        case "Procedure":
+          this.componentType = "Procedure";
+          this.operationForm = item;
+          break;
+      }
+    },
     // 新增计划
     addPalnt() {
       this.componentType = "PlantForm";
     },
     // 保存提交
-    saveSub() {
-      let { onChange } = this.customConfig;
-      onChange(e);
+    saveSub(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          alert('submit!');
+          console.log('11111111');
+          let { onChange } = this.customConfig;
+          onChange(e);
+          this.forKey(this.plantList);
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    // 远程搜索
+    remoteMethod(query) {
+      if (query !== '') {
+        this.loading = true;
+        setTimeout(() => {
+          this.loading = false;
+          this.options = this.list.filter(item => {
+            return item.label.toLowerCase()
+              .indexOf(query.toLowerCase()) > -1;
+          });
+        }, 200);
+      } else {
+        this.options = [];
+      }
+    },
+    // 任务,工序新增与删除
+    handleCommand({ mod, item, index }) {
+      console.log(mod, item, index);
+      if (mod == 'add') {
+        let { mode_type } = item;
+        this.clickAddTtem = item;
+        this.clickAddType = mode_type;
+        // this.planForm = {
+        //   data_id: "", // 主键
+        //   plan_name: "", // 计划名称
+        //   plan_number: "", //计划编号
+        //   plan_type: "", // 计划类型
+        //   applicant: "", // 申报人
+        //   applicant_unit: "", // 申报单位
+        //   subunit: "", // 子单元
+        //   applicant_date: new Date(), // 申报日期
+        //   quality_record_number: "", // 质量记录号
+        //   mode_type: "Plan", // 类型
+        // }
+        this.dialogVisible = true;
+      } else {
+        // item.splice(index, 1);
+        console.log('item', item);
+        this.forKey(this.plantList);
+      }
+    },
+    // 名称
+    closeDialog(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          let { addName } = this.nameForm;
+
+          switch (this.clickAddType) {
+            case "Plan":
+              if (this.clickAddTtem.tasks) {
+                this.clickAddTtem.tasks.push({ project_name: addName, mode_type: 'Task' })
+              } else {
+                let tasks = [{ project_name: addName, mode_type: 'Task' }];
+                this.clickAddTtem.tasks = tasks;
+              }
+              this.tasksPrievw = { project_name: addName, mode_type: 'Task' }
+              this.componentType = "Task";
+              break;
+            case "Task":
+              if (this.clickAddTtem.procedures) {
+                console.log('this.clickAddTtem.procedures', this.clickAddTtem.procedures);
+                this.clickAddTtem.procedures.push({ process_name: addName, steps: [], materials: [], mode_type: 'Procedure' })
+              } else {
+                let procedures = [{ process_name: addName, steps: [], materials: [], mode_type: 'Procedure' }];
+                this.clickAddTtem.procedures = procedures;
+              }
+              this.operationForm = { process_name: addName, steps: [], materials: [], mode_type: 'Procedure' }
+              this.componentType = "Procedure";
+              break;
+          }
+          this.dialogVisible = false;
+          this.nameForm.addName = '';
+          this.forKey(this.plantList);
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    //选择框查询
+    querySelect() {
+      queryUnit().then(res => { this.stepsUnit = res.data }).catch(err => { this.stepsUnit = [] }) //工程量单位
+      queryDevices().then(res => { this.devicesArr = res.data }).catch(err => { this.devicesArr = [] }) //关联设备
+      queryFunArea().then(res => { this.funAreaArr = res.data }).catch(err => { this.funAreaArr = [] })//功能区域
     },
     //工序步骤新增
     detailedAddFn() {
-      this.detailedTable.push({})
+      this.operationForm.steps.push({})
     },
     //工序步骤删除
     detailedDelFn(row) {
@@ -556,17 +894,89 @@ export default {
       const i = row.$index
       this.procedureTable.splice(i, 1)
     },
-    //物料新增
+    //物料新增按钮
     procedureAddFn() {
-      this.procedureTable.push({})
+      this.materialsVisible = true
+      queryMaterials().then(res => {
+        this.dataAll = [...res.data]
+        this.materialsTable = this.dataAll.slice(0, this.currentPage * this.pageSize)
+        this.total = this.dataAll.length
+      }).catch(err => {
+        this.materialsTable = []
+      })
+    },
+    //物料弹框确定按钮
+    addmaterials() {
+      this.operationForm.materials.push(...this.selectionData)
+      this.$refs.multipleTable.clearSelection()
+      this.materialsVisible = false
     },
     //工序保存
     OperationSave() {
 
+      this.$refs.operationForm.validate((valid) => {
+        if (valid) {
+          alert('submit!');
+          console.log('11111111');
+          let { onChange } = this.customConfig;
+          // onChange(e);
+          this.forKey(this.plantList);
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
     },
     //保存的change事件
     handleChange(file, fileList) {
       this.fileList = fileList.slice(-3);
+    },
+    //工程页的编辑
+    proceduresEdit(procedures, index, tasks) {
+      this.componentType = "Procedure";
+      this.operationForm = procedures
+      this.tasks = tasks
+      this.backState.operation = true
+    },
+    //返回按钮
+    backFn() {
+      this.tasksPrievw = this.tasks
+      this.backState.operation = false
+      this.componentType = 'Task'
+    },
+    //工程编辑 方法
+    taskEdit(task) {
+      this.taskForm = JSON.parse(JSON.stringify(task))
+      this.componentType = 'TaskForm'
+    },
+    //工程保存
+    saveTask() {
+      for (const key in this.taskForm) {
+        this.tasksPrievw[key] = this.taskForm[key]
+      }
+    },
+    //表格选择框事件
+    handleSelectionChange(selection) {
+      this.selectionData = []
+      this.selectionData = selection
+    },
+    //改变页数大小
+    handleSizeChange(val) {
+      this.pagingHandler(this.currentPage, val)
+      this.pageSize = val
+    },
+    //改变页数
+    handleCurrentChange(val) {
+      this.pagingHandler(val, this.pageSize)
+      this.currentPage = val
+    },
+    //分页
+    pagingHandler(pageNum, pageSize) {
+      this.materialsTable = this.dataAll.slice((pageNum - 1) * pageSize, (pageNum - 1) * pageSize + pageSize)
+    },
+    //材料需求量、采购量主、采购量副更改是否为红色
+    changeItemState(i, key) {
+      this.operationForm.materials[i][key] = false
     },
     // async inputChange(e) {
     //   this.data = e;
@@ -582,17 +992,13 @@ export default {
     //   });
     //   onChange(e);
     // },
-    Event_Center_getName() {
-      let { formConfig, component } = this.customConfig;
-      return `${formConfig?.form_name}-${component.columnStyle.title}`;
-    },
     //逻辑控制 计算
     async calculationClick(e) {
-      await window.eventCenter.triggerEventNew({
+      await window?.eventCenter?.triggerEventNew({
         objectId: formConfig?.id,
         componentId: component.id,
         type: "report",
-        event: "  calculation",
+        event: "calculation",
         payload: {
           value: e,
         },
@@ -600,9 +1006,22 @@ export default {
     },
     //金额计算设值
     do_EventCenter_setValue({ value }) {
-      this.procedureTable[value.index].material_demand = value.material_demand
-      this.procedureTable[value.index].material_purchase_main = value.material_purchase_main
-      this.procedureTable[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
+      if (this.operationForm.materials) {
+        this.operationForm.materials[value.index].material_demand = value.material_demand
+        this.operationForm.materials[value.index].demand_state = true
+        this.operationForm.materials[value.index].purchase_main_state = true
+        this.operationForm.materials[value.index].purchase_auxiliary_state = true
+        this.operationForm.materials[value.index].material_purchase_main = value.material_purchase_main
+        this.operationForm.materials[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
+      }
+
+    },
+    Event_Center_getName() {
+      let { formConfig, component } = this.customConfig;
+      return `${formConfig?.form_name}-${component.columnStyle.title}`;
+    },
+    do_EventCenter_setValue({ value }) {
+      this.data = value;
     },
     Event_Center_getName() {
       return this.data;
@@ -625,6 +1044,7 @@ export default {
   .leftTree {
     padding: 24px 16px 0 16px;
     width: 248px;
+    min-width: 248px;
     height: 100%;
     background-color: #FFFFFF;
     border-radius: 8px;
@@ -673,8 +1093,109 @@ export default {
       }
     }
 
-    .el-menu-vertical-demo {
+    .menu_list {
+      width: 100%;
+      height: calc(100% - 40px);
+      user-select: none;
       margin-top: 10px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+
+      .menu_item {
+        width: 100%;
+        box-sizing: border-box;
+
+        .menu_item_box {
+          height: 36px;
+          line-height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          box-sizing: border-box;
+
+          .dropdownBox {
+            margin-left: auto;
+            margin-right: 10px;
+          }
+
+          .menuPlanTitle,
+          .taskTitle {
+            font-weight: 500;
+            font-size: 14px;
+            color: #373A55;
+          }
+
+          .stepTitle {
+            font-weight: 400;
+            font-size: 14px;
+            color: #626973;
+          }
+
+          .menuIcon {
+            margin-right: 5px;
+            width: 13px;
+            height: 13px;
+          }
+
+          .dotIcon {
+            display: inline-block;
+            margin-right: 10px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #959CA6;
+          }
+        }
+
+        .menu_item_box_active {
+          background: #1A79FF;
+          border-radius: 4px;
+
+          .dotIcon {
+            background-color: #FFFFFF;
+          }
+
+          .menuPlanTitle,
+          .taskTitle {
+            color: #FFFFFF;
+          }
+
+          .stepTitle {
+            color: #FFFFFF;
+          }
+        }
+      }
+
+      .planIdent {
+        padding-left: 10px;
+      }
+
+      .taskIdent {
+        padding-left: 20px;
+      }
+
+      .stepIdent {
+        padding-left: 30px;
+      }
+    }
+
+    .menu_list::-webkit-scrollbar {
+      /*滚动条整体样式*/
+      width: 6px;
+      /*高宽分别对应横竖滚动条的尺寸*/
+      height: 1px;
+    }
+
+    .menu_list::-webkit-scrollbar-thumb {
+      /*滚动条里面小方块*/
+      border-radius: 6px;
+      background: #e7edef;
+    }
+
+    .menu_list::-webkit-scrollbar-track {
+      /*滚动条里面轨道*/
+      border-radius: 6px;
+      background: #FFFFFF;
     }
 
     .emptyBox {
@@ -869,7 +1390,6 @@ export default {
         /deep/.el-upload {
           width: 100% !important;
           text-align: justify;
-
         }
       }
 
@@ -915,9 +1435,7 @@ export default {
             /deep/ .el-icon-edit {
               font-size: 16px;
             }
-
           }
-
         }
 
         /deep/ .title_label {
@@ -1085,6 +1603,12 @@ export default {
 
           .el-select {
             width: 100%;
+          }
+
+          /deep/.ITEMRED {
+            .el-input__inner {
+              color: red;
+            }
           }
         }
 
