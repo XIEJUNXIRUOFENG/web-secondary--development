@@ -98,24 +98,26 @@
         </div>
         <div class="PlantForm_content">
           <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
-            <el-form-item label="计划名称：" :label-width="formLabelWidth" prop="addName">
+            <el-form-item label="计划名称：" :label-width="formLabelWidth" prop="plan_name">
               <el-input v-model="planForm.plan_name" :clearable="true" placeholder="请输入名称"></el-input>
             </el-form-item>
             <el-form-item label="申报人：" :label-width="formLabelWidth" prop="applicant">
-              <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input>
+              <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
+              <el-select v-model="planForm.applicant" placeholder="请选择" :readonly="true">
+                <el-option :label="currentUser.name" :value="currentUser.id"></el-option>
+              </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" placeholder="请选择" :readonly="true">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+                <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
+            <!-- <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="applicant_date">
               <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-DD" type="date" placeholder="请选择日期">
               </el-date-picker>
@@ -497,7 +499,7 @@ export default {
   //   },
   // },
   data() {
-    let currentUser = window?.currentUser || {};
+    let currentUser = window?.currentUser || {name: "admin",id: "1234567890", office_name: "SO.MINE_OFFICE",officeId: "123456789"};
     return {
       currentUser, // 当前用户
       data: this.customConfig.data,
@@ -576,8 +578,11 @@ export default {
         plan_type: [
           { required: true, message: '请选择计划类型', trigger: 'change' }
         ],
+        plan_name: [
+          { required: true, message: '请输入计划名称', trigger: 'blur' }
+        ],
         addName: [
-          { required: true, message: '请输入名称', trigger: 'blur' }
+          { required: true, message: '请输入计划名称', trigger: 'blur' }
         ],
         project_name: [
           { required: true, message: '请输入工程名', trigger: 'blur' }
@@ -723,6 +728,19 @@ export default {
       switch (item.mode_type) {
         case "Plan":
           this.componentType = "PlantForm";
+          let plan = this.plantList[0];
+          this.planForm = {
+            data_id: "", // 主键
+            plan_name: plan.plan_name, // 计划名称
+            plan_number: "", //计划编号
+            plan_type: plan.plan_type, // 计划类型
+            applicant: this.currentUser.id, // 申报人
+            applicant_unit: this.currentUser.officeId, // 申报单位
+            subunit: "", // 子单元
+            applicant_date: new Date(), // 申报日期
+            quality_record_number: plan.quality_record_number, // 质量记录号
+            mode_type: "Plan", // 类型
+          }
           break;
         case "Task":
           this.componentType = "Task";
@@ -737,21 +755,51 @@ export default {
     // 新增计划
     addPalnt() {
       this.componentType = "PlantForm";
+      this.planForm = {
+        // data_id: "", // 主键
+        plan_name: "", // 计划名称
+        plan_number: "", //计划编号
+        plan_type: "", // 计划类型
+        applicant: this.currentUser.id, // 申报人
+        applicant_unit: this.currentUser.officeId, // 申报单位
+        subunit: "", // 子单元
+        applicant_date: new Date(), // 申报日期
+        quality_record_number: "NL/QR-PD-06", // 质量记录号
+        mode_type: "Plan", // 类型
+      }
     },
     // 保存提交
     saveSub(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          alert('submit!');
-          console.log('11111111');
+          let codeNum = this.get_NumberingRules(this.planForm.applicant_unit,this.planForm.plan_type,this.planForm.applicant_date);
+          this.planForm.plan_number = codeNum;
+          this.plantList[0] = JSON.parse(JSON.stringify(this.planForm));
           let { onChange } = this.customConfig;
-          onChange(e);
+          onChange(this.plantList[0]);
           this.forKey(this.plantList);
+          this.remoteValue = {};
         } else {
           console.log('error submit!!');
           return false;
         }
       });
+    },
+    get_NumberingRules(unitNo, planType, yearNo) {
+      // 年份
+      let year = new Date().getFullYear();
+      // 工程类别
+      let projectCategory = "";
+      planType == "大修单项" ? (projectCategory = "D") : (projectCategory = "W");
+      // 编号
+      let number = "";
+      if (projectCategory == "D") {
+          number = year;
+      } else {
+          let month = String(new Date().getMonth() + 1);
+          month.length < 1 ? (number = "0" + month) : (number = month);
+      }
+      return `${year}-${unitNo}${projectCategory}${number}`;
     },
     // 远程搜索
     remoteMethod(query) {
@@ -778,12 +826,23 @@ export default {
     // 模板切换
     selectMuBan(item) {
       this.remoteValue = item;
-      console.log('this.clickSonAddTtem',this.clickSonAddTtem);
-
       switch (this.clickAddType) {
         case "Plan":
-          this.plantList[0] = JSON.parse(JSON.stringify(item));
-          console.log(this.plantList);
+          this.planForm = {
+            data_id: "",
+            plan_name: item.plan_name, // 计划名称
+            plan_number: "", 
+            plan_type: item.plan_type, // 计划类型
+            applicant: this.currentUser.id, 
+            applicant_unit: this.currentUser.officeId, // 申报单位
+            subunit: item.subunit, // 子单元
+            applicant_date: new Date(), // 申报日期
+            quality_record_number: item.quality_record_number, // 质量记录号
+            mode_type: "Plan", // 类型
+            tasks: item.tasks
+          }
+          console.log('this.planForm',this.planForm);
+          this.forKey([this.planForm]);
           break;
         case "Task":
           // this.clickSonAddTtem
