@@ -39,8 +39,7 @@
                 </span>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item :command="{ mod: 'add', item: taskItem, index: taskIndx }">新增</el-dropdown-item>
-                  <el-dropdown-item
-                    :command="{ mod: 'del', item: planTtem, index: taskIndx }">删除</el-dropdown-item>
+                  <el-dropdown-item :command="{ mod: 'del', item: planTtem, index: taskIndx }">删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </div>
@@ -99,26 +98,24 @@
         </div>
         <div class="PlantForm_content">
           <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
-            <el-form-item label="计划名称：" :label-width="formLabelWidth" prop="plan_name">
+            <el-form-item label="计划名称：" :label-width="formLabelWidth" prop="addName">
               <el-input v-model="planForm.plan_name" :clearable="true" placeholder="请输入名称"></el-input>
             </el-form-item>
             <el-form-item label="申报人：" :label-width="formLabelWidth" prop="applicant">
-              <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
-              <el-select v-model="planForm.applicant" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUser.name" :value="currentUser.id"></el-option>
-              </el-select>
+              <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input>
             </el-form-item>
             <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
+                <el-option label="区域一" value="shanghai"></el-option>
+                <el-option label="区域二" value="beijing"></el-option>
               </el-select>
             </el-form-item>
-            <!-- <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
+            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
-            </el-form-item> -->
+            </el-form-item>
             <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="applicant_date">
               <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-DD" type="date" placeholder="请选择日期">
               </el-date-picker>
@@ -143,7 +140,7 @@
         <div class="operation_headr">
           <div class="operation_headr_back"><i class="el-icon-back"></i> <span>工程任务</span></div>
           <div class="operation_headr_itme">
-            <el-button type="primary" @click="saveTask()" round>
+            <el-button type="primary" round>
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
                 xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd"
@@ -214,7 +211,7 @@
               }}</span>
             </div>
             <div class="title_class_end">
-              <el-button circle type="small" @click="taskEdit(tasksPrievw)"> <i class="el-icon-edit"></i> </el-button>
+              <el-button circle type="small"> <i class="el-icon-edit"></i> </el-button>
             </div>
           </div>
           <el-descriptions :column="4">
@@ -304,17 +301,14 @@
                   </el-table-column>
                   <el-table-column prop="loadValue" label="工序描述">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`steps[${scope.$index}].process_desc`"
-                        :rules="{ required: true, message: '请输入工序描述', trigger: 'blur' }">
+                      <el-form-item :clearable="true" :prop="'work_name'">
                         <el-input v-model="scope.row.process_desc" :controls="false" type="text" size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
                   <el-table-column prop="vnotchesWidth" label="工程量单位">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true"
-                        :prop="scope.row.quantity_engineering_quantity ? `steps[${scope.$index}].unit_engineering_quantity` : ''"
-                        :rules="{ required: Boolean(scope.row.quantity_engineering_quantity), message: '请选择工程量', trigger: 'change' }">
+                      <el-form-item :clearable="true" :prop="'work_unit'">
                         <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
                           <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
                             :value="item.data_id"></el-option>
@@ -390,36 +384,29 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料需求量">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_demand`"
-                        :rules="{ required: true, message: '请输入材料需求量', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.demand_state }" v-model="scope.row.material_demand"
-                          :controls="false" @change="changeItemState(scope.$index, 'demand_state')" type="text"
-                          size="small" />
+                      <el-form-item :clearable="true" :prop="'work_name'">
+                        <el-input v-model="scope.row.material_demand" :controls="false" type="text" size="small" />
                       </el-form-item>
 
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（主单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_main`"
-                        :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
-                          @change="changeItemState(scope.$index, 'purchase_main_state')"></el-input>
-
+                      <el-form-item :clearable="true" :prop="'work_name'">
+                        <el-input v-model="scope.row.material_purchase_main" :controls="false" type="text"
+                          size="small" />
                       </el-form-item>
-
                     </template>
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（副单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_auxiliary`"
-                        :rules="{ required: true, message: '请输入材料采购量（副单位）', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.purchase_auxiliary_state }"
-                          @change="changeItemState(scope.$index, 'purchase_auxiliary_state')"
-                          v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text" size="small" />
+                      <el-form-item :clearable="true" :prop="'work_name'">
+                        <el-input v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text"
+                          size="small" />
                       </el-form-item>
                     </template>
                   </el-table-column>
+
                   <el-table-column prop="sampleThickness" label="是否提供车间">
                     <template slot-scope="scope">
                       <el-select v-model="scope.row.whether_workshop_supply" placeholder="请选择">
@@ -428,6 +415,8 @@
                       </el-select>
                     </template>
                   </el-table-column>
+
+
                   <el-table-column label="操作">
                     <template slot-scope="scope">
                       <el-button type="text" @click="calculationClick(scope)" size="small">计算</el-button>
@@ -459,43 +448,14 @@
         <el-button type="primary" @click="closeDialog('addNameForm')">确 定</el-button>
       </span>
     </el-dialog>
-    <!-- 物料清单新增弹窗 -->
-    <el-dialog title="物料清单表" :visible.sync="materialsVisible" width="80%">
-      <el-table :data="materialsTable" row-key="data_id" ref="multipleTable" stripe style="width: 100%"
-        tooltip-effect="dark" @selection-change="handleSelectionChange"
-        :header-cell-style="{ padding: 0 + 'px', fontSize: '12px', fontWeight: 400 }"
-        :header-row-style="{ height: '30px' }">
-        <el-table-column type="selection" :reserve-selection="true" width="55" fixed="left">
-        </el-table-column>
-        <el-table-column type="index" label="序列" width="55" fixed="left">
-        </el-table-column>
-        <el-table-column prop="material_code" label="物料编号">
-        </el-table-column>
-        <el-table-column prop="material_name" label="物料名称">
-        </el-table-column>
-        <el-table-column prop="main_unit" label="主单位">
-        </el-table-column>
-        <el-table-column prop="auxiliary_unit" label="副单位">
-        </el-table-column>
-      </el-table>
-      <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage"
-        class="two_pagination" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
-        layout="total, sizes, prev, pager, next, jumper" :total="total">
-      </el-pagination>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="materialsVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addmaterials()">确 定</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
 <script>
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
-import get_NumberingRules from "../utils/numberingRules";
-import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
-import { queryUnit, queryDevices, queryFunArea, queryMaterials, queryAllMuBan } from '../api/asset'
+import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
+import { queryUnit, queryDevices, queryFunArea, queryAllMuBan } from '../api/asset'
 Vue.use(Menu);
 Vue.use(MenuItem);
 Vue.use(Submenu);
@@ -525,7 +485,6 @@ Vue.use(Input);
 Vue.use(InputNumber);
 Vue.use(Select);
 Vue.use(Upload);
-Vue.use(Pagination)
 
 export default {
   name: "Add",
@@ -538,7 +497,7 @@ export default {
   //   },
   // },
   data() {
-    let currentUser = window?.currentUser || {name: "admin",id: "1234567890", office_name: "SO.MINE_OFFICE",officeId: "123456789"};
+    let currentUser = window?.currentUser || {};
     return {
       currentUser, // 当前用户
       data: this.customConfig.data,
@@ -556,23 +515,16 @@ export default {
       fileList: [],//上传文件保存
       tasksPrievw: {},//工程任务详情
       dialogVisible: false,
-      materialsVisible: false,
       backState: { operation: "" },//返回状态
       nameForm: {
         addName: ""
       },
-      materialsTable: [],//物料清单表
-      selectionData: [],//选中数据
       loading: false, // 远程搜索
       remoteFilter: [], // 模板数据
       remoteValue: {}, // 选中模板
       clickAddTtem: {}, // 新增项父级数据
       clickAddType: "", // 新增项父级类型
       clickSonAddTtem: {}, // 新增项当前数据
-      currentPage: 1,//当前页数
-      pageSize: 10,//页数大小
-      total: 0,
-      dataAll: [],//存放所有数据
       // 计划表单
       planForm: {
         data_id: "", // 主键
@@ -624,11 +576,8 @@ export default {
         plan_type: [
           { required: true, message: '请选择计划类型', trigger: 'change' }
         ],
-        plan_name: [
-          { required: true, message: '请输入计划名称', trigger: 'blur' }
-        ],
         addName: [
-          { required: true, message: '请输入计划名称', trigger: 'blur' }
+          { required: true, message: '请输入名称', trigger: 'blur' }
         ],
         project_name: [
           { required: true, message: '请输入工程名', trigger: 'blur' }
@@ -648,7 +597,7 @@ export default {
         work_name: [
           { required: true, message: '请输入工序描述', trigger: 'blur' }
         ],
-        project_name: [
+        procedures_name: [
           { required: true, message: '请输入工序名称', trigger: 'blur' }
         ]
       }
@@ -773,19 +722,6 @@ export default {
       switch (item.mode_type) {
         case "Plan":
           this.componentType = "PlantForm";
-          let plan = this.plantList[0];
-          this.planForm = {
-            data_id: "", // 主键
-            plan_name: plan.plan_name, // 计划名称
-            plan_number: "", //计划编号
-            plan_type: plan.plan_type, // 计划类型
-            applicant: this.currentUser.id, // 申报人
-            applicant_unit: this.currentUser.officeId, // 申报单位
-            subunit: "", // 子单元
-            applicant_date: new Date(), // 申报日期
-            quality_record_number: plan.quality_record_number, // 质量记录号
-            mode_type: "Plan", // 类型
-          }
           break;
         case "Task":
           this.componentType = "Task";
@@ -800,30 +736,16 @@ export default {
     // 新增计划
     addPalnt() {
       this.componentType = "PlantForm";
-      this.planForm = {
-        // data_id: "", // 主键
-        plan_name: "", // 计划名称
-        plan_number: "", //计划编号
-        plan_type: "", // 计划类型
-        applicant: this.currentUser.id, // 申报人
-        applicant_unit: this.currentUser.officeId, // 申报单位
-        subunit: "", // 子单元
-        applicant_date: new Date(), // 申报日期
-        quality_record_number: "NL/QR-PD-06", // 质量记录号
-        mode_type: "Plan", // 类型
-      }
     },
     // 保存提交
     saveSub(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          let codeNum = get_NumberingRules(this.planForm.applicant_date, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks.length || 0,  [this.planForm],'plan_number');
-          this.planForm.plan_number = codeNum;
-          this.plantList[0] = JSON.parse(JSON.stringify(this.planForm));
+          alert('submit!');
+          console.log('11111111');
           let { onChange } = this.customConfig;
-          onChange(this.plantList[0]);
+          onChange(e);
           this.forKey(this.plantList);
-          this.remoteValue = {};
         } else {
           console.log('error submit!!');
           return false;
@@ -855,23 +777,12 @@ export default {
     // 模板切换
     selectMuBan(item) {
       this.remoteValue = item;
+      console.log('this.clickSonAddTtem',this.clickSonAddTtem);
+
       switch (this.clickAddType) {
         case "Plan":
-          this.planForm = {
-            data_id: "",
-            plan_name: item.plan_name, // 计划名称
-            plan_number: "", 
-            plan_type: item.plan_type, // 计划类型
-            applicant: this.currentUser.id, 
-            applicant_unit: this.currentUser.officeId, // 申报单位
-            subunit: item.subunit, // 子单元
-            applicant_date: new Date(), // 申报日期
-            quality_record_number: item.quality_record_number, // 质量记录号
-            mode_type: "Plan", // 类型
-            tasks: item.tasks
-          }
-          console.log('this.planForm',this.planForm);
-          this.forKey([this.planForm]);
+          this.plantList[0] = JSON.parse(JSON.stringify(item));
+          console.log(this.plantList);
           break;
         case "Task":
           // this.clickSonAddTtem
@@ -911,6 +822,7 @@ export default {
         }
         this.$nextTick(()=>{
           item[keyVal].splice(index, 1);
+          console.log('item',item);
           this.forKey(this.plantList);
           this.changeForm(item)
         })
@@ -966,7 +878,7 @@ export default {
     },
     //工序步骤新增
     detailedAddFn() {
-      this.operationForm.steps.push({})
+      this.detailedTable.push({})
     },
     //工序步骤删除
     detailedDelFn(row) {
@@ -978,39 +890,12 @@ export default {
       const i = row.$index
       this.procedureTable.splice(i, 1)
     },
-    //物料新增按钮
+    //物料新增
     procedureAddFn() {
-      this.materialsVisible = true
-      queryMaterials().then(res => {
-        this.dataAll = [...res.data]
-        this.materialsTable = this.dataAll.slice(0, this.currentPage * this.pageSize)
-        this.total = this.dataAll.length
-      }).catch(err => {
-        this.materialsTable = []
-      })
-    },
-    //物料弹框确定按钮
-    addmaterials() {
-      this.operationForm.materials.push(...this.selectionData)
-      this.$refs.multipleTable.clearSelection()
-      this.materialsVisible = false
+      this.procedureTable.push({})
     },
     //工序保存
-    OperationSave() {
-
-      this.$refs.operationForm.validate((valid) => {
-        if (valid) {
-          alert('submit!');
-          console.log('11111111');
-          let { onChange } = this.customConfig;
-          // onChange(e);
-          this.forKey(this.plantList);
-        } else {
-          console.log('error submit!!');
-          return false;
-        }
-      });
-    },
+    OperationSave() { },
     //保存的change事件
     handleChange(file, fileList) {
       this.fileList = fileList.slice(-3);
@@ -1027,40 +912,6 @@ export default {
       this.tasksPrievw = this.tasks
       this.backState.operation = false
       this.componentType = 'Task'
-    },
-    //工程编辑 方法
-    taskEdit(task) {
-      this.taskForm = JSON.parse(JSON.stringify(task))
-      this.componentType = 'TaskForm'
-    },
-    //工程保存
-    saveTask() {
-      for (const key in this.taskForm) {
-        this.tasksPrievw[key] = this.taskForm[key]
-      }
-    },
-    //表格选择框事件
-    handleSelectionChange(selection) {
-      this.selectionData = []
-      this.selectionData = selection
-    },
-    //改变页数大小
-    handleSizeChange(val) {
-      this.pagingHandler(this.currentPage, val)
-      this.pageSize = val
-    },
-    //改变页数
-    handleCurrentChange(val) {
-      this.pagingHandler(val, this.pageSize)
-      this.currentPage = val
-    },
-    //分页
-    pagingHandler(pageNum, pageSize) {
-      this.materialsTable = this.dataAll.slice((pageNum - 1) * pageSize, (pageNum - 1) * pageSize + pageSize)
-    },
-    //材料需求量、采购量主、采购量副更改是否为红色
-    changeItemState(i, key) {
-      this.operationForm.materials[i][key] = false
     },
     // async inputChange(e) {
     //   this.data = e;
@@ -1082,34 +933,6 @@ export default {
         objectId: formConfig?.id,
         componentId: component.id,
         type: "report",
-        event: "calculation",
-        payload: {
-          value: e,
-        },
-      });
-    },
-    //金额计算设值
-    do_EventCenter_setValue({ value }) {
-      if (this.operationForm.materials) {
-        this.operationForm.materials[value.index].material_demand = value.material_demand
-        this.operationForm.materials[value.index].demand_state = true
-        this.operationForm.materials[value.index].purchase_main_state = true
-        this.operationForm.materials[value.index].purchase_auxiliary_state = true
-        this.operationForm.materials[value.index].material_purchase_main = value.material_purchase_main
-        this.operationForm.materials[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
-      }
-
-    },
-    Event_Center_getName() {
-      let { formConfig, component } = this.customConfig;
-      return `${formConfig?.form_name}-${component.columnStyle.title}`;
-    },
-    //逻辑控制 计算
-    async calculationClick(e) {
-      await window.eventCenter.triggerEventNew({
-        objectId: formConfig?.id,
-        componentId: component.id,
-        type: "report",
         event: "  calculation",
         payload: {
           value: e,
@@ -1121,6 +944,13 @@ export default {
       this.procedureTable[value.index].material_demand = value.material_demand
       this.procedureTable[value.index].material_purchase_main = value.material_purchase_main
       this.procedureTable[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
+    },
+    Event_Center_getName() {
+      let { formConfig, component } = this.customConfig;
+      return `${formConfig?.form_name}-${component.columnStyle.title}`;
+    },
+    do_EventCenter_setValue({ value }) {
+      this.data = value;
     },
     Event_Center_getName() {
       return this.data;
@@ -1702,12 +1532,6 @@ export default {
 
           .el-select {
             width: 100%;
-          }
-
-          /deep/.ITEMRED {
-            .el-input__inner {
-              color: red;
-            }
           }
         }
 
