@@ -86,8 +86,8 @@
         <div class="PlantForm_title">
           <div>
             <span class="drawerTitle">计划信息</span>
-            <el-select v-model="remoteValue" filterable remote reserve-keyword placeholder="请输入关键词"
-              :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
+            <el-select style="margin-left: 20px" size="small" v-model="remoteValue" filterable remote reserve-keyword
+              placeholder="请输入关键词" :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
               <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.plan_number"
                 :value="item"></el-option>
             </el-select>
@@ -99,35 +99,36 @@
           </el-button>
         </div>
         <div class="PlantForm_content">
-          <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
-            <el-form-item label="计划名称：" :label-width="formLabelWidth" prop="addName">
+          <el-form :model="planForm" v-if="componentType == 'PlantForm'" :rules="rules" ref="planForm" size="small">
+            <el-form-item label="计划名称：" key="addName" :label-width="formLabelWidth" prop="addName">
               <el-input v-model="planForm.plan_name" :clearable="true" placeholder="请输入名称"></el-input>
             </el-form-item>
-            <el-form-item label="申报人：" :label-width="formLabelWidth" prop="applicant">
+            <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input>
             </el-form-item>
-            <el-form-item label="申报单位：" :label-width="formLabelWidth" prop="applicant_unit">
+            <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" placeholder="请选择" :readonly="true">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
+            <el-form-item label="申报子单位：" key="subunit" :label-width="formLabelWidth" prop="subunit">
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报时间：" :label-width="formLabelWidth" prop="applicant_date">
+            <el-form-item label="申报时间：" key="applicant_date" :label-width="formLabelWidth" prop="applicant_date">
               <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-DD" type="date" placeholder="请选择日期">
               </el-date-picker>
             </el-form-item>
-            <el-form-item label="计划类型：" :label-width="formLabelWidth" prop="plan_type">
+            <el-form-item label="计划类型：" key="plan_type" :label-width="formLabelWidth" prop="plan_type">
               <el-select v-model="planForm.plan_type" placeholder="请选择">
                 <el-option v-for="item in planTypeList" :key="item" :label="item" :value="item"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="质量记录号：" :label-width="formLabelWidth" prop="quality_record_number">
+            <el-form-item label="质量记录号：" key="quality_record_number" :label-width="formLabelWidth"
+              prop="quality_record_number">
               <el-input v-model="planForm.quality_record_number" autocomplete="off" placeholder="请输入"
                 :clearable="true"></el-input>
             </el-form-item>
@@ -140,13 +141,14 @@
       <!-- 工序任务新增 -->
       <div class="Task-page-add" v-if="componentType == 'TaskForm'">
         <div class="operation_headr">
-          <div class="operation_headr_back"><i class="el-icon-back" @click="backTaskFn()"></i> <span
-              class="back_title">工程任务</span> <el-select size="small" v-model="remoteValue" filterable remote
+          <div class="operation_headr_back"><i v-if="backState.task" class="el-icon-back" @click="backTaskFn()"></i>
+            <span class="back_title">工程任务</span> <el-select size="small" v-model="remoteValue" filterable remote
               reserve-keyword placeholder="请输入关键词" :remote-method="remoteMethod" :loading="loading"
               @change="selectMuBan">
               <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.project_name"
                 :value="item"></el-option>
-            </el-select></div>
+            </el-select>
+          </div>
           <div class="operation_headr_itme">
             <el-button type="primary" @click="saveTask()" round>
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
@@ -160,25 +162,29 @@
           </div>
         </div>
         <div class="operation_main">
-          <el-form :model="taskForm" @submit.native.prevent :rules="rules" ref="taskForm" size="small">
-            <el-form-item label="工程名称：" :label-width="formLabelWidth" :clearable="true" :readonly="true"
-              prop="project_name">
+          <el-form v-if="componentType == 'TaskForm'" :model="taskForm" @submit.native.prevent ref="taskForm"
+            size="small">
+            <el-form-item label="工程名称：" key="project_name" :label-width="formLabelWidth" :clearable="true"
+              :readonly="true" prop="project_name" :rules="{ required: true, message: '请输入工程名', trigger: 'blur' }">
               <el-input v-model="taskForm.project_name" autocomplete="off" placeholder="请输入"></el-input>
             </el-form-item>
-            <el-form-item label="类型：" :label-width="formLabelWidth" prop="project_type">
+            <el-form-item label="类型：" key="project_type" :label-width="formLabelWidth" prop="project_type"
+              :rules="{ required: true, message: '请选择类型', trigger: 'change' }">
               <el-select v-model="taskForm.project_type" placeholder="请选择">
                 <el-option label="A" value="A"></el-option>
                 <el-option label="B" value="B"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="功能区域：" :label-width="formLabelWidth" prop="function_area">
+            <el-form-item label="功能区域：" key="function_area" :label-width="formLabelWidth" prop="function_area"
+              :rules="{ required: true, message: '请选择功能区域范围', trigger: 'change' }">
               <el-select v-model="taskForm.function_area" placeholder="请选择">
                 <el-option v-for="(item, i) in funAreaArr  " :key="i" :label="item.function_area"
                   :value="item.function_area"></el-option>
 
               </el-select>
             </el-form-item>
-            <el-form-item label="关联设备：" :label-width="formLabelWidth" prop="associated_devices">
+            <el-form-item label="关联设备：" key="associated_devices" :label-width="formLabelWidth" prop="associated_devices"
+              :rules="{ required: true, message: '请选择设备', trigger: 'change' }">
               <el-select v-model="taskForm.associated_devices" placeholder="请选择">
                 <el-option v-for="(item, i) in devicesArr  " :key="i" :label="item.associated_devices"
                   :value="item.associated_devices"></el-option>
@@ -315,9 +321,10 @@
           </div>
         </div>
         <div class="operation_main">
-          <el-form :model="operationForm" @submit.native.prevent :rules="rules" ref="operationForm" size="small">
-            <el-form-item label="工序名称:" :label-width="formLabelWidth" :clearable="true" :readonly="true"
-              prop="procedures_name">
+          <el-form v-if="componentType == 'Procedure'" :model="operationForm" @submit.native.prevent :rules="rules"
+            ref="operationForm" size="small">
+            <el-form-item label="工序名称:" key="process_name" :label-width="formLabelWidth" :clearable="true"
+              :readonly="true" prop="process_name">
               <el-input v-model="operationForm.process_name" autocomplete="off" placeholder="请输入"></el-input>
             </el-form-item>
             <el-form-item label="工序步骤:" :label-width="formLabelWidth" prop="">
@@ -655,6 +662,19 @@ export default {
         addName: [
           { required: true, message: '请输入名称', trigger: 'blur' }
         ],
+
+        work_unit: [
+          { required: true, message: '请输入工程量单位', trigger: 'blur' }
+        ],
+        work_name: [
+          { required: true, message: '请输入工序描述', trigger: 'blur' }
+        ],
+        process_name: [
+          { required: true, message: '请输入工序名称', trigger: 'blur' }
+        ]
+      },
+      //task校验
+      taskRules: {
         project_name: [
           { required: true, message: '请输入工程名', trigger: 'blur' }
         ],
@@ -667,15 +687,6 @@ export default {
         associated_devices: [
           { required: true, message: '请选择关联设备', trigger: 'change' }
         ],
-        work_unit: [
-          { required: true, message: '请输入工程量单位', trigger: 'blur' }
-        ],
-        work_name: [
-          { required: true, message: '请输入工序描述', trigger: 'blur' }
-        ],
-        project_name: [
-          { required: true, message: '请输入工序名称', trigger: 'blur' }
-        ]
       }
     };
   },
@@ -797,20 +808,29 @@ export default {
       this.clickAddType = mode_type;
       this.clickSonAddTtem = item;
       if (type) {
-
         this.tasksPrievw = item;
-
-        this.taskForm = JSON.parse(JSON.stringify(this.tasksPrievw))
+        this.tasksPrievw.status = 2;
+        // this.task = item
+        this.taskForm = JSON.parse(JSON.stringify(item))
+        this.taskForm.status = 2
         this.componentType = 'TaskForm'
-        console.log(this.componentType, this.taskForm, '========fron');
       } else {
         switch (item.mode_type) {
           case "Plan":
             this.componentType = "PlantForm";
             break;
           case "Task":
-            this.componentType = "Task";
-            this.tasksPrievw = item;
+            if (item.status == 2) {
+              this.componentType = "TaskForm";
+              this.taskForm = JSON.parse(JSON.stringify(item))
+              this.tasksPrievw = item;
+            } else {
+              this.componentType = "Task";
+              this.tasksPrievw = item;
+            }
+
+
+
             break;
           case "Procedure":
             this.componentType = "Procedure";
@@ -885,7 +905,7 @@ export default {
           for (const key in item) {
             this.clickSonAddTtem[key] = item[key]
           }
-
+          this.operationForm = JSON.parse(JSON.stringify(this.clickSonAddTtem))
           this.componentType = "Procedure";
           break;
       }
@@ -1063,6 +1083,7 @@ export default {
     },
     //工程保存
     saveTask() {
+      console.log('TaskForm:', this.taskForm);
       this.$refs.taskForm.validate((valid) => {
         if (valid) {
 
@@ -1070,12 +1091,13 @@ export default {
             this.tasksPrievw[key] = this.taskForm[key]
           }
 
-
+          this.tasksPrievw.status = 1
           let { onChange } = this.customConfig;
           // onChange(e);
           this.forKey(this.plantList);
         } else {
           console.log('error submit!!');
+
           return false;
         }
       });
