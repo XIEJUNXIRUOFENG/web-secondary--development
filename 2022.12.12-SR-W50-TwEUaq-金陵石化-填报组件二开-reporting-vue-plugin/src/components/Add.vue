@@ -821,7 +821,8 @@ export default {
           this.planForm.plan_number = codeNum;
           this.plantList[0] = JSON.parse(JSON.stringify(this.planForm));
           let { onChange } = this.customConfig;
-          onChange(this.plantList[0]);
+          let params = JSOn.stringify(this.plantList[0])
+          onChange(params);
           this.forKey(this.plantList);
           this.remoteValue = {};
         } else {
