@@ -40,12 +40,12 @@
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item :command="{ mod: 'add', item: taskItem, index: taskIndx }">新增</el-dropdown-item>
                   <el-dropdown-item
-                    :command="{ mod: 'del', item: planTtem.tasks, index: taskItem.seletKey }">删除</el-dropdown-item>
+                    :command="{ mod: 'del', item: planTtem, index: taskIndx }">删除</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </div>
             <!-- 工序 -->
-            <div class="menu_item" v-for="procedure in taskItem.procedures" :key="procedure.seletKey">
+            <div class="menu_item" v-for="procedure,procedIdx in taskItem.procedures" :key="procedure.seletKey">
               <div class="menu_item_box stepIdent" :class="{ 'menu_item_box_active': menuActive == procedure.seletKey }"
                 @click="changeForm(procedure)">
                 <div class="dotIcon"></div>
@@ -57,7 +57,7 @@
                   </span>
                   <el-dropdown-menu slot="dropdown">
                     <el-dropdown-item
-                      :command="{ mod: 'del', item: taskItem.procedures, index: procedure.seletKey }">删除</el-dropdown-item>
+                      :command="{ mod: 'del', item: taskItem, index: procedIdx }">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
               </div>
@@ -927,7 +927,6 @@ export default {
         }
         this.$nextTick(()=>{
           item[keyVal].splice(index, 1);
-          console.log('item',item);
           this.forKey(this.plantList);
           this.changeForm(item)
         })
