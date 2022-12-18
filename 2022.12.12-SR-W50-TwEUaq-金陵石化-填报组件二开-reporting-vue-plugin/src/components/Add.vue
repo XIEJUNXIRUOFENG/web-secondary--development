@@ -86,10 +86,10 @@
         <div class="PlantForm_title">
           <div>
             <span class="drawerTitle">计划信息</span>
-            <el-select v-model="remoteValue" multiple filterable remote reserve-keyword placeholder="请输入关键词"
-              :remote-method="remoteMethod" :loading="loading">
-              <el-option v-for="item in remoteFilter" :key="item.value" :label="item.label" :value="item.value">
-              </el-option>
+            <el-select v-model="remoteValue" filterable remote reserve-keyword placeholder="请输入关键词"
+              :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
+              <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.plan_number"
+                :value="item"></el-option>
             </el-select>
           </div>
           <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="saveSub('planForm')"
@@ -140,7 +140,13 @@
       <!-- 工序任务新增 -->
       <div class="Task-page-add" v-if="componentType == 'TaskForm'">
         <div class="operation_headr">
-          <div class="operation_headr_back"><i class="el-icon-back"></i> <span>工程任务</span></div>
+          <div class="operation_headr_back"><i class="el-icon-back" @click="backTaskFn()"></i> <span
+              class="back_title">工程任务</span> <el-select size="small" v-model="remoteValue" filterable remote
+              reserve-keyword placeholder="请输入关键词" :remote-method="remoteMethod" :loading="loading"
+              @change="selectMuBan">
+              <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.project_name"
+                :value="item"></el-option>
+            </el-select></div>
           <div class="operation_headr_itme">
             <el-button type="primary" @click="saveTask()" round>
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
@@ -154,7 +160,7 @@
           </div>
         </div>
         <div class="operation_main">
-          <el-form :model="taskForm" :rules="rules" ref="taskForm" size="small">
+          <el-form :model="taskForm" @submit.native.prevent :rules="rules" ref="taskForm" size="small">
             <el-form-item label="工程名称：" :label-width="formLabelWidth" :clearable="true" :readonly="true"
               prop="project_name">
               <el-input v-model="taskForm.project_name" autocomplete="off" placeholder="请输入"></el-input>
@@ -190,14 +196,23 @@
             </el-form-item>
             <el-form-item label="附件信息：" :label-width="formLabelWidth" prop="file">
               <div>
-                <el-upload class="upload-demo" action="https://jsonplaceholder.typicode.com/posts/"
-                  :on-change="handleChange">
+                <!-- <el-upload class="upload-demo" action="api/image/upload" :on-change="handleChange"> -->
+                <input type="file" ref="fileBtn" @change="handleFileChange" style="display: none" />
+                <button class="Task_add_upload" @click="
+                  () => {
+                    this.$refs.fileBtn.click();
+                  }
+                "><span class="iconfont">&#xe63d;</span> 上传附件</button>
+                <!-- </el-upload> -->
 
-                  <button class="Task_add_upload"><span class="iconfont">&#xe63d;</span> 上传附件</button>
-                </el-upload>
               </div>
 
             </el-form-item>
+            <el-form-item label="" :label-width="formLabelWidth" prop="">
+              <input type="text" style="display:none">
+
+            </el-form-item>
+
           </el-form>
 
         </div>
@@ -221,12 +236,18 @@
             <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="工程名称">{{
                 tasksPrievw.project_name
             }}</el-descriptions-item>
-            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="功能区域">{{
-                tasksPrievw.function_area
-            }}</el-descriptions-item>
-            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="关联设备">{{
-                tasksPrievw.associated_devices
-            }}</el-descriptions-item>
+            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="功能区域">
+              <div :class="{ title_gongn: tasksPrievw.function_area }"> {{
+                  tasksPrievw.function_area
+              }}</div>
+            </el-descriptions-item>
+            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="关联设备">
+              <div :class="{ title_guanl: tasksPrievw.associated_devices }">
+                {{
+                    tasksPrievw.associated_devices
+                }}
+              </div>
+            </el-descriptions-item>
             <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="施工要求">{{
                 tasksPrievw.requirement_for_construction
             }}</el-descriptions-item>
@@ -240,9 +261,8 @@
 
           </el-descriptions>
           <el-descriptions>
-            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">{{
-                tasksPrievw.file
-            }}</el-descriptions-item>
+            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">
+              <a :href="tasksPrievw.file" rel="noopener noreferrer">{{ tasksPrievw.file }}</a></el-descriptions-item>
 
 
           </el-descriptions>
@@ -275,7 +295,12 @@
       <div class="Operation-page" v-if="componentType == 'Procedure'">
         <div class="operation_headr">
           <div class="operation_headr_back"><i v-if="backState.operation" @click="backFn()" class="el-icon-back"></i>
-            <span>工序名称</span>
+            <span class="back_title">工序名称</span>
+            <el-select size="small" v-model="remoteValue" filterable remote reserve-keyword placeholder="请输入关键词"
+              :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
+              <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.process_name"
+                :value="item"></el-option>
+            </el-select>
           </div>
           <div class="operation_headr_itme">
             <el-button type="primary" round @click="OperationSave">
@@ -290,7 +315,7 @@
           </div>
         </div>
         <div class="operation_main">
-          <el-form :model="operationForm" :rules="rules" ref="operationForm" size="small">
+          <el-form :model="operationForm" @submit.native.prevent :rules="rules" ref="operationForm" size="small">
             <el-form-item label="工序名称:" :label-width="formLabelWidth" :clearable="true" :readonly="true"
               prop="procedures_name">
               <el-input v-model="operationForm.process_name" autocomplete="off" placeholder="请输入"></el-input>
@@ -403,6 +428,7 @@
                       <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_main`"
                         :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
+                          v-model="scope.row.material_purchase_main"
                           @change="changeItemState(scope.$index, 'purchase_main_state')"></el-input>
 
                       </el-form-item>
@@ -454,6 +480,9 @@
         <el-form-item label="名称：" :label-width="formLabelWidth" prop="addName">
           <el-input v-model.trim="nameForm.addName" :clearable="true" placeholder="请输入"></el-input>
         </el-form-item>
+        <el-form-item label="" :label-width="formLabelWidth" prop="">
+          <el-input style="display: none;" :clearable="true" placeholder="请输入"></el-input>
+        </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
@@ -495,7 +524,7 @@
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
 import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
-import { queryUnit, queryDevices, queryFunArea, queryMaterials, queryAllMuBan } from '../api/asset'
+import { queryUnit, queryDevices, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport } from '../api/asset'
 Vue.use(Menu);
 Vue.use(MenuItem);
 Vue.use(Submenu);
@@ -554,6 +583,7 @@ export default {
       stepsUnit: [],//工程量单位
       fileList: [],//上传文件保存
       tasksPrievw: {},//工程任务详情
+      operationPrievw: {},//工序详情
       dialogVisible: false,
       materialsVisible: false,
       backState: { operation: "" },//返回状态
@@ -650,9 +680,9 @@ export default {
     };
   },
   mounted() {
-    let josnData = ` [{
+    let josnData = `  [{
     "data_id": "",
-    "plan_name": "计划计划",
+    "plan_name": "计划1",
     "plan_number": "2022-301W01",
     "plan_type": "月度",
     "applicant": "1234567890",
@@ -668,24 +698,28 @@ export default {
       "parent_id": "",
       "function_area": "区域1",
       "associated_devices": "设备1",
-      "requirement_for_construction": "标准11",
+      "requirement_for_construction": "标准1",
       "remark": "备注",
       "file": "/stopere/werere/sd.pdf",
       "mode_type": "Task",
       "procedures": [{ 
         "data_id": "",
         "process_name": "工序1",
+        "remark": "",
+        "parent_id": "",
+        "mode_type": "Procedure",
+        "steps": [{ 
           "data_id": "",
-          "process_desc": "步骤1awd",
+          "process_desc": "步骤1",
           "parent_id": "",
-          "unit_engineering_quantity": "小时",
+          "unit_engineering_quantity": "",
           "quantity_engineering_quantity": "3",
           "mode_type": "Step"
         }],
         "materials": [{ 
           "data_id": "",
           "parent_id": "",
-          "material_name": "物料Aad",
+          "material_name": "物料A",
           "material_code": "ASF334",
           "standard_materials": "标准AB",
           "additional_note": "备注",
@@ -702,6 +736,7 @@ export default {
     }]
   }]`;
     console.log('currentUser', this.currentUser);
+
     window?.componentCenter?.register(
       this.customConfig.componentId,
       "comp",
@@ -755,25 +790,36 @@ export default {
       console.log(key, keyPath);
     },
     // 点击菜单
-    changeForm(item) {
+    changeForm(item, type) {
       this.menuActive = item.seletKey;
       console.log('activeitem', item);
       let { mode_type } = item;
       this.clickAddType = mode_type;
       this.clickSonAddTtem = item;
-      switch (item.mode_type) {
-        case "Plan":
-          this.componentType = "PlantForm";
-          break;
-        case "Task":
-          this.componentType = "Task";
-          this.tasksPrievw = item;
-          break;
-        case "Procedure":
-          this.componentType = "Procedure";
-          this.operationForm = item;
-          break;
+      if (type) {
+
+        this.tasksPrievw = item;
+
+        this.taskForm = JSON.parse(JSON.stringify(this.tasksPrievw))
+        this.componentType = 'TaskForm'
+        console.log(this.componentType, this.taskForm, '========fron');
+      } else {
+        switch (item.mode_type) {
+          case "Plan":
+            this.componentType = "PlantForm";
+            break;
+          case "Task":
+            this.componentType = "Task";
+            this.tasksPrievw = item;
+            break;
+          case "Procedure":
+            this.componentType = "Procedure";
+            this.operationPrievw = item
+            this.operationForm = JSON.parse(JSON.stringify(item));
+            break;
+        }
       }
+
     },
     // 新增计划
     addPalnt() {
@@ -783,8 +829,8 @@ export default {
     saveSub(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          alert('submit!');
-          console.log('11111111');
+
+
           let { onChange } = this.customConfig;
           onChange(e);
           this.forKey(this.plantList);
@@ -819,7 +865,7 @@ export default {
     // 模板切换
     selectMuBan(item) {
       this.remoteValue = item;
-      console.log('this.clickSonAddTtem', this.clickSonAddTtem);
+
 
       switch (this.clickAddType) {
         case "Plan":
@@ -828,9 +874,18 @@ export default {
           break;
         case "Task":
           // this.clickSonAddTtem
-          this.componentType = "Task";
+          for (const key in item) {
+            this.clickSonAddTtem[key] = item[key]
+          }
+          this.componentType = "TaskForm";
+          this.taskForm = JSON.parse(JSON.stringify(this.clickSonAddTtem))
+          console.log('this.clickSonAddTtem', this.clickSonAddTtem, item);
           break;
         case "Procedure":
+          for (const key in item) {
+            this.clickSonAddTtem[key] = item[key]
+          }
+
           this.componentType = "Procedure";
           break;
       }
@@ -876,16 +931,21 @@ export default {
         if (valid) {
           let { addName } = this.nameForm;
           let size = 0;
+          let type
           switch (this.clickAddType) {
             case "Plan":
               if (this.clickAddTtem.tasks) {
                 this.clickAddTtem.tasks.push({ project_name: addName, mode_type: 'Task' })
+                this.forKey(this.plantList);
               } else {
                 let tasks = [{ project_name: addName, mode_type: 'Task' }];
                 this.clickAddTtem.tasks = tasks;
+                this.forKey(this.plantList);
               }
               this.tasksPrievw = { project_name: addName, mode_type: 'Task' }
-              this.componentType = "Task";
+              this.tasksFrom = { project_name: addName, mode_type: 'Task' }
+              this.componentType = "TaskFrom";
+              type = 'TaskForm'
               size = this.clickAddTtem.tasks.length;
               this.clickSonAddTtem = this.clickAddTtem.tasks[size - 1];
               break;
@@ -906,7 +966,7 @@ export default {
           }
           this.dialogVisible = false;
           this.nameForm.addName = '';
-          this.changeForm(this.clickSonAddTtem)
+          this.changeForm(this.clickSonAddTtem, type)
         } else {
           console.log('error submit!!');
           return false;
@@ -955,8 +1015,12 @@ export default {
 
       this.$refs.operationForm.validate((valid) => {
         if (valid) {
-          alert('submit!');
-          console.log('11111111');
+
+          for (const key in this.operationForm) {
+            this.operationPrievw[key] = this.operationForm[key]
+          }
+
+
           let { onChange } = this.customConfig;
           // onChange(e);
           this.forKey(this.plantList);
@@ -973,14 +1037,23 @@ export default {
     //工程页的编辑
     proceduresEdit(procedures, index, tasks) {
       this.componentType = "Procedure";
-      this.operationForm = procedures
+      this.operationPrievw = procedures
+      this.operationForm = JSON.parse(JSON.stringify(procedures))
       this.tasks = tasks
       this.backState.operation = true
+      this.menuActive = procedures.seletKey;
     },
     //返回按钮
     backFn() {
+      this.menuActive = this.tasks.seletKey;
       this.tasksPrievw = this.tasks
       this.backState.operation = false
+      this.componentType = 'Task'
+    },
+    backTaskFn() {
+      this.menuActive = this.tasksPrievw.seletKey;
+
+
       this.componentType = 'Task'
     },
     //工程编辑 方法
@@ -990,9 +1063,23 @@ export default {
     },
     //工程保存
     saveTask() {
-      for (const key in this.taskForm) {
-        this.tasksPrievw[key] = this.taskForm[key]
-      }
+      this.$refs.taskForm.validate((valid) => {
+        if (valid) {
+
+          for (const key in this.taskForm) {
+            this.tasksPrievw[key] = this.taskForm[key]
+          }
+
+
+          let { onChange } = this.customConfig;
+          // onChange(e);
+          this.forKey(this.plantList);
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+
     },
     //表格选择框事件
     handleSelectionChange(selection) {
@@ -1016,6 +1103,36 @@ export default {
     //材料需求量、采购量主、采购量副更改是否为红色
     changeItemState(i, key) {
       this.operationForm.materials[i][key] = false
+    },
+    //上传
+    handleFileChange(e) {
+
+      const files = e.target.files;
+      if (files.length <= 0) {
+        return false;
+      }
+      let formData = new FormData()
+      if (files && files[0]) {
+        const file = files[0];
+        if (file.size > 1024 * 1024 * 3) {
+
+
+          return false;
+        } else {
+          let temp = new FormData()
+          temp.append('file', file)
+          console.log(temp.get('file'))
+
+          uploadFile(temp)
+            .then((data) => {
+
+              this.taskForm.file = data.data[0]
+            })
+            .catch((err) => {
+
+            });
+        }
+      }
     },
     // async inputChange(e) {
     //   this.data = e;
@@ -1385,6 +1502,15 @@ export default {
           cursor: pointer;
         }
 
+        .operation_headr_back {
+          display: flex;
+          align-items: center;
+
+          .back_title {
+            width: 95px;
+          }
+        }
+
         .operation_headr_itme {
 
           /deep/.el-button.is-round {
@@ -1492,6 +1618,20 @@ export default {
           }
         }
 
+        .title_gongn {
+          background: rgba(255, 178, 57, 0.15);
+          border-radius: 43px;
+          padding: 2px 8px;
+          color: #FF8130;
+        }
+
+        .title_guanl {
+          background: rgba(48, 174, 191, 0.15);
+          border-radius: 43px;
+          padding: 2px 8px;
+          color: #30AEBF;
+        }
+
         /deep/ .title_label {
           height: 22px;
           /* 14px-常规 */
@@ -1578,6 +1718,7 @@ export default {
               font-weight: 600;
               font-size: 14px;
               line-height: 22px;
+              width: 20%;
               /* identical to box */
             }
 
@@ -1622,6 +1763,15 @@ export default {
         display: flex;
         justify-content: space-between;
         margin-bottom: 24px;
+
+        .operation_headr_back {
+          display: flex;
+          align-items: center;
+
+          .back_title {
+            width: 70px;
+          }
+        }
 
         /deep/ .el-icon-back {
           font-size: 20px;
