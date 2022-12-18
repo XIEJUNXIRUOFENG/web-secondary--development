@@ -97,25 +97,27 @@
           </el-button>
         </div>
         <div class="PlantForm_content">
-          <el-form :model="planForm" v-if="componentType == 'PlantForm'" :rules="rules" ref="planForm" size="small">
-            <el-form-item label="计划名称：" key="addName" :label-width="formLabelWidth" prop="addName">
+          <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
+            <el-form-item label="计划名称：" key="plan_name" :label-width="formLabelWidth" prop="plan_name">
               <el-input v-model="planForm.plan_name" :clearable="true" placeholder="请输入名称"></el-input>
             </el-form-item>
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
-              <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input>
+              <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
+              <el-select v-model="planForm.applicant" placeholder="请选择" :readonly="true">
+                <el-option :label="currentUser.name" :value="currentUser.id"></el-option>
+              </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" placeholder="请选择" :readonly="true">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+                <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报子单位：" key="subunit" :label-width="formLabelWidth" prop="subunit">
+            <!-- <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
               </el-select>
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="申报时间：" key="applicant_date" :label-width="formLabelWidth" prop="applicant_date">
               <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-DD" type="date" placeholder="请选择日期">
               </el-date-picker>
@@ -160,29 +162,26 @@
           </div>
         </div>
         <div class="operation_main">
-          <el-form v-if="componentType == 'TaskForm'" :model="taskForm" @submit.native.prevent ref="taskForm"
-            size="small">
+          <el-form :model="taskForm" @submit.native.prevent :rules="taskRules" ref="taskForm" size="small">
             <el-form-item label="工程名称：" key="project_name" :label-width="formLabelWidth" :clearable="true"
-              :readonly="true" prop="project_name" :rules="{ required: true, message: '请输入工程名', trigger: 'blur' }">
+              :readonly="true" prop="project_name">
               <el-input v-model="taskForm.project_name" autocomplete="off" placeholder="请输入"></el-input>
             </el-form-item>
-            <el-form-item label="类型：" key="project_type" :label-width="formLabelWidth" prop="project_type"
-              :rules="{ required: true, message: '请选择类型', trigger: 'change' }">
+            <el-form-item label="类型：" key="project_type" :label-width="formLabelWidth" prop="project_type">
               <el-select v-model="taskForm.project_type" placeholder="请选择">
                 <el-option label="A" value="A"></el-option>
                 <el-option label="B" value="B"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="功能区域：" key="function_area" :label-width="formLabelWidth" prop="function_area"
-              :rules="{ required: true, message: '请选择功能区域范围', trigger: 'change' }">
+            <el-form-item label="功能区域：" key="function_area" :label-width="formLabelWidth" prop="function_area">
               <el-select v-model="taskForm.function_area" placeholder="请选择">
                 <el-option v-for="(item, i) in funAreaArr  " :key="i" :label="item.function_area"
                   :value="item.function_area"></el-option>
 
               </el-select>
             </el-form-item>
-            <el-form-item label="关联设备：" key="associated_devices" :label-width="formLabelWidth" prop="associated_devices"
-              :rules="{ required: true, message: '请选择设备', trigger: 'change' }">
+            <el-form-item label="关联设备：" key="associated_devices" :label-width="formLabelWidth"
+              prop="associated_devices">
               <el-select v-model="taskForm.associated_devices" placeholder="请选择">
                 <el-option v-for="(item, i) in devicesArr  " :key="i" :label="item.associated_devices"
                   :value="item.associated_devices"></el-option>
@@ -218,7 +217,6 @@
             </el-form-item>
 
           </el-form>
-
         </div>
       </div>
       <!-- 工序任务详情页 -->
@@ -265,10 +263,9 @@
 
           </el-descriptions>
           <el-descriptions>
-            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">
-              <a :href="tasksPrievw.file" rel="noopener noreferrer">{{ tasksPrievw.file }}</a></el-descriptions-item>
-
-
+            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息"> <a
+                :href="tasksPrievw.file" rel="noopener noreferrer">{{ tasksPrievw.file
+                }}</a></el-descriptions-item>
           </el-descriptions>
         </div>
         <div class="task_operaList">
@@ -333,7 +330,7 @@
                   </el-table-column>
                   <el-table-column prop="loadValue" label="工序描述">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`steps[${scope.$index}].process_desc`"
+                      <el-form-item :clearable="true" :prop="`steps.${scope.$index}.process_desc`"
                         :rules="{ required: true, message: '请输入工序描述', trigger: 'blur' }">
                         <el-input v-model="scope.row.process_desc" :controls="false" type="text" size="small" />
                       </el-form-item>
@@ -342,7 +339,7 @@
                   <el-table-column prop="vnotchesWidth" label="工程量单位">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true"
-                        :prop="scope.row.quantity_engineering_quantity ? `steps[${scope.$index}].unit_engineering_quantity` : ''"
+                        :prop="scope.row.quantity_engineering_quantity ? `steps.${scope.$index}.unit_engineering_quantity` : ''"
                         :rules="{ required: Boolean(scope.row.quantity_engineering_quantity), message: '请选择工程量', trigger: 'change' }">
                         <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
                           <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
@@ -419,7 +416,7 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料需求量">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_demand`"
+                      <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_demand`"
                         :rules="{ required: true, message: '请输入材料需求量', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.demand_state }" v-model="scope.row.material_demand"
                           :controls="false" @change="changeItemState(scope.$index, 'demand_state')" type="text"
@@ -430,7 +427,7 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（主单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_main`"
+                      <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_main`"
                         :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
                           v-model="scope.row.material_purchase_main"
@@ -442,7 +439,7 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（副单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_auxiliary`"
+                      <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_auxiliary`"
                         :rules="{ required: true, message: '请输入材料采购量（副单位）', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.purchase_auxiliary_state }"
                           @change="changeItemState(scope.$index, 'purchase_auxiliary_state')"
@@ -484,6 +481,7 @@
       <el-form :model="nameForm" :rules="rules" ref="addNameForm" size="small">
         <el-form-item label="名称：" :label-width="formLabelWidth" prop="addName">
           <el-input v-model.trim="nameForm.addName" :clearable="true" placeholder="请输入"></el-input>
+
         </el-form-item>
         <el-form-item label="" :label-width="formLabelWidth" prop="">
           <el-input style="display: none;" :clearable="true" placeholder="请输入"></el-input>
@@ -557,11 +555,12 @@ Vue.use(Table);
 Vue.use(TableColumn);
 Vue.use(Input);
 Vue.use(InputNumber);
+Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Upload);
-Vue.use(Pagination)
+
 export default {
-  name: "Add",
+  name: "AddMultiple",
   props: {
     customConfig: Object,
   },
@@ -571,7 +570,7 @@ export default {
   //   },
   // },
   data() {
-    let currentUser = window?.currentUser || {};
+    let currentUser = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
     return {
       currentUser, // 当前用户
       data: this.customConfig.data,
@@ -594,14 +593,14 @@ export default {
       backState: { operation: "" },//返回状态
       nameForm: {
         addName: ""
-      },
-      materialsTable: [],//物料清单表
+      }, materialsTable: [],//物料清单表
       selectionData: [],//选中数据
       loading: false, // 远程搜索
       remoteFilter: [], // 模板数据
       remoteValue: {}, // 选中模板
       clickAddTtem: {}, // 新增项父级数据
       clickAddType: "", // 新增项父级类型
+      clickSonAddTtem: {}, // 新增项当前数据
       currentPage: 1,//当前页数
       pageSize: 10,//页数大小
       total: 0,
@@ -657,17 +656,31 @@ export default {
         plan_type: [
           { required: true, message: '请选择计划类型', trigger: 'change' }
         ],
-        addName: [
-          { required: true, message: '请输入名称', trigger: 'blur' }
+        plan_name: [
+          { required: true, message: '请输入计划名称', trigger: 'blur' }
         ],
-
+        addName: [
+          { required: true, message: '请输入计划名称', trigger: 'blur' }
+        ],
+        project_name: [
+          { required: true, message: '请输入工程名', trigger: 'blur' }
+        ],
+        project_type: [
+          { required: true, message: '请选择类型', trigger: 'change' }
+        ],
+        function_area: [
+          { required: true, message: '请选择功能区域', trigger: 'change' }
+        ],
+        associated_devices: [
+          { required: true, message: '请选择关联设备', trigger: 'change' }
+        ],
         work_unit: [
           { required: true, message: '请输入工程量单位', trigger: 'blur' }
         ],
         work_name: [
           { required: true, message: '请输入工序描述', trigger: 'blur' }
         ],
-        process_name: [
+        procedures_name: [
           { required: true, message: '请输入工序名称', trigger: 'blur' }
         ]
       },
@@ -689,9 +702,9 @@ export default {
     };
   },
   mounted() {
-    let josnData = `  [{
+    let josnData = ` [{
     "data_id": "",
-    "plan_name": "计划1",
+    "plan_name": "计划计划",
     "plan_number": "2022-301W01",
     "plan_type": "月度",
     "applicant": "1234567890",
@@ -702,33 +715,33 @@ export default {
     "mode_type": "Plan",
     "tasks": [{ 
       "data_id": "",
-      "project_name": "任务1",
+      "project_name": "任务aaa",
       "project_type": "A",
       "parent_id": "",
       "function_area": "区域1",
       "associated_devices": "设备1",
-      "requirement_for_construction": "标准1",
+      "requirement_for_construction": "标准11",
       "remark": "备注",
       "file": "/stopere/werere/sd.pdf",
       "mode_type": "Task",
       "procedures": [{ 
         "data_id": "",
-        "process_name": "工序1",
+        "process_name": "工序1vbbb",
         "remark": "",
         "parent_id": "",
         "mode_type": "Procedure",
         "steps": [{ 
           "data_id": "",
-          "process_desc": "步骤1",
+          "process_desc": "步骤1awd",
           "parent_id": "",
-          "unit_engineering_quantity": "",
+          "unit_engineering_quantity": "小时",
           "quantity_engineering_quantity": "3",
           "mode_type": "Step"
         }],
         "materials": [{ 
           "data_id": "",
           "parent_id": "",
-          "material_name": "物料A",
+          "material_name": "物料Aad",
           "material_code": "ASF334",
           "standard_materials": "标准AB",
           "additional_note": "备注",
@@ -808,7 +821,6 @@ export default {
       if (type) {
         this.tasksPrievw = item;
         this.tasksPrievw.status = 2;
-        // this.task = item
         this.taskForm = JSON.parse(JSON.stringify(item))
         this.taskForm.status = 2
         this.componentType = 'TaskForm'
@@ -816,6 +828,19 @@ export default {
         switch (item.mode_type) {
           case "Plan":
             this.componentType = "PlantForm";
+            let plan = this.plantList[0];
+            this.planForm = {
+              data_id: "", // 主键
+              plan_name: plan.plan_name, // 计划名称
+              plan_number: "", //计划编号
+              plan_type: plan.plan_type, // 计划类型
+              applicant: this.currentUser.id, // 申报人
+              applicant_unit: this.currentUser.officeId, // 申报单位
+              subunit: "", // 子单元
+              applicant_date: new Date(), // 申报日期
+              quality_record_number: plan.quality_record_number, // 质量记录号
+              mode_type: "Plan", // 类型
+            }
             break;
           case "Task":
             if (item.status == 2) {
@@ -825,11 +850,13 @@ export default {
             } else {
               this.componentType = "Task";
               this.tasksPrievw = item;
+
             }
             break;
           case "Procedure":
             this.componentType = "Procedure";
             this.operationPrievw = item
+            this.backState.operation = false
             this.operationForm = JSON.parse(JSON.stringify(item));
             break;
         }
@@ -838,21 +865,51 @@ export default {
     // 新增计划
     addPalnt() {
       this.componentType = "PlantForm";
+      this.planForm = {
+        // data_id: "", // 主键
+        plan_name: "", // 计划名称
+        plan_number: "", //计划编号
+        plan_type: "", // 计划类型
+        applicant: this.currentUser.id, // 申报人
+        applicant_unit: this.currentUser.officeId, // 申报单位
+        subunit: "", // 子单元
+        applicant_date: new Date(), // 申报日期
+        quality_record_number: "NL/QR-PD-06", // 质量记录号
+        mode_type: "Plan", // 类型
+      }
     },
     // 保存提交
     saveSub(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-
-
+          let codeNum = this.get_NumberingRules(this.planForm.applicant_unit, this.planForm.plan_type, this.planForm.applicant_date);
+          this.planForm.plan_number = codeNum;
+          this.plantList[0] = JSON.parse(JSON.stringify(this.planForm));
           let { onChange } = this.customConfig;
-          onChange(e);
+          onChange(this.plantList[0]);
           this.forKey(this.plantList);
+          this.remoteValue = {};
         } else {
           console.log('error submit!!');
           return false;
         }
       });
+    },
+    get_NumberingRules(unitNo, planType, yearNo) {
+      // 年份
+      let year = new Date().getFullYear();
+      // 工程类别
+      let projectCategory = "";
+      planType == "大修单项" ? (projectCategory = "D") : (projectCategory = "W");
+      // 编号
+      let number = "";
+      if (projectCategory == "D") {
+        number = year;
+      } else {
+        let month = String(new Date().getMonth() + 1);
+        month.length < 1 ? (number = "0" + month) : (number = month);
+      }
+      return `${year}-${unitNo}${projectCategory}${number}`;
     },
     // 远程搜索
     remoteMethod(query) {
@@ -898,7 +955,6 @@ export default {
           this.forKey([this.planForm]);
           break;
         case "Task":
-          // this.clickSonAddTtem
           for (const key in item) {
             this.clickSonAddTtem[key] = item[key]
           }
@@ -924,18 +980,6 @@ export default {
       this.clickAddType = mode_type;
       if (mod == 'add') {
         this.clickAddTtem = item;
-        this.planForm = {
-          data_id: "", // 主键
-          plan_name: "", // 计划名称
-          plan_number: "", //计划编号
-          plan_type: "", // 计划类型
-          applicant: "", // 申报人
-          applicant_unit: "", // 申报单位
-          subunit: "", // 子单元
-          applicant_date: new Date(), // 申报日期
-          quality_record_number: "", // 质量记录号
-          mode_type: "Plan", // 类型
-        }
         this.dialogVisible = true;
       } else {
         let keyVal = ''
@@ -946,6 +990,7 @@ export default {
         }
         this.$nextTick(() => {
           item[keyVal].splice(index, 1);
+          console.log('item', item);
           this.forKey(this.plantList);
           this.changeForm(item)
         })
@@ -1012,14 +1057,14 @@ export default {
     //工序步骤删除
     detailedDelFn(row) {
       const i = row.$index
-      this.detailedTable.splice(i, 1)
+      this.operationForm.steps.splice(i, 1)
     },
     //物料删除
     procedureDelFn(row) {
       const i = row.$index
-      this.procedureTable.splice(i, 1)
+      this.operationForm?.materials.splice(i, 1)
     },
-    //物料新增按钮
+    //物料新增
     procedureAddFn() {
       this.materialsVisible = true
       queryMaterials().then(res => {
@@ -1038,17 +1083,14 @@ export default {
     },
     //工序保存
     OperationSave() {
-
       this.$refs.operationForm.validate((valid) => {
         if (valid) {
-
           for (const key in this.operationForm) {
             this.operationPrievw[key] = this.operationForm[key]
           }
-
-
           let { onChange } = this.customConfig;
-          // onChange(e);
+          onChange && onChange(JSON.stringify(this.plantList));
+          this.remoteValue = {};
           this.forKey(this.plantList);
         } else {
           console.log('error submit!!');
@@ -1078,13 +1120,14 @@ export default {
     },
     backTaskFn() {
       this.menuActive = this.tasksPrievw.seletKey;
-
-
+      this.taskForm.back = false
       this.componentType = 'Task'
     },
     //工程编辑 方法
     taskEdit(task) {
+
       this.taskForm = JSON.parse(JSON.stringify(task))
+      this.taskForm.back = true
       this.componentType = 'TaskForm'
     },
     //工程保存
@@ -1092,22 +1135,19 @@ export default {
       console.log('TaskForm:', this.taskForm);
       this.$refs.taskForm.validate((valid) => {
         if (valid) {
-
           for (const key in this.taskForm) {
             this.tasksPrievw[key] = this.taskForm[key]
           }
-
           this.tasksPrievw.status = 1
           let { onChange } = this.customConfig;
-          // onChange(e);
+          onChange && onChange(JSON.stringify(this.plantList));
           this.forKey(this.plantList);
+          this.remoteValue = {};
         } else {
           console.log('error submit!!');
-
           return false;
         }
       });
-
     },
     //表格选择框事件
     handleSelectionChange(selection) {
@@ -1198,7 +1238,6 @@ export default {
         this.operationForm.materials[value.index].material_purchase_main = value.material_purchase_main
         this.operationForm.materials[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
       }
-
     },
     Event_Center_getName() {
       let { formConfig, component } = this.customConfig;
@@ -1210,18 +1249,13 @@ export default {
         objectId: formConfig?.id,
         componentId: component.id,
         type: "report",
-        event: "  calculation",
+        event: " calculation",
         payload: {
           value: e,
         },
       });
     },
-    //金额计算设值
-    do_EventCenter_setValue({ value }) {
-      this.procedureTable[value.index].material_demand = value.material_demand
-      this.procedureTable[value.index].material_purchase_main = value.material_purchase_main
-      this.procedureTable[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
-    },
+
     Event_Center_getName() {
       return this.data;
     },
@@ -1792,6 +1826,11 @@ export default {
         justify-content: space-between;
         margin-bottom: 24px;
 
+        /deep/ .el-icon-back {
+          font-size: 20px;
+          cursor: pointer;
+        }
+
         .operation_headr_back {
           display: flex;
           align-items: center;
@@ -1799,11 +1838,6 @@ export default {
           .back_title {
             width: 70px;
           }
-        }
-
-        /deep/ .el-icon-back {
-          font-size: 20px;
-          cursor: pointer;
         }
 
         .operation_headr_itme {
@@ -1835,12 +1869,6 @@ export default {
 
           .el-select {
             width: 100%;
-          }
-
-          /deep/.ITEMRED {
-            .el-input__inner {
-              color: red;
-            }
           }
         }
 

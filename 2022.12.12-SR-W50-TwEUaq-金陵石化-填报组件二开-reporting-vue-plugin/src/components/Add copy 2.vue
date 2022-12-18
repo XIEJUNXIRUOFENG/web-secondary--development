@@ -139,7 +139,7 @@
       <!-- 工序任务新增 -->
       <div class="Task-page-add" v-if="componentType == 'TaskForm'">
         <div class="operation_headr">
-          <div class="operation_headr_back"><i v-if="backState.task" class="el-icon-back" @click="backTaskFn()"></i>
+          <div class="operation_headr_back"><i v-if="taskForm.back" class="el-icon-back" @click="backTaskFn()"></i>
             <span class="back_title">工程任务</span> <el-select size="small" v-model="remoteValue" filterable remote
               reserve-keyword placeholder="请输入关键词" :remote-method="remoteMethod" :loading="loading"
               @change="selectMuBan">
@@ -218,7 +218,6 @@
             </el-form-item>
 
           </el-form>
-
         </div>
       </div>
       <!-- 工序任务详情页 -->
@@ -333,7 +332,7 @@
                   </el-table-column>
                   <el-table-column prop="loadValue" label="工序描述">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`steps[${scope.$index}].process_desc`"
+                      <el-form-item :clearable="true" :prop="`steps.${scope.$index}.process_desc`"
                         :rules="{ required: true, message: '请输入工序描述', trigger: 'blur' }">
                         <el-input v-model="scope.row.process_desc" :controls="false" type="text" size="small" />
                       </el-form-item>
@@ -342,7 +341,7 @@
                   <el-table-column prop="vnotchesWidth" label="工程量单位">
                     <template slot-scope="scope">
                       <el-form-item :clearable="true"
-                        :prop="scope.row.quantity_engineering_quantity ? `steps[${scope.$index}].unit_engineering_quantity` : ''"
+                        :prop="scope.row.quantity_engineering_quantity ? `steps.${scope.$index}.unit_engineering_quantity` : undefined"
                         :rules="{ required: Boolean(scope.row.quantity_engineering_quantity), message: '请选择工程量', trigger: 'change' }">
                         <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
                           <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
@@ -419,7 +418,7 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料需求量">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_demand`"
+                      <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_demand`"
                         :rules="{ required: true, message: '请输入材料需求量', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.demand_state }" v-model="scope.row.material_demand"
                           :controls="false" @change="changeItemState(scope.$index, 'demand_state')" type="text"
@@ -430,7 +429,7 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（主单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_main`"
+                      <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_main`"
                         :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
                           v-model="scope.row.material_purchase_main"
@@ -442,7 +441,7 @@
                   </el-table-column>
                   <el-table-column prop="sampleThickness" label="材料采购量（副单位）">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true" :prop="`materials[${scope.$index}].material_purchase_auxiliary`"
+                      <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_auxiliary`"
                         :rules="{ required: true, message: '请输入材料采购量（副单位）', trigger: 'blur' }">
                         <el-input :class="{ ITEMRED: scope.row.purchase_auxiliary_state }"
                           @change="changeItemState(scope.$index, 'purchase_auxiliary_state')"
@@ -808,7 +807,6 @@ export default {
       if (type) {
         this.tasksPrievw = item;
         this.tasksPrievw.status = 2;
-        // this.task = item
         this.taskForm = JSON.parse(JSON.stringify(item))
         this.taskForm.status = 2
         this.componentType = 'TaskForm'
@@ -1078,13 +1076,13 @@ export default {
     },
     backTaskFn() {
       this.menuActive = this.tasksPrievw.seletKey;
-
-
+      // this.taskForm.back = false
       this.componentType = 'Task'
     },
     //工程编辑 方法
     taskEdit(task) {
       this.taskForm = JSON.parse(JSON.stringify(task))
+      // this.taskForm.back = true
       this.componentType = 'TaskForm'
     },
     //工程保存
