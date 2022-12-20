@@ -52,5 +52,9 @@ export const queryDict = params =>
 export const queryPlanNumber = params =>
   request.get(`ext/plan/apply/queryPlanNumber?year=${params}`);
 
-
+/*
+*  子单位查询
+*/
+export const queryzidanwei = params =>
+  request.get(`system/office/queryOfficeUser?year=${params}`);
 

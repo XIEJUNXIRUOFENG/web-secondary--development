@@ -132,8 +132,8 @@
               <el-input v-model="planForm.quality_record_number" autocomplete="off" placeholder="请输入"
                 :clearable="true"></el-input>
             </el-form-item>
-            <el-form-item label="预估工程费：" :label-width="formLabelWidth" prop="estimateWmount"> 
-              <el-input v-model.number="planForm.estimateWmount" placeholder="请输入">
+            <el-form-item label="预估工程费：" :label-width="formLabelWidth" prop="estimate_amount_project_cost"> 
+              <el-input v-model="planForm.estimate_amount_project_cost" type="number" placeholder="请输入">
                 <template slot="append">万元</template>
               </el-input>
             </el-form-item>
@@ -593,17 +593,18 @@ export default {
   // },
   data() {
     let checkAge = (rule, value, callback) => {
-      console.log('111111111111');
       if (!value) {
-        return callback(new Error('年龄不能为空'));
-      }
-      setTimeout(() => {
-        if (!Number.isInteger(value)) {
-          callback(new Error('请输入数字值'));
-        }else {
+        return callback(new Error('金额不能为空'));
+      }else {
           callback();
-        }
-      }, 300);
+      }
+      // setTimeout(() => {
+      //   if (!Number.isInteger(value)) {
+      //     callback(new Error('请输入数字值'));
+      //   }else {
+      //     callback();
+      //   }
+      // }, 300);
     };
     let currentUser = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
     return {
@@ -653,7 +654,7 @@ export default {
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimateWmount: 0 // 金额
+        estimate_amount_project_cost: 0 // 金额
       },
       //工程任务表单
       taskForm: {
@@ -690,9 +691,6 @@ export default {
         quality_record_number: [
           { required: true, message: '请输入质量记录号', trigger: 'blur' }
         ],
-        // estimateWmount: [
-        //   { required: true, message: '请输入预估金额', trigger: 'blur' }
-        // ],
         plan_type: [
           { required: true, message: '请选择计划类型', trigger: 'change' }
         ],
@@ -702,7 +700,7 @@ export default {
         addName: [
           { required: true, message: '请输入计划名称', trigger: 'blur' }
         ],
-        estimateWmount: [
+        estimate_amount_project_cost: [
           { validator: checkAge, trigger: 'blur' }
         ],
         project_name: [
@@ -815,8 +813,8 @@ export default {
     );
     try {
       this.configuration = JSON.parse(this.propsConfiguration);
-      // this.plantList = JSON.parse(this.customConfig.data || '[]')
-      this.plantList = JSON.parse(josnData);
+      this.plantList = JSON.parse(this.customConfig.data || '[]')
+      // this.plantList = JSON.parse(josnData);
       if (this.plantList.length > 0) {
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
@@ -913,7 +911,7 @@ export default {
               applicant_date:  new Date(), // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
-              estimateWmount: plan.estimate_amount_project_cost || 0, // 金额
+              estimate_amount_project_cost: plan.estimate_amount_project_cost || 0, // 金额
             }
             break;
           case "Task":
@@ -951,7 +949,7 @@ export default {
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimateWmount: 0 // 金额
+        estimate_amount_project_cost: 0 // 金额
       }
     },
     // 保存提交
@@ -961,43 +959,33 @@ export default {
          let isDate = moment(this.planForm.applicant_date).format("yyyy-MM-DD");
          let year = isDate.split('-')[0];
          let liushuihao = 0;
+         if (this.plantList.length == 0) {
+          this.plantList.push({plan_number: ""});
+         }
           let { onChange } = this.customConfig;
           if (this.planForm.plan_type == "大修单项") {
             queryPlanNumber(year).then(res=>{
               liushuihao = Number(res.data) + 1;
               let codeNum = get_NumberingRules(year, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks?.length || 0, liushuihao);
-              let money = Number(this.planForm.estimateWmount).toFixed(1);
+              let money = Number(this.planForm.estimate_amount_project_cost).toFixed(1);
               this.planForm.plan_number = codeNum;
-              this.plantList[0].plan_name = this.planForm.plan_name;
-              this.plantList[0].plan_number = this.planForm.plan_number;
-              this.plantList[0].plan_type = this.planForm.plan_type;
-              this.plantList[0].applicant = this.planForm.applicant;
-              this.plantList[0].applicant_unit = this.planForm.applicant_unit;
-              this.plantList[0].subunit = this.planForm.subunit;
-              this.plantList[0].applicant_date = isDate;
-              this.plantList[0].quality_record_number = this.planForm.quality_record_number;
-              this.plantList[0].mode_type = this.planForm.mode_type;
-              this.plantList[0].estimate_amount_project_cost = money;
+              this.planForm.estimate_amount_project_cost = money;
+              Object.keys(this.planForm).forEach(x=>{
+                this.plantList[0][x] = this.planForm[x];
+              })
               onChange(this.plantList[0]);
               this.forKey(this.plantList);
               this.remoteValue = {};
-          console.log('this.plantList[0]',this.plantList[0]);
-
+              console.log('this.plantList[0]',this.plantList[0]);
             });
           }else {
             let codeNum = get_NumberingRules(year, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks?.length || 0, liushuihao);
-            let money = Number(this.planForm.estimateWmount).toFixed(1);
+            let money = Number(this.planForm.estimate_amount_project_cost).toFixed(1);
             this.planForm.plan_number = codeNum;
-            this.plantList[0].plan_name = this.planForm.plan_name;
-            this.plantList[0].plan_number = this.planForm.plan_number;
-            this.plantList[0].plan_type = this.planForm.plan_type;
-            this.plantList[0].applicant = this.planForm.applicant;
-            this.plantList[0].applicant_unit = this.planForm.applicant_unit;
-            this.plantList[0].subunit = this.planForm.subunit;
-            this.plantList[0].applicant_date = isDate;
-            this.plantList[0].quality_record_number = this.planForm.quality_record_number;
-            this.plantList[0].mode_type = this.planForm.mode_type;
-            this.plantList[0].estimate_amount_project_cost = money;
+            this.planForm.estimate_amount_project_cost = money;
+            Object.keys(this.planForm).forEach(x=>{
+              this.plantList[0][x] = this.planForm[x];
+            })
             onChange(this.plantList[0]);
             this.forKey(this.plantList);
             this.remoteValue = {};
@@ -1046,7 +1034,7 @@ export default {
             applicant_date:  new Date(), // 申报日期
             quality_record_number: item.quality_record_number, // 质量记录号
             mode_type: "Plan", // 类型
-            estimateWmount: item.estimate_amount_project_cost, // 金额
+            estimate_amount_project_cost: item.estimate_amount_project_cost, // 金额
             tasks: item.tasks
           }
           console.log('this.planForm', this.planForm);

@@ -7,7 +7,6 @@
  * @param planNumber 计划数量
  */
 export const get_NumberingRules = (year, unitNo, planType, serialNumber, planNumber) => {
-   console.log('planNumber', planNumber);
    // 工程类别
    let projectCategory = "";
    // 月份
