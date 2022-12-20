@@ -336,10 +336,9 @@
                       </el-form-item>
                     </template>
                   </el-table-column>
-                  <el-table-column prop="vnotchesWidth" label="工程量单位">
+                  <el-table-column prop="unit_engineering_quantity" label="工程量单位">
                     <template slot-scope="scope">
-                      <el-form-item :clearable="true"
-                        :prop="scope.row.quantity_engineering_quantity ? `steps.${scope.$index}.unit_engineering_quantity` : ''"
+                      <el-form-item :clearable="true" :prop="`steps.${scope.$index}.unit_engineering_quantity`"
                         :rules="{ required: Boolean(scope.row.quantity_engineering_quantity), message: '请选择工程量', trigger: 'change' }">
                         <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
                           <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
@@ -347,6 +346,23 @@
 
                         </el-select>
                       </el-form-item>
+                      <!-- :prop="`steps.${scope.$index}.unit_engineering_quantity `" -->
+                      <!-- :rules="{ required: true, message: '请选择工程量', trigger: 'change' }" -->
+                      <!-- <el-form-item v-if="Boolean(scope.row.quantity_engineering_quantity)"
+                        :prop="`steps.${scope.$index}.unit_engineering_quantity `"
+                        :rules="{ required: true, message: '请选择工程量', trigger: 'change' }" key="121212">
+                        <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
+                          <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
+                            :value="item.data_id"></el-option>
+                        </el-select>
+                      </el-form-item>
+                      <el-form-item v-else :clearable="true" key="1212123333">
+                        <el-select v-model="scope.row.unit_engineering_quantity" placeholder="请选择">
+                          <el-option v-for="(item, i) in stepsUnit  " :key="i" :label="item.unit_engineering_quantity"
+                            :value="item.data_id"></el-option>
+
+                        </el-select>
+                      </el-form-item> -->
 
                     </template>
                   </el-table-column>
@@ -459,7 +475,8 @@
 
                   <el-table-column label="操作">
                     <template slot-scope="scope">
-                      <el-button type="text" @click="calculationClick(scope)" size="small">计算</el-button>
+                      <el-button type="text" @click="calculationClick(scope.row, scope.$index)"
+                        size="small">计算</el-button>
                       <el-button type="text" @click="procedureDelFn(scope.row)" size="small">删除</el-button>
                     </template>
                   </el-table-column>
@@ -477,7 +494,7 @@
       </div>
     </div>
     <!-- 弹窗 -->
-    <el-dialog title="请输入名称" :visible.sync="dialogVisible" width="30%">
+    <el-dialog class="two_dialog" :title="title" :visible.sync="dialogVisible" width="30%">
       <el-form :model="nameForm" :rules="rules" ref="addNameForm" size="small">
         <el-form-item label="名称：" :label-width="formLabelWidth" prop="addName">
           <el-input v-model.trim="nameForm.addName" :clearable="true" placeholder="请输入"></el-input>
@@ -493,12 +510,13 @@
       </span>
     </el-dialog>
     <!-- 物料清单新增弹窗 -->
-    <el-dialog title="物料清单表" :visible.sync="materialsVisible" width="80%">
+    <el-dialog class="two_dialog" title="物料清单表" :visible.sync="materialsVisible" width="80%">
       <el-table :data="materialsTable" row-key="data_id" ref="multipleTable" stripe style="width: 100%"
         tooltip-effect="dark" @selection-change="handleSelectionChange"
         :header-cell-style="{ padding: 0 + 'px', fontSize: '12px', fontWeight: 400 }"
         :header-row-style="{ height: '30px' }">
-        <el-table-column type="selection" :reserve-selection="true" width="55" fixed="left">
+        <el-table-column type="selection" :selectable="checkSelectable" :reserve-selection="true" width="55"
+          fixed="left">
         </el-table-column>
         <el-table-column type="index" label="序列" width="55" fixed="left">
         </el-table-column>
@@ -527,7 +545,9 @@
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
 import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
-import { queryUnit, queryDevices, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport } from '../api/asset'
+import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport } from '../api/asset'
+import { get_NumberingRules } from '../utils/numberingRules'
+
 Vue.use(Menu);
 Vue.use(MenuItem);
 Vue.use(Submenu);
@@ -558,7 +578,6 @@ Vue.use(InputNumber);
 Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Upload);
-
 export default {
   name: "AddMultiple",
   props: {
@@ -682,7 +701,11 @@ export default {
         ],
         procedures_name: [
           { required: true, message: '请输入工序名称', trigger: 'blur' }
-        ]
+        ],
+        unit_engineering_quantity: [
+          { required: true, message: '请选择类型', trigger: 'change' }
+        ],
+
       },
       //task校验
       taskRules: {
@@ -767,24 +790,31 @@ export default {
     );
     try {
       this.configuration = JSON.parse(this.propsConfiguration);
-      // this.plantList = JSON.parse(this.customConfig.data)
-      this.plantList = JSON.parse(josnData);
+      this.plantList = JSON.parse(this.customConfig.data || '[]')
+      // this.plantList = JSON.parse(josnData);
       if (this.plantList.length > 0) {
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
       } else {
         this.componentType = 'emptyPage';
       }
-      this.taskForm = this.plantList[0].tasks[0]
-      this.tasksPrievw = this.plantList[0].tasks[0]
-      this.operationForm = this.plantList[0].tasks[0].procedures[0];
+      // this.taskForm = this.plantList[0].tasks[0]
+      // this.tasksPrievw = this.plantList[0].tasks[0]
+      // this.operationForm = this.plantList[0].tasks[0].procedures[0];
       setTimeout(() => {
         console.log('this.plantList', this.plantList)
       }, 500)
     } catch (error) {
       console.error("configuration解析错误", error);
+      this.plantList = []
     }
+    let a = document.querySelector('.liuChen-page')
+    if (a.parentNode) a.parentNode.style.height = '100%'
+    if (a.parentNode) a.parentNode.parentNode.style.height = '100%'
+    if (a.parentNode) a.parentNode.parentNode.parentNode.style.height = '100%'
+    if (a.parentNode) a.parentNode.parentNode.parentNode.parentNode.style.height = '100%'
     this.querySelect()
+    // queryOfficeUser()
   },
   methods: {
     // 生成唯一key
@@ -882,7 +912,7 @@ export default {
     saveSub(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          let codeNum = this.get_NumberingRules(this.planForm.applicant_unit, this.planForm.plan_type, this.planForm.applicant_date);
+          let codeNum = get_NumberingRules(this.planForm.applicant_date, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks?.length || 0, [this.planForm], 'plan_number');
           this.planForm.plan_number = codeNum;
           this.plantList[0] = JSON.parse(JSON.stringify(this.planForm));
           let { onChange } = this.customConfig;
@@ -894,22 +924,6 @@ export default {
           return false;
         }
       });
-    },
-    get_NumberingRules(unitNo, planType, yearNo) {
-      // 年份
-      let year = new Date().getFullYear();
-      // 工程类别
-      let projectCategory = "";
-      planType == "大修单项" ? (projectCategory = "D") : (projectCategory = "W");
-      // 编号
-      let number = "";
-      if (projectCategory == "D") {
-        number = year;
-      } else {
-        let month = String(new Date().getMonth() + 1);
-        month.length < 1 ? (number = "0" + month) : (number = month);
-      }
-      return `${year}-${unitNo}${projectCategory}${number}`;
     },
     // 远程搜索
     remoteMethod(query) {
@@ -981,6 +995,14 @@ export default {
       if (mod == 'add') {
         this.clickAddTtem = item;
         this.dialogVisible = true;
+        switch (mode_type) {
+          case 'Plan':
+            this.title = '新建工程任务'
+            break;
+          case 'Task':
+            this.title = '新建工序'
+            break;
+        }
       } else {
         let keyVal = ''
         if (mode_type == "Plan") {
@@ -990,7 +1012,6 @@ export default {
         }
         this.$nextTick(() => {
           item[keyVal].splice(index, 1);
-          console.log('item', item);
           this.forKey(this.plantList);
           this.changeForm(item)
         })
@@ -1052,7 +1073,11 @@ export default {
     },
     //工序步骤新增
     detailedAddFn() {
-      this.operationForm.steps.push({})
+      this.operationForm.steps.push({
+        unit_engineering_quantity: '',
+        quantity_engineering_quantity: 0,
+        process_desc: ''
+      })
     },
     //工序步骤删除
     detailedDelFn(row) {
@@ -1202,6 +1227,24 @@ export default {
         }
       }
     },
+    //标记不可选中方法()
+    checkSelectable(row, index) {
+      // debugger
+      /**
+       * row：当前每行的行数据
+       * index：当前第几位
+       */
+      let flag = true
+      for (let i = 0; i < this.operationForm.materials.length; i++) {
+        if (row.data_id == this.operationForm.materials[i].data_id) {
+          flag = false
+          break
+        } else {
+          flag = true
+        }
+      }
+      return flag
+    },
     // async inputChange(e) {
     //   this.data = e;
     //   let { formConfig, component, onChange } = this.customConfig;
@@ -1217,7 +1260,10 @@ export default {
     //   onChange(e);
     // },
     //逻辑控制 计算
-    async calculationClick(e) {
+    async calculationClick(e, i) {
+
+      let { formConfig, component, onChange } = this.customConfig;
+      this.mateIndex = i
       await window?.eventCenter?.triggerEventNew({
         objectId: formConfig?.id,
         componentId: component.id,
@@ -1230,31 +1276,30 @@ export default {
     },
     //金额计算设值
     do_EventCenter_setValue({ value }) {
+
       if (this.operationForm.materials) {
-        this.operationForm.materials[value.index].material_demand = value.material_demand
-        this.operationForm.materials[value.index].demand_state = true
-        this.operationForm.materials[value.index].purchase_main_state = true
-        this.operationForm.materials[value.index].purchase_auxiliary_state = true
-        this.operationForm.materials[value.index].material_purchase_main = value.material_purchase_main
-        this.operationForm.materials[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
+
+        // this.operationForm.materials[value.index].material_demand = value.material_demand
+        value.demand_state = true
+        value.purchase_main_state = true
+        value.purchase_auxiliary_state = true
+        // this.operationForm.materials[value.index].material_purchase_main = value.material_purchase_main
+        // this.operationForm.materials[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
+        // Object.keys(value).forEach(x => {
+        //   this.operationForm.materials[value.index][x] = value[x]
+        // })
+        // this.operationForm.materials[value.index] = { ...this.operationForm.materials[value.index], ...value }
+        let a = { ...this.operationForm.materials[this.mateIndex], ...value }
+        this.$set(this.operationForm.materials, this.mateIndex, { ...a })
+
+        console.log(this.operationForm.materials, '=========materials');
       }
     },
     Event_Center_getName() {
       let { formConfig, component } = this.customConfig;
       return `${formConfig?.form_name}-${component.columnStyle.title}`;
     },
-    //逻辑控制 计算
-    async calculationClick(e) {
-      await window.eventCenter.triggerEventNew({
-        objectId: formConfig?.id,
-        componentId: component.id,
-        type: "report",
-        event: " calculation",
-        payload: {
-          value: e,
-        },
-      });
-    },
+
 
     Event_Center_getName() {
       return this.data;
@@ -1467,6 +1512,7 @@ export default {
       margin-top: 50%;
       transform: translateY(-50%);
       width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -1870,6 +1916,12 @@ export default {
           .el-select {
             width: 100%;
           }
+
+          /deep/.ITEMRED {
+            .el-input__inner {
+              color: red;
+            }
+          }
         }
 
         /deep/ .el-input-number {
@@ -1904,6 +1956,30 @@ export default {
         }
       }
 
+    }
+  }
+}
+
+/deep/ .el-button--primary {
+  background: #0454f2;
+  border-color: #0454f2;
+  display: flex;
+  justify-content: center;
+
+  &:hover {
+    background: #0454f2;
+    border-color: #0454f2;
+  }
+}
+
+/deep/ .dialog-footer {
+  /deep/ .el-button--primary {
+    background: #0454f2;
+    border-color: #0454f2;
+
+    &:hover {
+      background: #0454f2;
+      border-color: #0454f2;
     }
   }
 }
