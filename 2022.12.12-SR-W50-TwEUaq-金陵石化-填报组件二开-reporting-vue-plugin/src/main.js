@@ -125,8 +125,8 @@ if (process.env.NODE_ENV !== "production") {
   }]
   const customConfig = {
     componentId: "111",
-    data: JSON.stringify(temp),
-    // data: '',
+    // data: JSON.stringify(temp),
+    data: '',
     saveValue: [],
     component: {
       columnStyle: {

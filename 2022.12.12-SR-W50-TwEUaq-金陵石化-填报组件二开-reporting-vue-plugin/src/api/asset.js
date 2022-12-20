@@ -32,3 +32,25 @@ export const uploadFile = (params) =>
 
 export const puginImport = params =>
   request.post(`plugin/import`, params, { 'Content-Type': 'multipart/form-data' });
+
+
+/*
+*  name 数据字典类型  plan_type_dictId 计划类型 quality_record_number_dictId 质量编号
+*/
+export const getDictId = params =>
+  request.get(`system/config/queryConfig?type=plan_apply&name=${params}`);
+
+/*
+*  dictId 数据字典类型
+*/
+export const queryDict = params =>
+  request.get(`ext/plan/apply/queryDict?dictId=${params}`);
+
+/*
+*  year 年份
+*/
+export const queryPlanNumber = params =>
+  request.get(`ext/plan/apply/queryPlanNumber?year=${params}`);
+
+
+
