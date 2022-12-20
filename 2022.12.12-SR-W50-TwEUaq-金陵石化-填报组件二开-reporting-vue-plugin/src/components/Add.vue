@@ -112,7 +112,7 @@
                 <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报子单位：" :label-width="formLabelWidth" prop="subunit">
+            <el-form-item label="申报子单位：" :label-width="formLabelWidth" key="subunit" prop="subunit">
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option label="区域一" value="shanghai"></el-option>
                 <el-option label="区域二" value="beijing"></el-option>
@@ -265,9 +265,15 @@
 
           </el-descriptions>
           <el-descriptions>
-            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息"> <a
-                :href="tasksPrievw.file" rel="noopener noreferrer">{{ tasksPrievw.file
-                }}</a></el-descriptions-item>
+            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">
+              <a :href="tasksPrievw.file" target="_blank" rel="noopener noreferrer"> {{ tasksPrievw.file_name ||
+                  tasksPrievw.file
+              }}</a>
+              <!-- <span
+                @click="previewMoadlFn" class="title_content_a_file">
+                {{ tasksPrievw.file_name || tasksPrievw.file }}
+              </span> -->
+            </el-descriptions-item>
           </el-descriptions>
         </div>
         <div class="task_operaList">
@@ -540,14 +546,23 @@
         <el-button type="primary" @click="addmaterials()">确 定</el-button>
       </span>
     </el-dialog>
+    <!-- 文件预览弹窗 -->
+    <el-dialog class="two_dialog" title="" :visible.sync="previewVisible" width="80%">
+      <iframe sandbox="allow-scripts allow-top-navigation allow-same-origin allow-popups" :src="iframeSrc" width='100%'
+        height='700' frameborder="0"></iframe>
+
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
-import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
-import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, queryDict, queryPlanNumber  } from '../api/asset'
+import {
+  Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, MessageBox,
+  Message, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload
+} from "element-ui";
+import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, queryDict, queryPlanNumber } from '../api/asset'
 import { get_NumberingRules } from '../utils/numberingRules'
 import moment from "moment";
 
@@ -581,6 +596,7 @@ Vue.use(InputNumber);
 Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Upload);
+Vue.prototype.$message = Message;
 export default {
   name: "AddMultiple",
   props: {
@@ -612,7 +628,7 @@ export default {
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
-      componentType: "Procedure", // 组件类型 emptyPage-空白页 PlantForm-计划新增
+      componentType: "PlantForm", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
       menuActive: '',
       title: "",
@@ -627,6 +643,8 @@ export default {
       operationPrievw: {},//工序详情
       dialogVisible: false,
       materialsVisible: false,
+      previewVisible: false,
+      iframeSrc: '',//弹出框地址
       backState: { operation: "" },//返回状态
       nameForm: {
         addName: ""
@@ -641,6 +659,7 @@ export default {
       currentPage: 1,//当前页数
       pageSize: 10,//页数大小
       total: 0,
+      title: '',
       dataAll: [],//存放所有数据
       // 计划表单
       planForm: {
@@ -856,7 +875,7 @@ export default {
     },
     // 查询字典
     getDicty() {
-      
+
     },
     // 生成唯一key
     forKey(list) {
@@ -908,7 +927,7 @@ export default {
               applicant: this.currentUser.id, // 申报人
               applicant_unit: this.currentUser.officeId, // 申报单位
               subunit: "", // 子单元
-              applicant_date:  new Date(), // 申报日期
+              applicant_date: new Date(), // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
               estimate_amount_project_cost: plan.estimate_amount_project_cost || 0, // 金额
@@ -963,8 +982,9 @@ export default {
           this.plantList.push({plan_number: ""});
          }
           let { onChange } = this.customConfig;
+          if (this.plantList.length == 0) this.plantList[0] = {}
           if (this.planForm.plan_type == "大修单项") {
-            queryPlanNumber(year).then(res=>{
+            queryPlanNumber(year).then(res => {
               liushuihao = Number(res.data) + 1;
               let codeNum = get_NumberingRules(year, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks?.length || 0, liushuihao);
               let money = Number(this.planForm.estimate_amount_project_cost).toFixed(1);
@@ -978,7 +998,7 @@ export default {
               this.remoteValue = {};
               console.log('this.plantList[0]',this.plantList[0]);
             });
-          }else {
+          } else {
             let codeNum = get_NumberingRules(year, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks?.length || 0, liushuihao);
             let money = Number(this.planForm.estimate_amount_project_cost).toFixed(1);
             this.planForm.plan_number = codeNum;
@@ -1031,7 +1051,7 @@ export default {
             applicant: this.currentUser.id,
             applicant_unit: this.currentUser.officeId, // 申报单位
             subunit: item.subunit, // 子单元
-            applicant_date:  new Date(), // 申报日期
+            applicant_date: new Date(), // 申报日期
             quality_record_number: item.quality_record_number, // 质量记录号
             mode_type: "Plan", // 类型
             estimate_amount_project_cost: item.estimate_amount_project_cost, // 金额
@@ -1290,11 +1310,18 @@ export default {
 
           uploadFile(temp)
             .then((data) => {
-
               this.taskForm.file = data.data[0]
+              this.taskForm.file_name = file.name
+              this.$message({
+                message: '上传成功',
+                type: 'success'
+              });
             })
             .catch((err) => {
-
+              this.$message({
+                message: '上传失败',
+                type: 'success'
+              });
             });
         }
       }
@@ -1316,6 +1343,17 @@ export default {
         }
       }
       return flag
+    },
+    //预览弹框方法
+    previewMoadlFn() {
+      this.previewVisible = true
+      let tempArr = ['.doc', '.docx', '.xls', '.xlsx']
+      let off = false
+      tempArr.forEach((x, i) => {
+        if (this.tasksPrievw.file.indexOf(x) != -1) off = true
+      })
+      this.iframeSrc = off ? 'https://docs.google.com/viewer?url=' + window.location.origin + this.tasksPrievw.file : this.tasksPrievw.file
+      // this.iframeSrc = this.tasksPrievw.file
     },
     // async inputChange(e) {
     //   this.data = e;
@@ -2054,6 +2092,15 @@ export default {
       border-color: #0454f2;
     }
   }
+}
+
+.title_content_a_file {
+  cursor: pointer;
+  text-decoration-line: underline;
+
+
+  color: #1A79FF;
+
 }
 
 @font-face {
