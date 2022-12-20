@@ -178,7 +178,17 @@ if (process.env.NODE_ENV !== "production") {
 
   window.CUSTOM_PLUGIN.set(
     process.env.VUE_APP_CUSTOM_PLUGIN_ID,
-    (dom, props) => {
+    (dom, props, _, eventBus) => {
+      eventBus.on((props) => {
+        console.log(props, '====a');
+        const component = new Vue({
+          render: (h) => <App type={props.type} customConfig={props} />,
+        }).$mount();
+        if (dom.childNodes.length > 0) {
+          dom.removeChild(dom.childNodes[0]);
+        }
+        dom.appendChild(component.$el);
+      });
       if (dom.childNodes.length == 0) {
         const div = document.createElement("div");
         dom.appendChild(div);
@@ -187,7 +197,11 @@ if (process.env.NODE_ENV !== "production") {
         }).$mount(div);
       }
 
+
     }
   );
 }
+
+
+
 

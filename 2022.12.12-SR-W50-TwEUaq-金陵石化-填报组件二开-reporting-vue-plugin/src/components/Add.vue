@@ -263,9 +263,15 @@
 
           </el-descriptions>
           <el-descriptions>
-            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息"> <a
-                :href="tasksPrievw.file" rel="noopener noreferrer">{{ tasksPrievw.file
-                }}</a></el-descriptions-item>
+            <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">
+              <a :href="tasksPrievw.file" target="_blank" rel="noopener noreferrer"> {{ tasksPrievw.file_name ||
+                  tasksPrievw.file
+              }}</a>
+              <!-- <span
+                @click="previewMoadlFn" class="title_content_a_file">
+                {{ tasksPrievw.file_name || tasksPrievw.file }}
+              </span> -->
+            </el-descriptions-item>
           </el-descriptions>
         </div>
         <div class="task_operaList">
@@ -538,13 +544,22 @@
         <el-button type="primary" @click="addmaterials()">确 定</el-button>
       </span>
     </el-dialog>
+    <!-- 文件预览弹窗 -->
+    <el-dialog class="two_dialog" title="" :visible.sync="previewVisible" width="80%">
+      <iframe sandbox="allow-scripts allow-top-navigation allow-same-origin allow-popups" :src="iframeSrc" width='100%'
+        height='700' frameborder="0"></iframe>
+
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
-import { Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload } from "element-ui";
+import {
+  Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, MessageBox,
+  Message, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload
+} from "element-ui";
 import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport } from '../api/asset'
 import { get_NumberingRules } from '../utils/numberingRules'
 
@@ -578,6 +593,7 @@ Vue.use(InputNumber);
 Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Upload);
+Vue.prototype.$message = Message;
 export default {
   name: "AddMultiple",
   props: {
@@ -609,6 +625,8 @@ export default {
       operationPrievw: {},//工序详情
       dialogVisible: false,
       materialsVisible: false,
+      previewVisible: false,
+      iframeSrc: '',//弹出框地址
       backState: { operation: "" },//返回状态
       nameForm: {
         addName: ""
@@ -623,6 +641,7 @@ export default {
       currentPage: 1,//当前页数
       pageSize: 10,//页数大小
       total: 0,
+      title: '',
       dataAll: [],//存放所有数据
       // 计划表单
       planForm: {
@@ -780,7 +799,7 @@ export default {
       ]
     }]
   }]`;
-    console.log('currentUser', this.currentUser);
+
 
     window?.componentCenter?.register(
       this.customConfig.componentId,
@@ -791,6 +810,7 @@ export default {
     try {
       this.configuration = JSON.parse(this.propsConfiguration);
       this.plantList = JSON.parse(this.customConfig.data || '[]')
+      console.log('currentUser==', JSON.parse(this.customConfig.data || '[]'));
       // this.plantList = JSON.parse(josnData);
       if (this.plantList.length > 0) {
         this.forKey(this.plantList);
@@ -809,10 +829,10 @@ export default {
       this.plantList = []
     }
     let a = document.querySelector('.liuChen-page')
-    if (a.parentNode) a.parentNode.style.height = '100%'
-    if (a.parentNode) a.parentNode.parentNode.style.height = '100%'
-    if (a.parentNode) a.parentNode.parentNode.parentNode.style.height = '100%'
-    if (a.parentNode) a.parentNode.parentNode.parentNode.parentNode.style.height = '100%'
+    // if (a.parentNode) a.parentNode.style.height = '100%'
+    // if (a.parentNode) a.parentNode.parentNode.style.height = '100%'
+    // if (a.parentNode) a.parentNode.parentNode.parentNode.style.height = '100%'
+    // if (a.parentNode) a.parentNode.parentNode.parentNode.parentNode.style.height = '100%'
     this.querySelect()
     // queryOfficeUser()
   },
@@ -1218,11 +1238,18 @@ export default {
 
           uploadFile(temp)
             .then((data) => {
-
               this.taskForm.file = data.data[0]
+              this.taskForm.file_name = file.name
+              this.$message({
+                message: '上传成功',
+                type: 'success'
+              });
             })
             .catch((err) => {
-
+              this.$message({
+                message: '上传失败',
+                type: 'success'
+              });
             });
         }
       }
@@ -1244,6 +1271,17 @@ export default {
         }
       }
       return flag
+    },
+    //预览弹框方法
+    previewMoadlFn() {
+      this.previewVisible = true
+      let tempArr = ['.doc', '.docx', '.xls', '.xlsx']
+      let off = false
+      tempArr.forEach((x, i) => {
+        if (this.tasksPrievw.file.indexOf(x) != -1) off = true
+      })
+      this.iframeSrc = off ? 'https://docs.google.com/viewer?url=' + window.location.origin + this.tasksPrievw.file : this.tasksPrievw.file
+      // this.iframeSrc = this.tasksPrievw.file
     },
     // async inputChange(e) {
     //   this.data = e;
@@ -1982,6 +2020,15 @@ export default {
       border-color: #0454f2;
     }
   }
+}
+
+.title_content_a_file {
+  cursor: pointer;
+  text-decoration-line: underline;
+
+
+  color: #1A79FF;
+
 }
 
 @font-face {
