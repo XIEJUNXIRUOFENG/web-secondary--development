@@ -1433,7 +1433,7 @@ export default {
     padding: 24px 16px 0 16px;
     width: 248px;
     min-width: 248px;
-    height: calc(100vh - 30px);
+    height: calc(100vh - 230px);
     background-color: #FFFFFF;
     border-radius: 8px;
     box-sizing: border-box;
