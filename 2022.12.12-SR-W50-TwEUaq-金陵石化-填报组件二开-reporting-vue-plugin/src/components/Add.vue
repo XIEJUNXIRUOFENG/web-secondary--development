@@ -117,11 +117,10 @@
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option v-for="(item, i) in subunitArr" :key="i" :label="item.office_name"
                   :value="item.id"></el-option>
-
               </el-select>
             </el-form-item>
             <el-form-item label="申报时间：" key="applicant_date" :label-width="formLabelWidth" prop="applicant_date">
-              <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-dd" type="date" placeholder="请选择日期">
+              <el-date-picker v-model="planForm.applicant_date" :disabled="true" format="yyyy-MM-dd" type="date" placeholder="请选择日期">
               </el-date-picker>
             </el-form-item>
             <el-form-item label="计划类型：" key="plan_type" :label-width="formLabelWidth" prop="plan_type">
@@ -774,62 +773,7 @@ export default {
     };
   },
   mounted() {
-    let josnData = ` [{
-    "data_id": "",
-    "plan_name": "计划计划",
-    "plan_number": "2022-301W01",
-    "plan_type": "月度",
-    "applicant": "1234567890",
-    "applicant_unit": "123456789",
-    "subunit": "",
-    "applicant_date": "2022-12-23",
-    "quality_record_number": "AWF323434",
-    "mode_type": "Plan",
-    "tasks": [{ 
-      "data_id": "",
-      "project_name": "任务aaa",
-      "project_type": "A",
-      "parent_id": "",
-      "function_area": "区域1",
-      "associated_devices": "设备1",
-      "requirement_for_construction": "标准11",
-      "remark": "备注",
-      "file": "/stopere/werere/sd.pdf",
-      "mode_type": "Task",
-      "procedures": [{ 
-        "data_id": "",
-        "process_name": "工序1vbbb",
-        "remark": "",
-        "parent_id": "",
-        "mode_type": "Procedure",
-        "steps": [{ 
-          "data_id": "",
-          "process_desc": "步骤1awd",
-          "parent_id": "",
-          "unit_engineering_quantity": "小时",
-          "quantity_engineering_quantity": "3",
-          "mode_type": "Step"
-        }],
-        "materials": [{ 
-          "data_id": "",
-          "parent_id": "",
-          "material_name": "物料Aad",
-          "material_code": "ASF334",
-          "standard_materials": "标准AB",
-          "additional_note": "备注",
-          "main_unit": "个", 
-          "auxiliary_unit": "个",
-          "material_demand": "3",
-          "material_purchase_main": "",
-          "material_purchase_auxiliary": "",
-          "whether_workshop_supply": "",
-          "mode_type": "Material"
-        }]
-      }
-      ]
-    }]
-  }]`;
-
+    console.log('customConfig',this.customConfig);
     this.currentUser.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUser.office_name) : this.currentUser.office_name
     console.log('currentUser', this.currentUser, this.customConfig.intlGetKey);
     this.getDictId('plan_type_dictId'); // 计划类型字典
@@ -843,16 +787,12 @@ export default {
     try {
       this.configuration = JSON.parse(this.propsConfiguration);
       this.plantList = JSON.parse(this.customConfig.data || '[]')
-      // this.plantList = JSON.parse(josnData);
       if (this.plantList.length > 0) {
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
       } else {
         this.componentType = 'emptyPage';
       }
-      // this.taskForm = this.plantList[0].tasks[0]
-      // this.tasksPrievw = this.plantList[0].tasks[0]
-      // this.operationForm = this.plantList[0].tasks[0].procedures[0];
       setTimeout(() => {
         console.log('this.plantList', this.plantList)
       }, 500)
@@ -860,11 +800,7 @@ export default {
       console.error("configuration解析错误", error);
       this.plantList = []
     }
-    let a = document.querySelector('.liuChen-page')
-    // if (a.parentNode) a.parentNode.style.height = '100%'
-    // if (a.parentNode) a.parentNode.parentNode.style.height = '100%'
-    // if (a.parentNode) a.parentNode.parentNode.parentNode.style.height = '100%'
-    // if (a.parentNode) a.parentNode.parentNode.parentNode.parentNode.style.height = '100%'
+    
     this.querySelect()
     queryOfficeUser(this.currentUser.officeId).then(res => {
       this.subunitArr = res.data?.office_children || []
@@ -1028,7 +964,7 @@ export default {
               Object.keys(this.planForm).forEach(x => {
                 this.plantList[0][x] = this.planForm[x];
               })
-              onChange(this.plantList[0]);
+              onChange(this.plantList);
               this.forKey(this.plantList);
               this.remoteValue = {};
               console.log('this.plantList[0]', this.plantList[0]);
@@ -1041,7 +977,7 @@ export default {
             Object.keys(this.planForm).forEach(x => {
               this.plantList[0][x] = this.planForm[x];
             })
-            onChange(this.plantList[0]);
+            onChange(this.plantList);
             this.forKey(this.plantList);
             this.remoteValue = {};
           }
