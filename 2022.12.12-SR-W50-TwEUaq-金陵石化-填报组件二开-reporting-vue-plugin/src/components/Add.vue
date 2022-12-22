@@ -668,7 +668,7 @@ export default {
       dataAll: [],//存放所有数据
       // 计划表单
       planForm: {
-        data_id: "", // 主键
+        // data_id: "", // 主键
         plan_name: "", // 计划名称
         plan_number: "", // 计划编号
         plan_type: "", // 计划类型
@@ -678,7 +678,8 @@ export default {
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimate_amount_project_cost: 0 // 金额
+        estimate_amount_project_cost: 0, // 金额
+        tasks: []
       },
       //工程任务表单
       taskForm: {
@@ -886,6 +887,7 @@ export default {
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
               estimate_amount_project_cost: plan.estimate_amount_project_cost || 0, // 金额
+              tasks: plan.tasks ? plan.tasks : []
             }
             break;
           case "Task":
@@ -975,7 +977,7 @@ export default {
               Object.keys(this.planForm).forEach(x => {
                 this.plantList[0][x] = this.planForm[x];
               })
-              onChange(this.plantList);
+              onChange(JSON.stringify(this.plantList));
               this.forKey(this.plantList);
               this.remoteValue = {};
               console.log('this.plantList[0]', this.plantList[0]);
@@ -988,7 +990,7 @@ export default {
             Object.keys(this.planForm).forEach(x => {
               this.plantList[0][x] = this.planForm[x];
             })
-            onChange(this.plantList);
+            onChange(JSON.stringify(this.plantList));
             this.forKey(this.plantList);
             this.remoteValue = {};
           }
