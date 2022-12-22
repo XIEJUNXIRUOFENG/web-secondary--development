@@ -23,8 +23,12 @@ export const queryFunArea = () =>
 export const queryMaterials = () =>
   request.get(`ext/plan/apply/queryMaterials`);  //查询物料  
 
-export const queryOfficeUser = () =>
-  request.get(`/system/office/queryOfficeUser`);  //查询子组织 
+export const queryOfficeUser = (value) =>
+  request.post(`/system/office/queryOfficeUser`, {
+    "type": "office",
+    "value": value,
+    "varibleType": "values"
+  });  //查询子组织 
 
 export const uploadFile = (params) =>
   request.post(`image/upload`, params, { 'Content-Type': 'multipart/form-data' });

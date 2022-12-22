@@ -103,19 +103,21 @@
             </el-form-item>
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
-              <el-select v-model="planForm.applicant" placeholder="请选择" :readonly="true">
+              <el-select v-model="planForm.applicant" :disabled="true" placeholder="请选择" :readonly="true">
                 <el-option :label="currentUser.name" :value="currentUser.id"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
-              <el-select v-model="planForm.applicant_unit" placeholder="请选择" :readonly="true">
+              <el-select v-model="planForm.applicant_unit" :disabled="true" placeholder="请选择" :readonly="true">
                 <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
               </el-select>
             </el-form-item>
-            <el-form-item label="申报子单位：" :label-width="formLabelWidth" key="subunit" prop="subunit">
+            <el-form-item v-if="this.subunitArr.length > 0" label="申报子单位：" :label-width="formLabelWidth" key="subunit"
+              prop="subunit">
               <el-select v-model="planForm.subunit" placeholder="请选择">
-                <el-option label="区域一" value="shanghai"></el-option>
-                <el-option label="区域二" value="beijing"></el-option>
+                <el-option v-for="(item, i) in subunitArr" :key="i" :label="item.office_name"
+                  :value="item.id"></el-option>
+
               </el-select>
             </el-form-item>
             <el-form-item label="申报时间：" key="applicant_date" :label-width="formLabelWidth" prop="applicant_date">
@@ -129,10 +131,11 @@
             </el-form-item>
             <el-form-item label="质量记录号：" key="quality_record_number" :label-width="formLabelWidth"
               prop="quality_record_number">
-              <el-input v-model="planForm.quality_record_number" autocomplete="off" placeholder="请输入"
+              <el-input v-model="planForm.quality_record_number" :disabled="true" autocomplete="off" placeholder="请输入"
                 :clearable="true"></el-input>
             </el-form-item>
-            <el-form-item label="预估工程费：" :label-width="formLabelWidth" prop="estimate_amount_project_cost"> 
+            <el-form-item label="预估工程费：" key="estimate_amount_project_cost" :label-width="formLabelWidth"
+              prop="estimate_amount_project_cost">
               <el-input v-model="planForm.estimate_amount_project_cost" type="number" placeholder="请输入">
                 <template slot="append">万元</template>
               </el-input>
@@ -266,9 +269,11 @@
           </el-descriptions>
           <el-descriptions>
             <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">
-              <a :href="tasksPrievw.file" target="_blank" rel="noopener noreferrer"> {{ tasksPrievw.file_name ||
-                  tasksPrievw.file
-              }}</a>
+              <span style="margin-right:8px" v-for="(item, i) in tasksPrievw.file" :key="i">
+                <a :href="item.file" target="_blank" rel="noopener noreferrer"> {{ item.file_name ||
+                    tasksPrievw.file
+                }}</a>
+              </span>
               <!-- <span
                 @click="previewMoadlFn" class="title_content_a_file">
                 {{ tasksPrievw.file_name || tasksPrievw.file }}
@@ -601,6 +606,7 @@ export default {
   name: "AddMultiple",
   props: {
     customConfig: Object,
+
   },
   // computed: {
   //   componentType: function () {
@@ -611,8 +617,8 @@ export default {
     let checkAge = (rule, value, callback) => {
       if (!value) {
         return callback(new Error('金额不能为空'));
-      }else {
-          callback();
+      } else {
+        callback();
       }
       // setTimeout(() => {
       //   if (!Number.isInteger(value)) {
@@ -623,12 +629,13 @@ export default {
       // }, 300);
     };
     let currentUser = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
+
     return {
       currentUser, // 当前用户
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
-      componentType: "PlantForm", // 组件类型 emptyPage-空白页 PlantForm-计划新增
+      componentType: "Procedure", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
       menuActive: '',
       title: "",
@@ -637,6 +644,7 @@ export default {
       procedureTable: [], //物料数据
       devicesArr: [],//关联设备
       funAreaArr: [],//功能区域
+      subunitArr: [],//申报子单位
       stepsUnit: [],//工程量单位
       fileList: [],//上传文件保存
       tasksPrievw: {},//工程任务详情
@@ -821,7 +829,9 @@ export default {
       ]
     }]
   }]`;
-    console.log('currentUser', this.currentUser);
+
+    this.currentUser.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUser.office_name) : this.currentUser.office_name
+    console.log('currentUser', this.currentUser, this.customConfig.intlGetKey);
     this.getDictId('plan_type_dictId'); // 计划类型字典
     this.getDictId('quality_record_number_dictId'); // 计划质量编号字典
     window?.componentCenter?.register(
@@ -850,13 +860,17 @@ export default {
       console.error("configuration解析错误", error);
       this.plantList = []
     }
-    // let a = document.querySelector('.liuChen-page')
+    let a = document.querySelector('.liuChen-page')
     // if (a.parentNode) a.parentNode.style.height = '100%'
     // if (a.parentNode) a.parentNode.parentNode.style.height = '100%'
     // if (a.parentNode) a.parentNode.parentNode.parentNode.style.height = '100%'
     // if (a.parentNode) a.parentNode.parentNode.parentNode.parentNode.style.height = '100%'
     this.querySelect()
-    // queryOfficeUser()
+    queryOfficeUser(this.currentUser.officeId).then(res => {
+      this.subunitArr = res.data?.office_children || []
+    }).catch(err => {
+      this.subunitArr = []
+    })
   },
   methods: {
     // 查询数据字典id
@@ -913,6 +927,13 @@ export default {
         this.tasksPrievw.status = 2;
         this.taskForm = JSON.parse(JSON.stringify(item))
         this.taskForm.status = 2
+        try {
+          this.tasksPrievw.file = JSON.parse(item.file || '[]')
+          this.taskForm.file = JSON.parse(item.file || '[]')
+        } catch (error) {
+          this.taskForm.file = []
+          this.tasksPrievw.file = []
+        }
         this.componentType = 'TaskForm'
       } else {
         switch (item.mode_type) {
@@ -926,7 +947,7 @@ export default {
               plan_type: plan.plan_type, // 计划类型
               applicant: this.currentUser.id, // 申报人
               applicant_unit: this.currentUser.officeId, // 申报单位
-              subunit: "", // 子单元
+              subunit: plan.subunit, // 子单元
               applicant_date: new Date(), // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
@@ -938,9 +959,23 @@ export default {
               this.componentType = "TaskForm";
               this.taskForm = JSON.parse(JSON.stringify(item))
               this.tasksPrievw = item;
+              try {
+                this.tasksPrievw.file = JSON.parse(item.file || '[]')
+                this.taskForm.file = JSON.parse(item.file || '[]')
+              } catch (error) {
+                this.taskForm.file = []
+                this.tasksPrievw.file = []
+              }
             } else {
               this.componentType = "Task";
               this.tasksPrievw = item;
+              try {
+                this.tasksPrievw.file = JSON.parse(item.file || '[]')
+                this.taskForm.file = JSON.parse(item.file || '[]')
+              } catch (error) {
+                this.taskForm.file = []
+                this.tasksPrievw.file = []
+              }
 
             }
             break;
@@ -975,12 +1010,12 @@ export default {
     async saveSub(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-         let isDate = moment(this.planForm.applicant_date).format("yyyy-MM-DD");
-         let year = isDate.split('-')[0];
-         let liushuihao = 0;
-         if (this.plantList.length == 0) {
-          this.plantList.push({plan_number: ""});
-         }
+          let isDate = moment(this.planForm.applicant_date).format("yyyy-MM-DD");
+          let year = isDate.split('-')[0];
+          let liushuihao = 0;
+          if (this.plantList.length == 0) {
+            this.plantList.push({ plan_number: "" });
+          }
           let { onChange } = this.customConfig;
           if (this.plantList.length == 0) this.plantList[0] = {}
           if (this.planForm.plan_type == "大修单项") {
@@ -990,20 +1025,20 @@ export default {
               let money = Number(this.planForm.estimate_amount_project_cost).toFixed(1);
               this.planForm.plan_number = codeNum;
               this.planForm.estimate_amount_project_cost = money;
-              Object.keys(this.planForm).forEach(x=>{
+              Object.keys(this.planForm).forEach(x => {
                 this.plantList[0][x] = this.planForm[x];
               })
               onChange(this.plantList[0]);
               this.forKey(this.plantList);
               this.remoteValue = {};
-              console.log('this.plantList[0]',this.plantList[0]);
+              console.log('this.plantList[0]', this.plantList[0]);
             });
           } else {
             let codeNum = get_NumberingRules(year, this.planForm.applicant_unit, this.planForm.plan_type, this.planForm?.tasks?.length || 0, liushuihao);
             let money = Number(this.planForm.estimate_amount_project_cost).toFixed(1);
             this.planForm.plan_number = codeNum;
             this.planForm.estimate_amount_project_cost = money;
-            Object.keys(this.planForm).forEach(x=>{
+            Object.keys(this.planForm).forEach(x => {
               this.plantList[0][x] = this.planForm[x];
             })
             onChange(this.plantList[0]);
@@ -1249,15 +1284,17 @@ export default {
     },
     //工程保存
     saveTask() {
-      console.log('TaskForm:', this.taskForm);
+
       this.$refs.taskForm.validate((valid) => {
         if (valid) {
+          this.taskForm.file = JSON.stringify(this.taskForm.file)
           for (const key in this.taskForm) {
             this.tasksPrievw[key] = this.taskForm[key]
           }
           this.tasksPrievw.status = 1
           let { onChange } = this.customConfig;
           onChange && onChange(JSON.stringify(this.plantList));
+          console.log('TaskForm:', this.taskForm, this.plantList);
           this.forKey(this.plantList);
           this.remoteValue = {};
         } else {
@@ -1306,12 +1343,10 @@ export default {
         } else {
           let temp = new FormData()
           temp.append('file', file)
-          console.log(temp.get('file'))
 
           uploadFile(temp)
             .then((data) => {
-              this.taskForm.file = data.data[0]
-              this.taskForm.file_name = file.name
+              this.taskForm.file.push({ file: data.data[0], file_name: file.name })
               this.$message({
                 message: '上传成功',
                 type: 'success'
