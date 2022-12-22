@@ -85,7 +85,7 @@
           <div>
             <span class="drawerTitle">计划信息</span>
             <el-select style="margin-left: 20px" size="small" v-model="remoteValue" filterable remote reserve-keyword
-              placeholder="请输入关键词" :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
+              placeholder="请输入计划编号搜索" :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
               <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.plan_number"
                 :value="item"></el-option>
             </el-select>
@@ -104,12 +104,12 @@
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
               <el-select v-model="planForm.applicant" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUser.name" :value="currentUser.id"></el-option>
+                <el-option :label="currentUserIS.name" :value="currentUserIS.id"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
+                <el-option :label="currentUserIS.office_name" :value="currentUserIS.officeId"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item v-if="this.subunitArr.length > 0" label="申报子单位：" :label-width="formLabelWidth" key="subunit"
@@ -135,7 +135,7 @@
             </el-form-item>
             <el-form-item label="预估工程费：" key="estimate_amount_project_cost" :label-width="formLabelWidth"
               prop="estimate_amount_project_cost">
-              <el-input v-model="planForm.estimate_amount_project_cost" type="number" placeholder="请输入">
+              <el-input v-model="planForm.estimate_amount_project_cost" type="number" placeholder="请输入" autocomplete="off">
                 <template slot="append">万元</template>
               </el-input>
             </el-form-item>
@@ -619,18 +619,11 @@ export default {
       } else {
         callback();
       }
-      // setTimeout(() => {
-      //   if (!Number.isInteger(value)) {
-      //     callback(new Error('请输入数字值'));
-      //   }else {
-      //     callback();
-      //   }
-      // }, 300);
     };
-    let currentUser = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
+    let currentUserIS = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
 
     return {
-      currentUser, // 当前用户
+      currentUserIS, // 当前用户
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
@@ -774,8 +767,8 @@ export default {
   },
   mounted() {
     console.log('customConfig',this.customConfig);
-    this.currentUser.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUser.office_name) : this.currentUser.office_name
-    console.log('currentUser', this.currentUser, this.customConfig.intlGetKey);
+    this.currentUserIS.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUserIS.office_name) : this.currentUserIS.office_name
+    console.log('currentUserIS', this.currentUserIS, this.customConfig.intlGetKey);
     this.getDictId('plan_type_dictId'); // 计划类型字典
     this.getDictId('quality_record_number_dictId'); // 计划质量编号字典
     window?.componentCenter?.register(
@@ -802,7 +795,7 @@ export default {
     }
     
     this.querySelect()
-    queryOfficeUser(this.currentUser.officeId).then(res => {
+    queryOfficeUser(this.currentUserIS.officeId).then(res => {
       this.subunitArr = res.data?.office_children || []
     }).catch(err => {
       this.subunitArr = []
@@ -822,10 +815,6 @@ export default {
           this.planForm.quality_record_number = res.data[0];
           break;
       }
-    },
-    // 查询字典
-    getDicty() {
-
     },
     // 生成唯一key
     forKey(list) {
@@ -877,12 +866,12 @@ export default {
             this.componentType = "PlantForm";
             let plan = this.plantList[0];
             this.planForm = {
-              data_id: "", // 主键
+              // data_id: "", // 主键
               plan_name: plan.plan_name, // 计划名称
               plan_number: "", //计划编号
               plan_type: plan.plan_type, // 计划类型
-              applicant: this.currentUser.id, // 申报人
-              applicant_unit: this.currentUser.officeId, // 申报单位
+              applicant: this.currentUserIS.id, // 申报人
+              applicant_unit: this.currentUserIS.officeId, // 申报单位
               subunit: plan.subunit, // 子单元
               applicant_date: new Date(), // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
@@ -933,8 +922,8 @@ export default {
         plan_name: "", // 计划名称
         plan_number: "", //计划编号
         plan_type: "", // 计划类型
-        applicant: this.currentUser.id, // 申报人
-        applicant_unit: this.currentUser.officeId, // 申报单位
+        applicant: this.currentUserIS.id, // 申报人
+        applicant_unit: this.currentUserIS.officeId, // 申报单位
         subunit: "", // 子单元
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
@@ -953,7 +942,6 @@ export default {
             this.plantList.push({ plan_number: "" });
           }
           let { onChange } = this.customConfig;
-          if (this.plantList.length == 0) this.plantList[0] = {}
           if (this.planForm.plan_type == "大修单项") {
             queryPlanNumber(year).then(res => {
               liushuihao = Number(res.data) + 1;
@@ -1019,8 +1007,8 @@ export default {
             plan_name: item.plan_name, // 计划名称
             plan_number: "",
             plan_type: item.plan_type, // 计划类型
-            applicant: this.currentUser.id,
-            applicant_unit: this.currentUser.officeId, // 申报单位
+            applicant: this.currentUserIS.id,
+            applicant_unit: this.currentUserIS.officeId, // 申报单位
             subunit: item.subunit, // 子单元
             applicant_date: new Date(), // 申报日期
             quality_record_number: item.quality_record_number, // 质量记录号
