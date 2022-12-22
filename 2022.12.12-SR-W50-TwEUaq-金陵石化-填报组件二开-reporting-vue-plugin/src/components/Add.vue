@@ -211,9 +211,14 @@
                     this.$refs.fileBtn.click();
                   }
                 "><span class="iconfont">&#xe63d;</span> 上传附件</button>
+              
                 <!-- </el-upload> -->
 
               </div>
+              <div class="file_list"  v-for="(item,i) in taskForm.file" :key="i"   >
+                  <span  style='margin-right: 15px;'> {{item.file_name}}</span>
+                  <span style='cursor: pointer;'   @click='deleteClik(i)' ><i class="el-icon-delete"></i></span>
+                </div>
 
             </el-form-item>
             <el-form-item label="" :label-width="formLabelWidth" prop="">
@@ -269,7 +274,7 @@
           </el-descriptions>
           <el-descriptions>
             <el-descriptions-item labelClassName="title_label" contentClassName="title_content" label="附件信息">
-              <span style="margin-right:8px" v-for="(item, i) in tasksPrievw.file" :key="i">
+              <span style="margin-right:8px" v-for="(item, i) in  tasksPrievw.file_list" :key="i">
                 <a :href="item.file" target="_blank" rel="noopener noreferrer"> {{ item.file_name ||
                     tasksPrievw.file
                 }}</a>
@@ -447,7 +452,7 @@
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_demand`"
                         :rules="{ required: true, message: '请输入材料需求量', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.demand_state }" v-model="scope.row.material_demand"
+                        <el-input :class="{ ITEMRED: scope.row.demand_state.demand_state }" v-model="scope.row.material_demand"
                           :controls="false" @change="changeItemState(scope.$index, 'demand_state')" type="text"
                           size="small" />
                       </el-form-item>
@@ -458,7 +463,7 @@
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_main`"
                         :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.purchase_main_state }"
+                        <el-input :class="{ ITEMRED: scope.row.demand_state.purchase_main_state }"
                           v-model="scope.row.material_purchase_main"
                           @change="changeItemState(scope.$index, 'purchase_main_state')"></el-input>
 
@@ -470,7 +475,7 @@
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_auxiliary`"
                         :rules="{ required: true, message: '请输入材料采购量（副单位）', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.purchase_auxiliary_state }"
+                        <el-input :class="{ ITEMRED: scope.row.demand_state.purchase_auxiliary_state }"
                           @change="changeItemState(scope.$index, 'purchase_auxiliary_state')"
                           v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text" size="small" />
                       </el-form-item>
@@ -928,11 +933,12 @@ export default {
         this.taskForm = JSON.parse(JSON.stringify(item))
         this.taskForm.status = 2
         try {
-          this.tasksPrievw.file = JSON.parse(item.file || '[]')
+          this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
           this.taskForm.file = JSON.parse(item.file || '[]')
         } catch (error) {
-          this.taskForm.file = []
-          this.tasksPrievw.file = []
+                this.taskForm.file = []
+                this.tasksPrievw.file = '[]'
+                this.tasksPrievw.file_list=[]
         }
         this.componentType = 'TaskForm'
       } else {
@@ -960,21 +966,24 @@ export default {
               this.taskForm = JSON.parse(JSON.stringify(item))
               this.tasksPrievw = item;
               try {
-                this.tasksPrievw.file = JSON.parse(item.file || '[]')
+                this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
                 this.taskForm.file = JSON.parse(item.file || '[]')
               } catch (error) {
                 this.taskForm.file = []
-                this.tasksPrievw.file = []
+                this.tasksPrievw.file ='[]'
+                this.tasksPrievw.file_list=[]
               }
             } else {
               this.componentType = "Task";
               this.tasksPrievw = item;
               try {
-                this.tasksPrievw.file = JSON.parse(item.file || '[]')
+                this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
                 this.taskForm.file = JSON.parse(item.file || '[]')
+                console.log( this.tasksPrievw.file_list ,  this.taskForm.file,':takstfile_list');
               } catch (error) {
                 this.taskForm.file = []
-                this.tasksPrievw.file = []
+                this.tasksPrievw.file ='[]'
+                this.tasksPrievw.file_list=[]
               }
 
             }
@@ -1279,6 +1288,14 @@ export default {
     taskEdit(task) {
 
       this.taskForm = JSON.parse(JSON.stringify(task))
+      try {
+                this.tasksPrievw.file_list = JSON.parse(task.file || '[]')
+                this.taskForm.file = JSON.parse(task.file || '[]')
+              } catch (error) {
+                this.taskForm.file = []
+                this.tasksPrievw.file ='[]'
+                this.tasksPrievw.file_list=[]
+              }
       this.taskForm.back = true
       this.componentType = 'TaskForm'
     },
@@ -1287,14 +1304,18 @@ export default {
 
       this.$refs.taskForm.validate((valid) => {
         if (valid) {
-          this.taskForm.file = JSON.stringify(this.taskForm.file)
+          if(typeof this.taskForm.file == 'object'){
+              this.taskForm.file = JSON.stringify(this.taskForm.file)
+          }
+        
           for (const key in this.taskForm) {
             this.tasksPrievw[key] = this.taskForm[key]
           }
           this.tasksPrievw.status = 1
+          // this.tasksPrievw.file = JSON.stringify(this.tasksPrievw.file)
           let { onChange } = this.customConfig;
           onChange && onChange(JSON.stringify(this.plantList));
-          console.log('TaskForm:', this.taskForm, this.plantList);
+          console.log('TaskForm:', this.taskForm, this.tasksPrievw,this.plantList);
           this.forKey(this.plantList);
           this.remoteValue = {};
         } else {
@@ -1324,11 +1345,11 @@ export default {
     },
     //材料需求量、采购量主、采购量副更改是否为红色
     changeItemState(i, key) {
+       if(!this.operationForm.materials[i].demand_state)this.operationForm.materials[i].demand_state[key]={}
       this.operationForm.materials[i][key] = false
     },
     //上传
     handleFileChange(e) {
-
       const files = e.target.files;
       if (files.length <= 0) {
         return false;
@@ -1337,13 +1358,10 @@ export default {
       if (files && files[0]) {
         const file = files[0];
         if (file.size > 1024 * 1024 * 3) {
-
-
           return false;
         } else {
           let temp = new FormData()
           temp.append('file', file)
-
           uploadFile(temp)
             .then((data) => {
               this.taskForm.file.push({ file: data.data[0], file_name: file.name })
@@ -1353,13 +1371,26 @@ export default {
               });
             })
             .catch((err) => {
-              this.$message({
-                message: '上传失败',
+              if(err.statusText=='OK'){
+                this.taskForm.file.push({ file: data.data[0], file_name: file.name })
+                this.$message({
+                message: '上传成功',
                 type: 'success'
               });
+              }else{
+                this.$message({
+                message: '上传失败',
+                type: 'error'
+              });
+              }
+             
             });
         }
       }
+    },
+    //删除文件
+    deleteClik(i){
+this.taskForm.file.splice(i, 1)
     },
     //标记不可选中方法()
     checkSelectable(row, index) {
@@ -1425,9 +1456,9 @@ export default {
       if (this.operationForm.materials) {
 
         // this.operationForm.materials[value.index].material_demand = value.material_demand
-        value.demand_state = true
-        value.purchase_main_state = true
-        value.purchase_auxiliary_state = true
+        value.demand_state = {demand_state:true,purchase_main_state:true,purchase_auxiliary_state:true}
+        // value.purchase_main_state = true
+        // value.purchase_auxiliary_state = true
         // this.operationForm.materials[value.index].material_purchase_main = value.material_purchase_main
         // this.operationForm.materials[value.index].material_purchase_auxiliary = value.material_purchase_auxiliary
         // Object.keys(value).forEach(x => {
