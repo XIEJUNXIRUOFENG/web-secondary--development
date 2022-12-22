@@ -117,11 +117,10 @@
               <el-select v-model="planForm.subunit" placeholder="请选择">
                 <el-option v-for="(item, i) in subunitArr" :key="i" :label="item.office_name"
                   :value="item.id"></el-option>
-
               </el-select>
             </el-form-item>
             <el-form-item label="申报时间：" key="applicant_date" :label-width="formLabelWidth" prop="applicant_date">
-              <el-date-picker v-model="planForm.applicant_date" format="yyyy-MM-dd" type="date" placeholder="请选择日期">
+              <el-date-picker v-model="planForm.applicant_date" :disabled="true" format="yyyy-MM-dd" type="date" placeholder="请选择日期">
               </el-date-picker>
             </el-form-item>
             <el-form-item label="计划类型：" key="plan_type" :label-width="formLabelWidth" prop="plan_type">
@@ -215,7 +214,7 @@
                 <!-- </el-upload> -->
 
               </div>
-              <div class="file_list"  v-for="(item,i) in taskForm.file" :key="i"   >
+              <div class="file_list"  v-for="(item,i) in taskForm.file_list" :key="i"   >
                   <span  style='margin-right: 15px;'> {{item.file_name}}</span>
                   <span style='cursor: pointer;'   @click='deleteClik(i)' ><i class="el-icon-delete"></i></span>
                 </div>
@@ -452,7 +451,7 @@
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_demand`"
                         :rules="{ required: true, message: '请输入材料需求量', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.demand_state.demand_state }" v-model="scope.row.material_demand"
+                        <el-input :class="{ ITEMRED: scope.row?.demand_state?.demand_state }" v-model="scope.row.material_demand"
                           :controls="false" @change="changeItemState(scope.$index, 'demand_state')" type="text"
                           size="small" />
                       </el-form-item>
@@ -463,7 +462,7 @@
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_main`"
                         :rules="{ required: true, message: '请输入材料采购量（主单位）', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.demand_state.purchase_main_state }"
+                        <el-input :class="{ ITEMRED: scope.row?.demand_state?.purchase_main_state }"
                           v-model="scope.row.material_purchase_main"
                           @change="changeItemState(scope.$index, 'purchase_main_state')"></el-input>
 
@@ -475,7 +474,7 @@
                     <template slot-scope="scope">
                       <el-form-item :clearable="true" :prop="`materials.${scope.$index}.material_purchase_auxiliary`"
                         :rules="{ required: true, message: '请输入材料采购量（副单位）', trigger: 'blur' }">
-                        <el-input :class="{ ITEMRED: scope.row.demand_state.purchase_auxiliary_state }"
+                        <el-input :class="{ ITEMRED: scope.row?.demand_state?.purchase_auxiliary_state }"
                           @change="changeItemState(scope.$index, 'purchase_auxiliary_state')"
                           v-model="scope.row.material_purchase_auxiliary" :controls="false" type="text" size="small" />
                       </el-form-item>
@@ -779,62 +778,7 @@ export default {
     };
   },
   mounted() {
-    let josnData = ` [{
-    "data_id": "",
-    "plan_name": "计划计划",
-    "plan_number": "2022-301W01",
-    "plan_type": "月度",
-    "applicant": "1234567890",
-    "applicant_unit": "123456789",
-    "subunit": "",
-    "applicant_date": "2022-12-23",
-    "quality_record_number": "AWF323434",
-    "mode_type": "Plan",
-    "tasks": [{ 
-      "data_id": "",
-      "project_name": "任务aaa",
-      "project_type": "A",
-      "parent_id": "",
-      "function_area": "区域1",
-      "associated_devices": "设备1",
-      "requirement_for_construction": "标准11",
-      "remark": "备注",
-      "file": "/stopere/werere/sd.pdf",
-      "mode_type": "Task",
-      "procedures": [{ 
-        "data_id": "",
-        "process_name": "工序1vbbb",
-        "remark": "",
-        "parent_id": "",
-        "mode_type": "Procedure",
-        "steps": [{ 
-          "data_id": "",
-          "process_desc": "步骤1awd",
-          "parent_id": "",
-          "unit_engineering_quantity": "小时",
-          "quantity_engineering_quantity": "3",
-          "mode_type": "Step"
-        }],
-        "materials": [{ 
-          "data_id": "",
-          "parent_id": "",
-          "material_name": "物料Aad",
-          "material_code": "ASF334",
-          "standard_materials": "标准AB",
-          "additional_note": "备注",
-          "main_unit": "个", 
-          "auxiliary_unit": "个",
-          "material_demand": "3",
-          "material_purchase_main": "",
-          "material_purchase_auxiliary": "",
-          "whether_workshop_supply": "",
-          "mode_type": "Material"
-        }]
-      }
-      ]
-    }]
-  }]`;
-
+    console.log('customConfig',this.customConfig);
     this.currentUser.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUser.office_name) : this.currentUser.office_name
     console.log('currentUser', this.currentUser, this.customConfig.intlGetKey);
     this.getDictId('plan_type_dictId'); // 计划类型字典
@@ -848,16 +792,12 @@ export default {
     try {
       this.configuration = JSON.parse(this.propsConfiguration);
       this.plantList = JSON.parse(this.customConfig.data || '[]')
-      // this.plantList = JSON.parse(josnData);
       if (this.plantList.length > 0) {
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
       } else {
         this.componentType = 'emptyPage';
       }
-      // this.taskForm = this.plantList[0].tasks[0]
-      // this.tasksPrievw = this.plantList[0].tasks[0]
-      // this.operationForm = this.plantList[0].tasks[0].procedures[0];
       setTimeout(() => {
         console.log('this.plantList', this.plantList)
       }, 500)
@@ -865,11 +805,7 @@ export default {
       console.error("configuration解析错误", error);
       this.plantList = []
     }
-    let a = document.querySelector('.liuChen-page')
-    // if (a.parentNode) a.parentNode.style.height = '100%'
-    // if (a.parentNode) a.parentNode.parentNode.style.height = '100%'
-    // if (a.parentNode) a.parentNode.parentNode.parentNode.style.height = '100%'
-    // if (a.parentNode) a.parentNode.parentNode.parentNode.parentNode.style.height = '100%'
+    
     this.querySelect()
     queryOfficeUser(this.currentUser.officeId).then(res => {
       this.subunitArr = res.data?.office_children || []
@@ -933,13 +869,16 @@ export default {
         this.taskForm = JSON.parse(JSON.stringify(item))
         this.taskForm.status = 2
         try {
-          this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
-          this.taskForm.file = JSON.parse(item.file || '[]')
-        } catch (error) {
+                this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
+                this.taskForm.file = JSON.parse(item.file || '[]')
+                this.$set(this.taskForm,'file_list',JSON.parse(item.file || '[]'))
+                // this.taskForm.file_list=JSON.parse(item.file || '[]')
+              } catch (error) {
                 this.taskForm.file = []
-                this.tasksPrievw.file = '[]'
+                this.taskForm.file_list=[]
+                this.tasksPrievw.file ='[]'
                 this.tasksPrievw.file_list=[]
-        }
+              }
         this.componentType = 'TaskForm'
       } else {
         switch (item.mode_type) {
@@ -968,8 +907,10 @@ export default {
               try {
                 this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
                 this.taskForm.file = JSON.parse(item.file || '[]')
+                this.$set(this.taskForm,'file_list',JSON.parse(item.file || '[]'))
               } catch (error) {
                 this.taskForm.file = []
+                this.taskForm.file_list=[]
                 this.tasksPrievw.file ='[]'
                 this.tasksPrievw.file_list=[]
               }
@@ -979,12 +920,21 @@ export default {
               try {
                 this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
                 this.taskForm.file = JSON.parse(item.file || '[]')
-                console.log( this.tasksPrievw.file_list ,  this.taskForm.file,':takstfile_list');
+                this.$set(this.taskForm,'file_list',JSON.parse(item.file || '[]'))
               } catch (error) {
                 this.taskForm.file = []
+                this.taskForm.file_list=[]
                 this.tasksPrievw.file ='[]'
                 this.tasksPrievw.file_list=[]
               }
+              // try {
+              //   this.tasksPrievw.file_list = JSON.parse(item.file || '[]')
+              //   this.taskForm.file = JSON.parse(item.file || '[]')
+              // } catch (error) {
+              //   this.taskForm.file = []
+              //   this.tasksPrievw.file ='[]'
+              //   this.tasksPrievw.file_list=[]
+              // }
 
             }
             break;
@@ -1037,7 +987,7 @@ export default {
               Object.keys(this.planForm).forEach(x => {
                 this.plantList[0][x] = this.planForm[x];
               })
-              onChange(this.plantList[0]);
+              onChange(this.plantList);
               this.forKey(this.plantList);
               this.remoteValue = {};
               console.log('this.plantList[0]', this.plantList[0]);
@@ -1050,7 +1000,7 @@ export default {
             Object.keys(this.planForm).forEach(x => {
               this.plantList[0][x] = this.planForm[x];
             })
-            onChange(this.plantList[0]);
+            onChange(this.plantList);
             this.forKey(this.plantList);
             this.remoteValue = {};
           }
@@ -1291,8 +1241,11 @@ export default {
       try {
                 this.tasksPrievw.file_list = JSON.parse(task.file || '[]')
                 this.taskForm.file = JSON.parse(task.file || '[]')
+                this.$set(this.taskForm,'file_list',JSON.parse(task.file || '[]'))
+                // this.taskForm.file_list=JSON.parse(task.file || '[]')
               } catch (error) {
                 this.taskForm.file = []
+                this.taskForm.file_list=[]
                 this.tasksPrievw.file ='[]'
                 this.tasksPrievw.file_list=[]
               }
@@ -1304,9 +1257,9 @@ export default {
 
       this.$refs.taskForm.validate((valid) => {
         if (valid) {
-          if(typeof this.taskForm.file == 'object'){
-              this.taskForm.file = JSON.stringify(this.taskForm.file)
-          }
+          // if(typeof this.taskForm.file == 'object'){
+              this.taskForm.file = JSON.stringify(this.taskForm.file_list)
+          // }
         
           for (const key in this.taskForm) {
             this.tasksPrievw[key] = this.taskForm[key]
@@ -1364,7 +1317,9 @@ export default {
           temp.append('file', file)
           uploadFile(temp)
             .then((data) => {
-              this.taskForm.file.push({ file: data.data[0], file_name: file.name })
+              // this.taskForm.file.push({ file: data.data[0], file_name: file.name })
+              this.$set(this.taskForm.file_list,this.taskForm.file_list.length, {file: data.data[0], file_name: file.name })
+              // this.taskForm.file_list.push({ file: data.data[0], file_name: file.name })
               this.$message({
                 message: '上传成功',
                 type: 'success'
@@ -1390,7 +1345,7 @@ export default {
     },
     //删除文件
     deleteClik(i){
-this.taskForm.file.splice(i, 1)
+this.taskForm.file_list.splice(i, 1)
     },
     //标记不可选中方法()
     checkSelectable(row, index) {
@@ -1499,7 +1454,7 @@ this.taskForm.file.splice(i, 1)
     padding: 24px 16px 0 16px;
     width: 248px;
     min-width: 248px;
-    height: calc(100vh - 230px);
+    height: calc(100vh - 255px);
     background-color: #FFFFFF;
     border-radius: 8px;
     box-sizing: border-box;
