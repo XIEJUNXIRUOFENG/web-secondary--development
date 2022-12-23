@@ -298,10 +298,10 @@
           <div class="task_opear_main">
             <div class="task_operaList_item" v-for="(item, i) in tasksPrievw.procedures" :key="i">
               <div class="task_opera_name text_class">{{ item.process_name }}</div>
-              <div class="task_opera_step text_class"><span class="title_label">工序步骤：</span>{{ item.steps.length }}
+              <div class="task_opera_step text_class"><span class="title_label">工序步骤：</span>{{   item.steps?  item.steps.length:0}}
               </div>
               <div class="task_opera_procedure text_class"><span class="title_label">物料清单：</span>{{
-                  item.materials.length
+                  item.materials?  item.materials.length:0
               }}</div>
               <div class="task_opera_cz" @click="proceduresEdit(item, i, tasksPrievw)"><img
                   style="vertical-align: middle;" src="../../pluginTemp/images/Edit.png" alt="" srcset=""> 编辑</div>
