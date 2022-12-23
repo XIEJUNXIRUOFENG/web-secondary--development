@@ -6,7 +6,7 @@
           <img class="planImg" src="../../pluginTemp/images/Category.png" alt="">
           <span class="planTitle">计划列表</span>
         </div>
-        <div v-if="plantList.length == 0" class="addIcon" @click="addPalnt">＋</div>
+        <!-- <div v-if="plantList.length == 0" class="addIcon" @click="addPalnt">＋</div> -->
       </div>
       <!-- 菜单 -->
       <div v-if="plantList.length > 0" class="menu_list">
@@ -15,7 +15,9 @@
           <div class="menu_item_box planIdent" :class="{ 'menu_item_box_active': menuActive == planTtem.seletKey }"
             @click="changeForm(planTtem)">
             <img class="menuIcon" src="../../pluginTemp/images/menuIcon.png" alt="">
-            <span class="menuPlanTitle">{{ planTtem.plan_name }}</span>
+            <el-tooltip class="item" effect="dark" :content="planTtem.plan_name" placement="top-start">
+              <span class="menuPlanTitle">{{ planTtem.plan_name }}</span>
+            </el-tooltip>
             <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
               <span class="el-dropdown-link">
                 <i class="el-icon-more"
@@ -31,7 +33,9 @@
             <div class="menu_item_box taskIdent" :class="{ 'menu_item_box_active': menuActive == taskItem.seletKey }"
               @click="changeForm(taskItem)">
               <img class="menuIcon" src="../../pluginTemp/images/menuIcon.png" alt="">
-              <span class="taskTitle">{{ taskItem.project_name }}</span>
+              <el-tooltip class="item" effect="dark" :content="taskItem.project_name" placement="top-start">
+                <span class="taskTitle">{{ taskItem.project_name }}</span>
+              </el-tooltip>
               <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
                 <span class="el-dropdown-link">
                   <i class="el-icon-more"
@@ -48,7 +52,9 @@
               <div class="menu_item_box stepIdent" :class="{ 'menu_item_box_active': menuActive == procedure.seletKey }"
                 @click="changeForm(procedure)">
                 <div class="dotIcon"></div>
-                <span class="stepTitle">{{ procedure.process_name }}</span>
+                <el-tooltip class="item" effect="dark" :content="procedure.process_name" placement="top-start">
+                  <span class="stepTitle">{{ procedure.process_name }}</span>
+                </el-tooltip>
                 <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
                   <span class="el-dropdown-link">
                     <i class="el-icon-more"
@@ -569,7 +575,9 @@ import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
 import {
   Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, MessageBox,
-  Message, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload
+  Message, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem,
+  Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, 
+  InputNumber, Select, Upload, Tooltip
 } from "element-ui";
 import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, queryDict, queryPlanNumber } from '../api/asset'
 import { get_NumberingRules } from '../utils/numberingRules'
@@ -605,12 +613,12 @@ Vue.use(InputNumber);
 Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Upload);
+Vue.use(Tooltip);
 Vue.prototype.$message = Message;
 export default {
   name: "AddMultiple",
   props: {
     customConfig: Object,
-
   },
   // computed: {
   //   componentType: function () {
@@ -632,7 +640,7 @@ export default {
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
-      componentType: "Procedure", // 组件类型 emptyPage-空白页 PlantForm-计划新增
+      componentType: "PlantForm", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
       menuActive: '',
       title: "",
@@ -678,7 +686,7 @@ export default {
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimate_amount_project_cost: 0, // 金额
+        estimate_amount_project_cost: null, // 金额
         tasks: []
       },
       //工程任务表单
@@ -790,7 +798,7 @@ export default {
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
       } else {
-        this.componentType = 'emptyPage';
+        this.addPalnt()
       }
       setTimeout(() => {
         console.log('this.plantList', this.plantList)
@@ -886,7 +894,7 @@ export default {
               applicant_date: new Date(), // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
-              estimate_amount_project_cost: plan.estimate_amount_project_cost || 0, // 金额
+              estimate_amount_project_cost: plan.estimate_amount_project_cost || null, // 金额
               tasks: plan.tasks ? plan.tasks : []
             }
             break;
@@ -953,7 +961,7 @@ export default {
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimate_amount_project_cost: 0 // 金额
+        estimate_amount_project_cost: null // 金额
       }
     },
     // 保存提交
@@ -1519,15 +1527,27 @@ this.taskForm.file_list.splice(i, 1)
 
           .menuPlanTitle,
           .taskTitle {
+            display: inline-block;
+            width: 70%;
             font-weight: 500;
             font-size: 14px;
             color: #373A55;
+            //超出一行省略号
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
 
           .stepTitle {
+            display: inline-block;
+            width: 70%;
             font-weight: 400;
             font-size: 14px;
             color: #626973;
+            //超出一行省略号
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
 
           .menuIcon {
