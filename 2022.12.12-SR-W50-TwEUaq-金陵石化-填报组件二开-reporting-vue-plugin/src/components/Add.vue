@@ -6,7 +6,7 @@
           <img class="planImg" src="../../pluginTemp/images/Category.png" alt="">
           <span class="planTitle">计划列表</span>
         </div>
-        <div v-if="plantList.length == 0" class="addIcon" @click="addPalnt">＋</div>
+        <!-- <div v-if="plantList.length == 0" class="addIcon" @click="addPalnt">＋</div> -->
       </div>
       <!-- 菜单 -->
       <div v-if="plantList.length > 0" class="menu_list">
@@ -15,7 +15,9 @@
           <div class="menu_item_box planIdent" :class="{ 'menu_item_box_active': menuActive == planTtem.seletKey }"
             @click="changeForm(planTtem)">
             <img class="menuIcon" src="../../pluginTemp/images/menuIcon.png" alt="">
-            <span class="menuPlanTitle">{{ planTtem.plan_name }}</span>
+            <el-tooltip class="item" effect="dark" :content="planTtem.plan_name" placement="top-start">
+              <span class="menuPlanTitle">{{ planTtem.plan_name }}</span>
+            </el-tooltip>
             <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
               <span class="el-dropdown-link">
                 <i class="el-icon-more"
@@ -31,7 +33,9 @@
             <div class="menu_item_box taskIdent" :class="{ 'menu_item_box_active': menuActive == taskItem.seletKey }"
               @click="changeForm(taskItem)">
               <img class="menuIcon" src="../../pluginTemp/images/menuIcon.png" alt="">
-              <span class="taskTitle">{{ taskItem.project_name }}</span>
+              <el-tooltip class="item" effect="dark" :content="taskItem.project_name" placement="top-start">
+                <span class="taskTitle">{{ taskItem.project_name }}</span>
+              </el-tooltip>
               <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
                 <span class="el-dropdown-link">
                   <i class="el-icon-more"
@@ -48,7 +52,9 @@
               <div class="menu_item_box stepIdent" :class="{ 'menu_item_box_active': menuActive == procedure.seletKey }"
                 @click="changeForm(procedure)">
                 <div class="dotIcon"></div>
-                <span class="stepTitle">{{ procedure.process_name }}</span>
+                <el-tooltip class="item" effect="dark" :content="procedure.process_name" placement="top-start">
+                  <span class="stepTitle">{{ procedure.process_name }}</span>
+                </el-tooltip>
                 <el-dropdown class="dropdownBox" trigger="click" placement="bottom-start" @command="handleCommand">
                   <span class="el-dropdown-link">
                     <i class="el-icon-more"
@@ -85,7 +91,7 @@
           <div>
             <span class="drawerTitle">计划信息</span>
             <el-select style="margin-left: 20px" size="small" v-model="remoteValue" filterable remote reserve-keyword
-              placeholder="请输入关键词" :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
+              placeholder="请输入计划编号搜索" :remote-method="remoteMethod" :loading="loading" @change="selectMuBan">
               <el-option v-for="item in remoteFilter" :key="item.data_id" :label="item.plan_number"
                 :value="item"></el-option>
             </el-select>
@@ -104,12 +110,12 @@
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
               <el-select v-model="planForm.applicant" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUser.name" :value="currentUser.id"></el-option>
+                <el-option :label="currentUserIS.name" :value="currentUserIS.id"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUser.office_name" :value="currentUser.officeId"></el-option>
+                <el-option :label="currentUserIS.office_name" :value="currentUserIS.officeId"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item v-if="this.subunitArr.length > 0" label="申报子单位：" :label-width="formLabelWidth" key="subunit"
@@ -135,7 +141,7 @@
             </el-form-item>
             <el-form-item label="预估工程费：" key="estimate_amount_project_cost" :label-width="formLabelWidth"
               prop="estimate_amount_project_cost">
-              <el-input v-model="planForm.estimate_amount_project_cost" type="number" placeholder="请输入">
+              <el-input v-model="planForm.estimate_amount_project_cost" type="number" placeholder="请输入" autocomplete="off">
                 <template slot="append">万元</template>
               </el-input>
             </el-form-item>
@@ -569,7 +575,9 @@ import Vue from "vue";
 import eventActionDefine from "./msgCompConfig";
 import {
   Menu, MenuItem, Submenu, Drawer, Form, FormItem, Button, MessageBox,
-  Message, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem, Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, InputNumber, Select, Upload
+  Message, Pagination, DatePicker, Dropdown, DropdownMenu, DropdownItem,
+  Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, 
+  InputNumber, Select, Upload, Tooltip
 } from "element-ui";
 import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, queryDict, queryPlanNumber } from '../api/asset'
 import { get_NumberingRules } from '../utils/numberingRules'
@@ -605,12 +613,12 @@ Vue.use(InputNumber);
 Vue.use(Pagination);
 Vue.use(Select);
 Vue.use(Upload);
+Vue.use(Tooltip);
 Vue.prototype.$message = Message;
 export default {
   name: "AddMultiple",
   props: {
     customConfig: Object,
-
   },
   // computed: {
   //   componentType: function () {
@@ -624,22 +632,15 @@ export default {
       } else {
         callback();
       }
-      // setTimeout(() => {
-      //   if (!Number.isInteger(value)) {
-      //     callback(new Error('请输入数字值'));
-      //   }else {
-      //     callback();
-      //   }
-      // }, 300);
     };
-    let currentUser = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
+    let currentUserIS = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
 
     return {
-      currentUser, // 当前用户
+      currentUserIS, // 当前用户
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
-      componentType: "Procedure", // 组件类型 emptyPage-空白页 PlantForm-计划新增
+      componentType: "PlantForm", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
       menuActive: '',
       title: "",
@@ -675,7 +676,7 @@ export default {
       dataAll: [],//存放所有数据
       // 计划表单
       planForm: {
-        data_id: "", // 主键
+        // data_id: "", // 主键
         plan_name: "", // 计划名称
         plan_number: "", // 计划编号
         plan_type: "", // 计划类型
@@ -685,7 +686,8 @@ export default {
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimate_amount_project_cost: 0 // 金额
+        estimate_amount_project_cost: null, // 金额
+        tasks: []
       },
       //工程任务表单
       taskForm: {
@@ -779,8 +781,8 @@ export default {
   },
   mounted() {
     console.log('customConfig',this.customConfig);
-    this.currentUser.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUser.office_name) : this.currentUser.office_name
-    console.log('currentUser', this.currentUser, this.customConfig.intlGetKey);
+    this.currentUserIS.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUserIS.office_name) : this.currentUserIS.office_name
+    console.log('currentUserIS', this.currentUserIS, this.customConfig.intlGetKey);
     this.getDictId('plan_type_dictId'); // 计划类型字典
     this.getDictId('quality_record_number_dictId'); // 计划质量编号字典
     window?.componentCenter?.register(
@@ -796,7 +798,7 @@ export default {
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
       } else {
-        this.componentType = 'emptyPage';
+        this.addPalnt()
       }
       setTimeout(() => {
         console.log('this.plantList', this.plantList)
@@ -807,7 +809,7 @@ export default {
     }
     
     this.querySelect()
-    queryOfficeUser(this.currentUser.officeId).then(res => {
+    queryOfficeUser(this.currentUserIS.officeId).then(res => {
       this.subunitArr = res.data?.office_children || []
     }).catch(err => {
       this.subunitArr = []
@@ -827,10 +829,6 @@ export default {
           this.planForm.quality_record_number = res.data[0];
           break;
       }
-    },
-    // 查询字典
-    getDicty() {
-
     },
     // 生成唯一key
     forKey(list) {
@@ -886,17 +884,18 @@ export default {
             this.componentType = "PlantForm";
             let plan = this.plantList[0];
             this.planForm = {
-              data_id: "", // 主键
+              // data_id: "", // 主键
               plan_name: plan.plan_name, // 计划名称
               plan_number: "", //计划编号
               plan_type: plan.plan_type, // 计划类型
-              applicant: this.currentUser.id, // 申报人
-              applicant_unit: this.currentUser.officeId, // 申报单位
+              applicant: this.currentUserIS.id, // 申报人
+              applicant_unit: this.currentUserIS.officeId, // 申报单位
               subunit: plan.subunit, // 子单元
               applicant_date: new Date(), // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
-              estimate_amount_project_cost: plan.estimate_amount_project_cost || 0, // 金额
+              estimate_amount_project_cost: plan.estimate_amount_project_cost || null, // 金额
+              tasks: plan.tasks ? plan.tasks : []
             }
             break;
           case "Task":
@@ -956,13 +955,13 @@ export default {
         plan_name: "", // 计划名称
         plan_number: "", //计划编号
         plan_type: "", // 计划类型
-        applicant: this.currentUser.id, // 申报人
-        applicant_unit: this.currentUser.officeId, // 申报单位
+        applicant: this.currentUserIS.id, // 申报人
+        applicant_unit: this.currentUserIS.officeId, // 申报单位
         subunit: "", // 子单元
         applicant_date: new Date(), // 申报日期
         quality_record_number: "NL/QR-PD-06", // 质量记录号
         mode_type: "Plan", // 类型
-        estimate_amount_project_cost: 0 // 金额
+        estimate_amount_project_cost: null // 金额
       }
     },
     // 保存提交
@@ -976,7 +975,6 @@ export default {
             this.plantList.push({ plan_number: "" });
           }
           let { onChange } = this.customConfig;
-          if (this.plantList.length == 0) this.plantList[0] = {}
           if (this.planForm.plan_type == "大修单项") {
             queryPlanNumber(year).then(res => {
               liushuihao = Number(res.data) + 1;
@@ -987,7 +985,7 @@ export default {
               Object.keys(this.planForm).forEach(x => {
                 this.plantList[0][x] = this.planForm[x];
               })
-              onChange(this.plantList);
+              onChange(JSON.stringify(this.plantList));
               this.forKey(this.plantList);
               this.remoteValue = {};
               console.log('this.plantList[0]', this.plantList[0]);
@@ -1000,7 +998,7 @@ export default {
             Object.keys(this.planForm).forEach(x => {
               this.plantList[0][x] = this.planForm[x];
             })
-            onChange(this.plantList);
+            onChange(JSON.stringify(this.plantList));
             this.forKey(this.plantList);
             this.remoteValue = {};
           }
@@ -1042,8 +1040,8 @@ export default {
             plan_name: item.plan_name, // 计划名称
             plan_number: "",
             plan_type: item.plan_type, // 计划类型
-            applicant: this.currentUser.id,
-            applicant_unit: this.currentUser.officeId, // 申报单位
+            applicant: this.currentUserIS.id,
+            applicant_unit: this.currentUserIS.officeId, // 申报单位
             subunit: item.subunit, // 子单元
             applicant_date: new Date(), // 申报日期
             quality_record_number: item.quality_record_number, // 质量记录号
@@ -1529,15 +1527,27 @@ this.taskForm.file_list.splice(i, 1)
 
           .menuPlanTitle,
           .taskTitle {
+            display: inline-block;
+            width: 70%;
             font-weight: 500;
             font-size: 14px;
             color: #373A55;
+            //超出一行省略号
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
 
           .stepTitle {
+            display: inline-block;
+            width: 70%;
             font-weight: 400;
             font-size: 14px;
             color: #626973;
+            //超出一行省略号
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
           }
 
           .menuIcon {
