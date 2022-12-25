@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === "development") {
     document.cookie =
         "token=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY3MTc2Nzc1MDcyMSwidXNlcklkIjoiMTVhY2I1N2MtZTJhOC00MjhlLTkzY2QtY2RhMjJmYTNjYTdjIn0.Y7xByP1RdLxekBmk6ubXh-HeqgEUfcNwkl4rw08sJ2Q";
     document.cookie =
-        "refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY3MTE3NDAxMDM0OX0.JRv2K1Q5fTkv4jwTwLXqCYvqqVrFOVO6-dO6xNPAKJ0";
+        "refreshToken=eyJhbGciOiJIUzI1NiJ9.eyJsb2dpblRpbWVzdGFtcCI6MTY3MTc2MzMzNzg4Nn0.zFFOGV0ptZ8yQm8haEfTre7KIQnA-uE9gFoOwEWQigo";
     document.cookie = "username=admin";
     document.cookie = "windowOnline=true";
     apiContextPath = "/api";
