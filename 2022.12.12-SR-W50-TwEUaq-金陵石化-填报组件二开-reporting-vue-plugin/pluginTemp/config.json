@@ -7,7 +7,8 @@
     "styleArr": "[\"title\",\"key\", \"eventCenterConfig\"]",
     "columnStyle": "{title:'自定义'}",
     "componentAttributes": "{\"style\":[\"title\"],\"data\":[\"key\"],\"interaction\":[\"eventCenterConfig\"]}",
-    "assetColumnList": "[{\"col_name\":\"自定义\",\"col_datatype\":0}]"
+    "assetColumnList": "[{\"col_name\":\"自定义\",\"col_datatype\":0}]",
+    "isSpreadJs": "true"
   },
   "requirement-number": "金陵石油申报计划",
   "requirement-name": "SR-W50-TwEUaq"

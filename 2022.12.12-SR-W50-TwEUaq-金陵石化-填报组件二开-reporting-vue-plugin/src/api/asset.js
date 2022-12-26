@@ -62,3 +62,20 @@ export const queryPlanNumber = params =>
 export const queryzidanwei = params =>
   request.post(`system/office/queryOfficeUser`, {type: "office",value: "9d2035cd-e639-4b1b-8e99-2c3e556a8198",varibleType:'values'});
 
+/*
+*  excel查询回填数据
+*/
+export const previewData = params =>
+  request.post(`ext/plan/apply/previewData?template_id=LYC1`, params);
+
+/*
+*  excel模版编辑
+*/
+export const templateSave = params =>
+  request.post(`ext/spreadjs/template/save`, params);
+
+/*
+*  excel获取模版
+*/
+export const templateQuery = templateNo =>
+  request.get(`ext/spreadjs/template/query?templateNo=${templateNo}`);

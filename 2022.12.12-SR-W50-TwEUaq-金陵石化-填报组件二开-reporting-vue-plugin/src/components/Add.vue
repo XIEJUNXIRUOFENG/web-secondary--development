@@ -110,7 +110,7 @@
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
               <el-select v-model="planForm.applicant" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="planForm.name" :value="planForm.applicant"></el-option>
+                <el-option :label="currentUserIS.name" :value="currentUserIS.id"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
@@ -326,7 +326,17 @@
                 :value="item"></el-option>
             </el-select>
           </div>
-          <div class="operation_headr_itme">
+          <div class="operation_headr_itme preview-save">
+            <el-button v-if="templateNo" style="width: 96px; font-size: 14px;" size="small" type="primary" @click="excelEditVisible = true"
+              round>
+              <img class="preview-icon" src="../../pluginTemp/images/preview.png" alt="">
+              编辑模版
+            </el-button>
+            <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="previewExcel"
+              round>
+              <img class="preview-icon" src="../../pluginTemp/images/preview.png" alt="">
+              预览
+            </el-button>
             <el-button type="primary" round @click="OperationSave">
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
                 xmlns="http://www.w3.org/2000/svg">
@@ -516,6 +526,14 @@
         </div>
       </div>
     </div>
+    <!-- excel编辑 -->
+    <el-dialog class="excel-dialog" :title="title" :visible.sync="excelEditVisible" width="80%" append-to-body>
+      <SpreadJsEdit :plantList="plantList" v-if="excelEditVisible" />
+    </el-dialog>
+    <!-- excel弹窗 -->
+    <el-dialog class="excel-dialog" :title="title" :visible.sync="excelVisible" width="80%" append-to-body>
+      <SpreadJs :plantList="plantList" v-if="excelVisible" />
+    </el-dialog>
     <!-- 弹窗 -->
     <el-dialog class="two_dialog" :title="title" :visible.sync="dialogVisible" width="30%">
       <el-form :model="nameForm" :rules="rules" ref="addNameForm" size="small">
@@ -580,8 +598,15 @@ import {
   InputNumber, Select, Upload, Tooltip
 } from "element-ui";
 import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, queryDict, queryPlanNumber } from '../api/asset'
-import { get_NumberingRules } from '../utils/numberingRules'
+import { get_NumberingRules } from '../utils/numberingRules';
+import SpreadJs from './spreadjs/index.vue';
+import SpreadJsEdit from './spreadjs/SpreadJsEdit.vue'
+import qs from "querystringify";
 import moment from "moment";
+
+const { templateNo } = qs.parse(
+  window.location.search
+);
 
 Vue.use(Menu);
 Vue.use(MenuItem);
@@ -619,6 +644,10 @@ export default {
   name: "AddMultiple",
   props: {
     customConfig: Object,
+  },
+  components: {
+    SpreadJs,
+    SpreadJsEdit
   },
   // computed: {
   //   componentType: function () {
@@ -663,6 +692,9 @@ export default {
       tasksPrievw: {},//工程任务详情
       operationPrievw: {},//工序详情
       dialogVisible: false,
+      excelVisible: false, // excel弹窗状态
+      excelEditVisible: false, // excel编辑态
+      templateNo: templateNo,
       materialsVisible: false,
       previewVisible: false,
       iframeSrc: '',//弹出框地址
@@ -976,6 +1008,10 @@ export default {
         mode_type: "Plan", // 类型
         estimate_amount_project_cost: null // 金额
       }
+    },
+    // 预览
+    previewExcel() {
+      this.excelVisible = true;
     },
     // 保存提交
     async saveSub(formName) {
@@ -2037,6 +2073,15 @@ this.taskForm.file_list.splice(i, 1)
 
           .back_title {
             width: 70px;
+          }
+        }
+
+        .preview-save {
+          display: flex;
+
+          .preview-icon {
+            width: 14px;
+            margin-right: 5px;
           }
         }
 
