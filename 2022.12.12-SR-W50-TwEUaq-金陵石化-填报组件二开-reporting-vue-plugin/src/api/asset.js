@@ -60,7 +60,7 @@ export const queryPlanNumber = params =>
 *  子单位查询
 */
 export const queryzidanwei = params =>
-  request.post(`system/office/queryOfficeUser`, {type: "office",value: "9d2035cd-e639-4b1b-8e99-2c3e556a8198",varibleType:'values'});
+  request.post(`system/office/queryOfficeUser`, { type: "office", value: "9d2035cd-e639-4b1b-8e99-2c3e556a8198", varibleType: 'values' });
 
 /*
 *  excel查询回填数据

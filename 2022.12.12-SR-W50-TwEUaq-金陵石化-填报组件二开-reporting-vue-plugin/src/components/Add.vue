@@ -603,6 +603,7 @@ import SpreadJs from './spreadjs/index.vue';
 import SpreadJsEdit from './spreadjs/SpreadJsEdit.vue'
 import qs from "querystringify";
 import moment from "moment";
+import moment from "moment";
 
 const { templateNo } = qs.parse(
   window.location.search
@@ -742,7 +743,7 @@ export default {
           url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'
         }]//附件
       },
-      //工序表单
+      //工序表单  //工序编辑页的数据
       operationForm: {
         name: ''
       },
@@ -1402,8 +1403,12 @@ this.taskForm.file_list.splice(i, 1)
        * index：当前第几位
        */
       let flag = true
-      for (let i = 0; i < this.operationForm.materials.length; i++) {
-        if (row.data_id == this.operationForm.materials[i].data_id) {
+      console.log(this.operationForm);
+      if( !(this.operationForm.materials) ||  this.operationForm?.materials?.length==0){
+        return true
+      }else{
+        for (let i = 0; i < this.operationForm.materials.length; i++) {
+        if (row.material_code == this.operationForm.materials[i].material_code) {
           flag = false
           break
         } else {
@@ -1411,6 +1416,8 @@ this.taskForm.file_list.splice(i, 1)
         }
       }
       return flag
+      }
+   
     },
     //预览弹框方法
     previewMoadlFn() {
