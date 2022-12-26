@@ -110,12 +110,12 @@
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
               <el-select v-model="planForm.applicant" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUserIS.name" :value="currentUserIS.id"></el-option>
+                <el-option :label="planForm.name" :value="planForm.applicant"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
               <el-select v-model="planForm.applicant_unit" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUserIS.office_name" :value="currentUserIS.officeId"></el-option>
+                <!-- <el-option :label="intlGetKeys(currentUserIS.office_name)" :value="currentUserIS.officeId"></el-option> -->
               </el-select>
             </el-form-item>
             <el-form-item v-if="this.subunitArr.length > 0" label="申报子单位：" :label-width="formLabelWidth" key="subunit"
@@ -634,12 +634,20 @@ export default {
       }
     };
     let currentUserIS = window?.currentUser || { name: "admin", id: "1234567890", office_name: "SO.MINE_OFFICE", officeId: "123456789" };
-
+    let intlGetKeys = this.customConfig?.intlGetKey;
     return {
       currentUserIS, // 当前用户
+      intlGetKeys, // 国际化
       data: this.customConfig.data,
       propsConfiguration: this.customConfig.configuration || "{}",
       configuration: {},
+      pageMode: 'add',
+      editUser: {
+        applicant: "", // 申报人
+        applicant_unit: "", // 申报单位
+        subunit: "", // 子单元
+        applicant_date: "", // 申报日期
+      },
       componentType: "PlantForm", // 组件类型 emptyPage-空白页 PlantForm-计划新增
       plantList: [], // 大JSON
       menuActive: '',
@@ -781,7 +789,7 @@ export default {
   },
   mounted() {
     console.log('customConfig',this.customConfig);
-    this.currentUserIS.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUserIS.office_name) : this.currentUserIS.office_name
+    // this.currentUserIS.office_name = this.customConfig.intlGetKey ? this.customConfig.intlGetKey(this.currentUserIS.office_name) : this.currentUserIS.office_name
     console.log('currentUserIS', this.currentUserIS, this.customConfig.intlGetKey);
     this.getDictId('plan_type_dictId'); // 计划类型字典
     this.getDictId('quality_record_number_dictId'); // 计划质量编号字典
@@ -795,9 +803,14 @@ export default {
       this.configuration = JSON.parse(this.propsConfiguration);
       this.plantList = JSON.parse(this.customConfig.data || '[]')
       if (this.plantList.length > 0) {
+        this.pageMode = 'edit'
         this.forKey(this.plantList);
         this.changeForm(this.plantList[0])
       } else {
+        this.pageMode = 'add'
+        Object.keys(this.editUser).forEach(x=>{
+          this.editUser[x] = this.plantList[0][x]
+        })
         this.addPalnt()
       }
       setTimeout(() => {
@@ -888,10 +901,10 @@ export default {
               plan_name: plan.plan_name, // 计划名称
               plan_number: "", //计划编号
               plan_type: plan.plan_type, // 计划类型
-              applicant: this.currentUserIS.id, // 申报人
-              applicant_unit: this.currentUserIS.officeId, // 申报单位
-              subunit: plan.subunit, // 子单元
-              applicant_date: new Date(), // 申报日期
+              applicant: this.pageMode === "add" ? this.currentUserIS.id : plan.applicant, // 申报人
+              applicant_unit: this.pageMode === "add" ? this.currentUserIS.officeId : plan.applicant_unit, // 申报单位
+              subunit: plan.subunit ? plan.subunit : "", // 子单元
+              applicant_date: this.pageMode === "add" ? new Date() : plan.applicant_date, // 申报日期
               quality_record_number: plan.quality_record_number, // 质量记录号
               mode_type: "Plan", // 类型
               estimate_amount_project_cost: plan.estimate_amount_project_cost || null, // 金额
@@ -1040,10 +1053,10 @@ export default {
             plan_name: item.plan_name, // 计划名称
             plan_number: "",
             plan_type: item.plan_type, // 计划类型
-            applicant: this.currentUserIS.id,
-            applicant_unit: this.currentUserIS.officeId, // 申报单位
-            subunit: item.subunit, // 子单元
-            applicant_date: new Date(), // 申报日期
+            applicant: this.pageMode == "add" ? this.currentUserIS.id : this.editUser.applicant,
+            applicant_unit: this.pageMode == "add" ? this.currentUserIS.officeId : this.editUser.applicant_unit, // 申报单位
+            subunit: this.pageMode == "add" ? "" : this.editUser.subunit, // 子单元
+            applicant_date: this.pageMode == "add" ? new Date() : this.editUser.applicant_date, // 申报日期
             quality_record_number: item.quality_record_number, // 质量记录号
             mode_type: "Plan", // 类型
             estimate_amount_project_cost: item.estimate_amount_project_cost, // 金额
