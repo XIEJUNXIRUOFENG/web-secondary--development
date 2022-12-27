@@ -95,11 +95,23 @@
                 :value="item"></el-option>
             </el-select>
           </div>
-          <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="saveSub('planForm')"
-            round>
-            <img class="saveIcon" src="../../pluginTemp/images/saveIcon.png" alt="">
-            保存
-          </el-button>
+          <div class="operation_headr_itme preview-save">
+            <el-button v-if="templateNo" style="width: 96px; font-size: 14px;" size="small" type="primary" @click="excelEditVisible = true"
+              round>
+              <img class="preview-icon" src="../../pluginTemp/images/preview.png" alt="">
+              编辑模版
+            </el-button>
+            <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="previewExcel"
+              round>
+              <img class="preview-icon" src="../../pluginTemp/images/preview.png" alt="">
+              预览
+            </el-button>
+            <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="saveSub('planForm')"
+              round>
+              <img class="saveIcon" src="../../pluginTemp/images/saveIcon.png" alt="">
+              保存
+            </el-button>
+          </div>
         </div>
         <div class="PlantForm_content">
           <el-form :model="planForm" :rules="rules" ref="planForm" size="small">
@@ -327,16 +339,6 @@
             </el-select>
           </div>
           <div class="operation_headr_itme preview-save">
-            <el-button v-if="templateNo" style="width: 96px; font-size: 14px;" size="small" type="primary" @click="excelEditVisible = true"
-              round>
-              <img class="preview-icon" src="../../pluginTemp/images/preview.png" alt="">
-              编辑模版
-            </el-button>
-            <el-button style="width: 96px; font-size: 14px;" size="small" type="primary" @click="previewExcel"
-              round>
-              <img class="preview-icon" src="../../pluginTemp/images/preview.png" alt="">
-              预览
-            </el-button>
             <el-button type="primary" round @click="OperationSave">
               <svg style="margin-right:5px" width="14" height="14" viewBox="0 0 14 14" fill="#fff"
                 xmlns="http://www.w3.org/2000/svg">
@@ -1757,6 +1759,18 @@ this.taskForm.file_list.splice(i, 1)
         justify-content: space-between;
         align-items: center;
 
+        .preview-save {
+          display: flex;
+          height: 32px;
+
+          .preview-icon {
+            margin-bottom: -1px;
+            margin-right: 2px;
+            width: 13px;
+            height: 13px;
+          }
+        }
+
         .drawerTitle {
           font-weight: 500;
           font-size: 16px;
@@ -2095,15 +2109,6 @@ this.taskForm.file_list.splice(i, 1)
 
           .back_title {
             width: 70px;
-          }
-        }
-
-        .preview-save {
-          display: flex;
-
-          .preview-icon {
-            width: 14px;
-            margin-right: 5px;
           }
         }
 
