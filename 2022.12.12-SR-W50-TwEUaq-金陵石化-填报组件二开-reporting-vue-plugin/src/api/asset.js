@@ -57,12 +57,6 @@ export const queryPlanNumber = params =>
   request.get(`ext/plan/apply/queryPlanNumber?year=${params}`);
 
 /*
-*  子单位查询
-*/
-export const queryzidanwei = params =>
-  request.post(`system/office/queryOfficeUser`, { type: "office", value: "9d2035cd-e639-4b1b-8e99-2c3e556a8198", varibleType: 'values' });
-
-/*
 *  excel查询回填数据
 */
 export const previewData = params =>
@@ -79,3 +73,16 @@ export const templateSave = params =>
 */
 export const templateQuery = templateNo =>
   request.get(`ext/spreadjs/template/query?templateNo=${templateNo}`);
+
+/*
+*  用户组件查询
+*/
+export const queryAdmin = params =>
+  request.post(`system/office/queryOfficeUserV2`, { type: "office", value: "9d2035cd-e639-4b1b-8e99-2c3e556a8198", varibleType: 'values' });
+
+
+/*
+*  用户组件查询
+*/
+export const querySelsctAdmin = params =>
+  request.get(`system/account/queryUserByAccount?account_code=${params}`);

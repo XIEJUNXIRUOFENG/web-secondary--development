@@ -82,8 +82,7 @@
       <div v-if="componentType == 'emptyPage'" class="rightEmptyBox">
         <img class="rightEmptyIcon" src="../../pluginTemp/images/plantTask.png" alt="">
         <span class="rightEmptyText">请创建工程计划</span>
-        <el-button style="width: 124px; font-size: 16px;" size="small" type="primary" @click="addPalnt" round
-          plain>＋新增计划</el-button>
+        <el-button style="width: 124px; font-size: 16px;" size="small" type="primary" @click="addPalnt" round plain>＋新增计划</el-button>
       </div>
       <!-- 计划新增 -->
       <div v-if="componentType == 'PlantForm'" class="addplantBox">
@@ -110,7 +109,8 @@
             <el-form-item label="申报人：" key="applicant" :label-width="formLabelWidth" prop="applicant">
               <!-- <el-input v-model="planForm.applicant" :readonly="true" :clearable="true" placeholder="请输入"></el-input> -->
               <el-select v-model="planForm.applicant" :disabled="true" placeholder="请选择" :readonly="true">
-                <el-option :label="currentUserIS.name" :value="currentUserIS.id"></el-option>
+                <el-option v-if="pageMode == 'add'" :label="currentUserIS.name" :value="currentUserIS.id"></el-option>
+                <el-option v-if="pageMode == 'edit'" :label="editUser.loginName" :value="editUser.applicant"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item label="申报单位：" key="applicant_unit" :label-width="formLabelWidth" prop="applicant_unit">
@@ -126,7 +126,7 @@
               </el-select>
             </el-form-item>
             <el-form-item label="申报时间：" key="applicant_date" :label-width="formLabelWidth" prop="applicant_date">
-              <el-date-picker v-model="planForm.applicant_date" :disabled="true" format="yyyy-MM-dd" type="date" placeholder="请选择日期">
+              <el-date-picker v-model="planForm.applicant_date" :disabled="true" value-format="yyyy-MM-dd" format="yyyy-MM-dd" type="date" placeholder="请选择日期">
               </el-date-picker>
             </el-form-item>
             <el-form-item label="计划类型：" key="plan_type" :label-width="formLabelWidth" prop="plan_type">
@@ -597,12 +597,15 @@ import {
   Dialog, Descriptions, DescriptionsItem, Table, TableColumn, Input, 
   InputNumber, Select, Upload, Tooltip
 } from "element-ui";
-import { queryUnit, queryDevices, queryOfficeUser, queryFunArea, queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, queryDict, queryPlanNumber } from '../api/asset'
+import { 
+  queryUnit, queryDevices, queryOfficeUser, queryFunArea,
+  queryMaterials, queryAllMuBan, uploadFile, puginImport, getDictId, 
+  queryDict, queryPlanNumber, queryAdmin, querySelsctAdmin
+} from '../api/asset'
 import { get_NumberingRules } from '../utils/numberingRules';
 import SpreadJs from './spreadjs/index.vue';
 import SpreadJsEdit from './spreadjs/SpreadJsEdit.vue'
 import qs from "querystringify";
-import moment from "moment";
 import moment from "moment";
 
 const { templateNo } = qs.parse(
@@ -650,11 +653,6 @@ export default {
     SpreadJs,
     SpreadJsEdit
   },
-  // computed: {
-  //   componentType: function () {
-  //     return "PlantForm";
-  //   },
-  // },
   data() {
     let checkAge = (rule, value, callback) => {
       if (!value) {
@@ -674,6 +672,7 @@ export default {
       pageMode: 'add',
       editUser: {
         applicant: "", // 申报人
+        loginName: "", // 名称
         applicant_unit: "", // 申报单位
         subunit: "", // 子单元
         applicant_date: "", // 申报日期
@@ -760,7 +759,7 @@ export default {
           { required: true, message: '请输入申报子单元', trigger: 'change' }
         ],
         applicant_date: [
-          { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
+          { required: true, message: '请选择日期', trigger: 'change' }
         ],
         quality_record_number: [
           { required: true, message: '请输入质量记录号', trigger: 'blur' }
@@ -837,14 +836,25 @@ export default {
       this.plantList = JSON.parse(this.customConfig.data || '[]')
       if (this.plantList.length > 0) {
         this.pageMode = 'edit'
-        this.forKey(this.plantList);
-        this.changeForm(this.plantList[0])
-      } else {
-        this.pageMode = 'add'
         Object.keys(this.editUser).forEach(x=>{
           this.editUser[x] = this.plantList[0][x]
         })
+        queryOfficeUser(this.editUser.applicant).then(res => {
+          this.subunitArr = res.data?.office_children || []
+        }).catch(err => {
+          this.subunitArr = []
+        })
+        this.forKey(this.plantList);
+        this.changeForm(this.plantList[0])
+        this.queryselestAdmins(this.editUser.applicant);
+      } else {
+        this.pageMode = 'add'
         this.addPalnt()
+        queryOfficeUser(this.currentUserIS.officeId).then(res => {
+          this.subunitArr = res.data?.office_children || []
+        }).catch(err => {
+          this.subunitArr = []
+        })
       }
       setTimeout(() => {
         console.log('this.plantList', this.plantList)
@@ -855,11 +865,6 @@ export default {
     }
     
     this.querySelect()
-    queryOfficeUser(this.currentUserIS.officeId).then(res => {
-      this.subunitArr = res.data?.office_children || []
-    }).catch(err => {
-      this.subunitArr = []
-    })
   },
   methods: {
     // 查询数据字典id
@@ -875,6 +880,16 @@ export default {
           this.planForm.quality_record_number = res.data[0];
           break;
       }
+    },
+    // 查询所有用户
+    async queryAdmins() {
+      let { data } = await queryAdmin();
+      console.log("用户信息", list);
+    },
+    // 查询当前用户
+    async queryselestAdmins(params) {
+      let { data } = await querySelsctAdmin(params);
+      this.editUser.loginName = data[0].loginName;
     },
     // 生成唯一key
     forKey(list) {
